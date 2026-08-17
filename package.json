@@ -29,12 +29,16 @@
   "license": "MIT",
   "dependencies": {
     "altiumts": "github:tscircuit/altiumts#043a6e90be8106ad3e0319ba2797d0a0a464f73a",
+    "circuit-json": "^0.0.469",
     "jszip": "^3.10.1",
     "transformation-matrix": "^3.1.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.5.8",
     "@types/bun": "latest",
+    "bun-match-svg": "^0.0.16",
+    "circuit-to-svg": "^0.0.403",
+    "tscircuit": "^0.0.2352",
     "typescript": "^5.9.3"
   }
 }

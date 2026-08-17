@@ -11,6 +11,28 @@ bun add circuit-json-to-altium
 ## Usage
 
 ```ts
+import { CircuitJsonToAltiumConverter } from "circuit-json-to-altium"
+
+const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+  projectName: "motor-controller",
+})
+
+converter.runUntilFinished()
+
+const { pcb, project, schematics } = converter.getOutput()
+const archiveBytes = await converter.getOutputZip()
+```
+
+The converter follows the same inspectable pipeline pattern as
+`circuit-json-to-kicad`. Call `step()` to advance one stage at a time, inspect
+`currentStage`, or use `runUntilFinished()` for ordinary conversion. The stages
+build the PCB, schematics, and project before validating every generated
+document.
+
+For callers that only need an archive, the convenience function wraps the same
+pipeline:
+
+```ts
 import { convertCircuitJsonToAltiumZip } from "circuit-json-to-altium"
 
 const archiveBytes = await convertCircuitJsonToAltiumZip(
@@ -44,3 +66,27 @@ bun run check
 ```
 
 Tests follow the tscircuit convention of one test case per test file. The suite covers archive structure, filename sanitization, PCB geometry and connectivity, schematic primitives and sheets, randomized inputs, and native binary round trips.
+
+PCB and schematic tests also render Circuit JSON and the converted Altium
+document side by side. Visual baselines live in `tests/__snapshots__` so mapping
+regressions can be reviewed directly in a pull request.
+
+```bash
+# Update visual snapshots after reviewing an intentional rendering change
+BUN_UPDATE_SNAPSHOTS=1 bun test tests/visual01-pcb-comparison.test.tsx
+BUN_UPDATE_SNAPSHOTS=1 bun test tests/visual02-schematic-comparison.test.tsx
+```
+
+## Project structure
+
+```text
+lib/
+├── circuit-json-to-altium-converter.ts  # Step-driven converter pipeline
+├── converter-stage.ts                   # Shared stage contract
+├── stages/                              # PCB, schematic, project, validation
+├── create-pcb-document.ts               # Circuit JSON PCB mapping
+└── create-schematic-document.ts         # Circuit JSON schematic mapping
+tests/
+├── fixtures/                            # Shared visual and archive helpers
+└── __snapshots__/                       # Side-by-side visual baselines
+```

@@ -1,6 +1,44 @@
+import type { CircuitJson as StandardCircuitJson } from "circuit-json"
+
 export type CircuitElement = Record<string, unknown> & { type?: string }
 
-export type CircuitJson = CircuitElement[]
+export type CircuitJson = StandardCircuitJson
+export type CircuitJsonInput = CircuitJson | CircuitElement[]
+export type NormalizedCircuitJson = CircuitElement[]
+
+export type AltiumPcbFile = {
+  asciiContent: string
+  content: Uint8Array
+  filename: string
+}
+
+export type AltiumSchematicFile = {
+  asciiContent: string
+  content: Uint8Array
+  filename: string
+}
+
+export type AltiumProjectFile = {
+  content: string
+  filename: string
+}
+
+export type CircuitJsonToAltiumOutput = {
+  pcb: AltiumPcbFile
+  project: AltiumProjectFile
+  schematics: AltiumSchematicFile[]
+}
+
+export type CircuitJsonToAltiumConverterContext = {
+  circuitJson: NormalizedCircuitJson
+  pcb?: AltiumPcbFile
+  project?: AltiumProjectFile
+  projectName: string
+  safeProjectName: string
+  schematics?: AltiumSchematicFile[]
+  validated: boolean
+}
+
 export type Point = { x: number; y: number }
 export type PointTransform = (circuitPoint: Point) => Point
 
