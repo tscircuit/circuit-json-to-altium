@@ -6,7 +6,6 @@
   "types": "lib/index.ts",
   "type": "module",
   "files": ["lib"],
-  "trustedDependencies": ["altiumts"],
   "scripts": {
     "check": "bun run format:check && bun run typecheck && bun test",
     "format": "biome check --write .",
@@ -28,7 +27,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "altiumts": "github:tscircuit/altiumts#8ff80b50369767910e42edb2cda5c062f5614c3d",
+    "altiumts": "0.0.17",
     "circuit-json": "^0.0.469",
     "jszip": "^3.10.1",
     "transformation-matrix": "^3.1.0"
