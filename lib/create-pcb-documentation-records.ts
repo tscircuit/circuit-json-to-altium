@@ -11,12 +11,13 @@ import {
 } from "circuit-json"
 import {
   createAltiumFillRecord,
+  createAltiumPcbPathRecords,
   createAltiumRegionRecord,
-  createAltiumTrackRecords,
   createRoundedRectPoints,
 } from "./create-pcb-annotation-primitives"
 import { createPcbDimensionRecord } from "./create-pcb-dimension-record"
 import { createPcbTextRecord } from "./create-pcb-text-record"
+import { getCircuitPathPoints } from "./get-circuit-path-points"
 import type {
   CircuitElement,
   PcbComponentId,
@@ -46,9 +47,9 @@ export function createPcbDocumentationRecords({
     if (element.type === "pcb_fabrication_note_path") {
       const path = pcb_fabrication_note_path.parse(element)
       records.push(
-        ...createAltiumTrackRecords({
+        ...createAltiumPcbPathRecords({
           altiumComponentIndex,
-          circuitPoints: path.route,
+          circuitPoints: getCircuitPathPoints(element.route),
           circuitToAltiumPcbPoint,
           layer: getAltiumDocumentationLayer(path.layer),
           strokeWidthMm: path.stroke_width,
@@ -57,9 +58,9 @@ export function createPcbDocumentationRecords({
     } else if (element.type === "pcb_note_path") {
       const path = pcb_note_path.parse(element)
       records.push(
-        ...createAltiumTrackRecords({
+        ...createAltiumPcbPathRecords({
           altiumComponentIndex,
-          circuitPoints: path.route,
+          circuitPoints: getCircuitPathPoints(element.route),
           circuitToAltiumPcbPoint,
           layer: getAltiumDocumentationLayer(path.layer),
           strokeWidthMm: path.stroke_width,
@@ -71,7 +72,7 @@ export function createPcbDocumentationRecords({
         throw new Error("Altium PCB note lines do not preserve dashed strokes")
       }
       records.push(
-        ...createAltiumTrackRecords({
+        ...createAltiumPcbPathRecords({
           altiumComponentIndex,
           circuitPoints: [
             { x: line.x1, y: line.y1 },
@@ -232,7 +233,7 @@ function createDocumentationRectRecords({
   }
   if (hasStroke) {
     records.push(
-      ...createAltiumTrackRecords({
+      ...createAltiumPcbPathRecords({
         altiumComponentIndex,
         circuitPoints,
         circuitToAltiumPcbPoint,
