@@ -171,8 +171,7 @@ function getArcGeometry(record: AltiumRecord):
   const rawSweepDegrees = endAngleDegrees - startAngleDegrees
   const isFullCircle =
     Math.abs(rawSweepDegrees) >= 360 - 1e-9 || rawSweepDegrees === 0
-  const altiumCcwSweepDegrees =
-    normalizeAltiumAngle(rawSweepDegrees) || (isFullCircle ? 360 : 0)
+  const altiumCcwSweepDegrees = isFullCircle ? 360 : rawSweepDegrees
   return {
     bulge: -Math.tan((altiumCcwSweepDegrees * Math.PI) / 720),
     center,

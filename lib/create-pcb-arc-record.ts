@@ -1,9 +1,4 @@
-import {
-  formatMil,
-  formatNumber,
-  MILLIMETERS_TO_MILS,
-  pointsEqual,
-} from "./format"
+import { formatMil, MILLIMETERS_TO_MILS, pointsEqual } from "./format"
 import type { Point, PointTransform } from "./types"
 
 type CreatePcbArcRecordFromBulgeOptions = {
@@ -55,26 +50,25 @@ export function createPcbArcRecordFromBulge({
   }
   const circuitCcwSweepDegrees = radiansToDegrees(4 * Math.atan(bulge))
   const altiumCenter = circuitToAltiumPcbPoint(circuitCenter)
-  const altiumCircuitStart = circuitToAltiumPcbPoint(circuitStartPoint)
-  const altiumCircuitEnd = circuitToAltiumPcbPoint(circuitEndPoint)
-  const [altiumArcStart, altiumArcEnd] =
-    circuitCcwSweepDegrees < 0
-      ? [altiumCircuitStart, altiumCircuitEnd]
-      : [altiumCircuitEnd, altiumCircuitStart]
+  const altiumArcStart = circuitToAltiumPcbPoint(circuitStartPoint)
   const radiusMils = Math.hypot(
     altiumArcStart.x - altiumCenter.x,
     altiumArcStart.y - altiumCenter.y,
   )
+  const startAngleDegrees = getPointAngleDegrees(altiumCenter, altiumArcStart)
+  // Circuit coordinates use positive Y upward, while Altium PCB coordinates
+  // use positive Y downward, so the signed sweep reverses direction.
+  const altiumCcwSweepDegrees = -circuitCcwSweepDegrees
 
   return createPcbArcRecord({
     altiumComponentIndex,
     altiumNetIndex,
     center: altiumCenter,
-    endAngleDegrees: getPointAngleDegrees(altiumCenter, altiumArcEnd),
+    endAngleDegrees: startAngleDegrees + altiumCcwSweepDegrees,
     isKeepout,
     layer,
     radiusMils,
-    startAngleDegrees: getPointAngleDegrees(altiumCenter, altiumArcStart),
+    startAngleDegrees,
     widthMils: widthMm * MILLIMETERS_TO_MILS,
   })
 }
@@ -136,8 +130,8 @@ function createPcbArcRecord({
     `LOCATION.X=${formatMil(center.x)}`,
     `LOCATION.Y=${formatMil(center.y)}`,
     `RADIUS=${formatMil(radiusMils)}`,
-    `STARTANGLE=${formatNumber(startAngleDegrees)}`,
-    `ENDANGLE=${formatNumber(endAngleDegrees)}`,
+    `STARTANGLE=${formatArcAngleDegrees(startAngleDegrees)}`,
+    `ENDANGLE=${formatArcAngleDegrees(endAngleDegrees)}`,
     `WIDTH=${formatMil(widthMils)}`,
   ].join("|")
 }
@@ -149,9 +143,17 @@ function getPointAngleDegrees(center: Point, point: Point): number {
 }
 
 function normalizeDegrees(angleDegrees: number): number {
-  return ((angleDegrees % 360) + 360) % 360
+  const normalizedDegrees = ((angleDegrees % 360) + 360) % 360
+  return Math.abs(normalizedDegrees - 360) < 1e-9 ? 0 : normalizedDegrees
 }
 
 function radiansToDegrees(angleRadians: number): number {
   return (angleRadians * 180) / Math.PI
+}
+
+function formatArcAngleDegrees(angleDegrees: number): string {
+  const roundedAngleDegrees = Math.round(angleDegrees * 1e10) / 1e10
+  return Number.isInteger(roundedAngleDegrees)
+    ? String(roundedAngleDegrees)
+    : roundedAngleDegrees.toFixed(10).replace(/0+$/u, "")
 }
