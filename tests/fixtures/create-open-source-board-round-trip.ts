@@ -46,7 +46,7 @@ export async function createOpenSourceBoardRoundTrip({
   )
   const sourceBytes = new Uint8Array(await Bun.file(sourcePath).arrayBuffer())
   const sourceDocument = parsePcbDoc(sourceBytes)
-  const sourceCircuitJson = convertAltiumPcbToCircuitJson(sourceDocument)
+  const sourceCircuitJson = await convertAltiumPcbToCircuitJson(sourceDocument)
   const converter = new CircuitJsonToAltiumConverter(sourceCircuitJson, {
     projectName: boardName,
   })
@@ -54,7 +54,8 @@ export async function createOpenSourceBoardRoundTrip({
   const generatedPcb = converter.getOutput().pcb
   const generatedBytes = Uint8Array.from(generatedPcb.content)
   const roundTripDocument = parsePcbDoc(generatedBytes)
-  const roundTripCircuitJson = convertAltiumPcbToCircuitJson(roundTripDocument)
+  const roundTripCircuitJson =
+    await convertAltiumPcbToCircuitJson(roundTripDocument)
   const metrics = getPcbRoundTripMetrics({
     roundTripCircuitJson,
     sourceCircuitJson,

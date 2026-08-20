@@ -8,10 +8,10 @@ export class BuildPcbDocumentStage extends ConverterStage<
   AltiumPcbFile
 > {
   _step(): void {
-    const asciiContent = createPcbDocument(this.input)
+    const { asciiContent, embeddedModels } = createPcbDocument(this.input)
     this.context.pcb = {
       asciiContent,
-      content: serializeAltiumPcbDocToBinary(asciiContent),
+      content: serializeAltiumPcbDocToBinary(asciiContent, { embeddedModels }),
       filename: `${this.context.safeProjectName}.PcbDoc`,
     }
     this.finished = true
