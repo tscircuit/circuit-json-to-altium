@@ -13,6 +13,9 @@ import {
 import type { NinePointAnchor } from "circuit-json"
 import type { CircuitElement } from "../../lib/types"
 import { convertAltiumPcbAnnotationsToCircuitJson } from "./convert-altium-pcb-annotations-to-circuit-json"
+import { convertAltiumPcbCadToCircuitJson } from "./convert-altium-pcb-cad-to-circuit-json"
+import { getAltiumPcbClassMembership } from "./get-altium-pcb-class-membership"
+import { getAltiumPcbRuleConstraints } from "./get-altium-pcb-rule-constraints"
 
 const MILLIMETERS_PER_MIL = 0.0254
 
@@ -385,12 +388,19 @@ function appendCopperPourElements({
   }
 }
 
-export function convertAltiumPcbToCircuitJson(
+export async function convertAltiumPcbToCircuitJson(
   document: AltiumPcbDocument,
-): CircuitElement[] {
+): Promise<CircuitElement[]> {
   const elements: CircuitElement[] = []
   const outline = document.boardGeometry.outline.points.map(toCircuitPoint)
-  elements.push({ type: "pcb_board", pcb_board_id: "pcb_board_0", outline })
+  const ruleConstraints = getAltiumPcbRuleConstraints(document)
+  const classMembership = getAltiumPcbClassMembership(document)
+  elements.push({
+    type: "pcb_board",
+    pcb_board_id: "pcb_board_0",
+    outline,
+    ...ruleConstraints.boardFields,
+  })
 
   const sourceNetIds = new Map(
     document.nets.map((net, index) => [net, `source_net_${index}`]),
@@ -400,6 +410,15 @@ export function convertAltiumPcbToCircuitJson(
       type: "source_net",
       source_net_id: sourceNetId,
       name: net.name ?? sourceNetId,
+      member_source_group_ids:
+        classMembership.netGroupIdsByName.get(net.name ?? sourceNetId) ?? [],
+      ...(ruleConstraints.traceWidthMmByNetName.has(net.name ?? sourceNetId)
+        ? {
+            trace_width: ruleConstraints.traceWidthMmByNetName.get(
+              net.name ?? sourceNetId,
+            ),
+          }
+        : {}),
     })
   }
   const sourceNetLookupContext: SourceNetLookupContext = {
@@ -418,6 +437,15 @@ export function convertAltiumPcbToCircuitJson(
         type: "source_component",
         source_component_id: sourceComponentId,
         name: component.designator ?? `Component-${componentIndex + 1}`,
+        ...(classMembership.componentGroupIdByDesignator.has(
+          component.designator ?? "",
+        )
+          ? {
+              source_group_id: classMembership.componentGroupIdByDesignator.get(
+                component.designator ?? "",
+              ),
+            }
+          : {}),
       },
       {
         type: "pcb_component",
@@ -659,6 +687,14 @@ export function convertAltiumPcbToCircuitJson(
   }
 
   elements.push(
+    ...classMembership.sourceGroups,
+    ...(await convertAltiumPcbCadToCircuitJson({
+      componentIds,
+      document,
+      toCircuitLength,
+      toCircuitPoint,
+      toCircuitRotation,
+    })),
     ...convertAltiumPcbAnnotationsToCircuitJson({ componentIds, document }),
   )
 

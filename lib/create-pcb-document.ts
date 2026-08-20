@@ -1,10 +1,14 @@
+import type { AltiumEmbeddedModelInput } from "altiumts"
 import { convertCircuitPcbCcwRotationDegreesToAltium } from "./convert-circuit-pcb-ccw-rotation-degrees-to-altium"
 import { createCircuitToAltiumPcbPointTransform } from "./create-circuit-to-altium-pcb-point-transform"
+import { createPcbClassRecords } from "./create-pcb-class-records"
+import { createPcbComponentBodyRecords } from "./create-pcb-component-body-records"
 import { createPcbCopperPourRecords } from "./create-pcb-copper-pour-records"
 import { createPcbCourtyardRecords } from "./create-pcb-courtyard-records"
 import { createPcbDocumentationRecords } from "./create-pcb-documentation-records"
 import { createPcbKeepoutRecords } from "./create-pcb-keepout-records"
 import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
+import { createPcbRuleRecords } from "./create-pcb-rule-records"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
 import {
   asNumber,
@@ -54,7 +58,14 @@ function getPadName(pad: CircuitElement, context: PadLookupContext): string {
   )
 }
 
-export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
+export type PcbDocumentSource = {
+  asciiContent: string
+  embeddedModels: AltiumEmbeddedModelInput[]
+}
+
+export const createPcbDocument = (
+  circuitJson: CircuitElement[],
+): PcbDocumentSource => {
   const board = byType(circuitJson, "pcb_board")[0]
   const outline = getBoardOutline(board)
   const circuitToAltiumPcbPoint =
@@ -114,6 +125,11 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
   }
 
   lines.push(
+    ...createPcbClassRecords(circuitJson),
+    ...createPcbRuleRecords(circuitJson),
+  )
+
+  lines.push(
     ...createPcbCopperPourRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
@@ -154,6 +170,13 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       ].join("|"),
     )
   }
+
+  const componentBodyRecords = createPcbComponentBodyRecords({
+    circuitJson,
+    circuitToAltiumPcbPoint,
+    componentIndex,
+  })
+  lines.push(...componentBodyRecords.recordSources)
 
   lines.push(
     ...createPcbKeepoutRecords({
@@ -429,5 +452,8 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     )
   }
 
-  return `${lines.join("\r\n")}\r\n`
+  return {
+    asciiContent: `${lines.join("\r\n")}\r\n`,
+    embeddedModels: componentBodyRecords.embeddedModels,
+  }
 }
