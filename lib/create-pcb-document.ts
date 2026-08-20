@@ -5,7 +5,9 @@ import { createPcbCourtyardRecords } from "./create-pcb-courtyard-records"
 import { createPcbDocumentationRecords } from "./create-pcb-documentation-records"
 import { createPcbKeepoutRecords } from "./create-pcb-keepout-records"
 import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
+import { createPcbSilkscreenRecords } from "./create-pcb-silkscreen-records"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
+import { createPcbTraceRecords } from "./create-pcb-trace-records"
 import {
   asNumber,
   asPoint,
@@ -14,9 +16,7 @@ import {
   byType,
   formatMil,
   formatNumber,
-  isCircuitElement,
   MILLIMETERS_TO_MILS,
-  pointsEqual,
   sanitizeField,
 } from "./format"
 import { getBoardOutline } from "./get-board-outline"
@@ -296,56 +296,13 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     )
   }
 
-  for (const trace of byType(circuitJson, "pcb_trace")) {
-    const route = Array.isArray(trace.route)
-      ? trace.route.flatMap((routePoint) =>
-          isCircuitElement(routePoint) && asPoint(routePoint)
-            ? [routePoint]
-            : [],
-        )
-      : []
-    const net = netByTraceId.get(asString(trace.source_trace_id))
-    for (let index = 1; index < route.length; index++) {
-      const circuitRouteStart = route[index - 1]
-      const circuitRouteEnd = route[index]
-      if (!circuitRouteStart || !circuitRouteEnd) continue
-      if (
-        circuitRouteStart.route_type === "via" &&
-        circuitRouteEnd.route_type === "via"
-      ) {
-        continue
-      }
-      const altiumStartPoint = circuitToAltiumPcbPoint({
-        x: asNumber(circuitRouteStart.x),
-        y: asNumber(circuitRouteStart.y),
-      })
-      const altiumEndPoint = circuitToAltiumPcbPoint({
-        x: asNumber(circuitRouteEnd.x),
-        y: asNumber(circuitRouteEnd.y),
-      })
-      if (pointsEqual(altiumStartPoint, altiumEndPoint)) continue
-      const routeLayer =
-        asString(
-          circuitRouteEnd.layer,
-          asString(circuitRouteStart.layer),
-        ).toLowerCase() === "bottom"
-          ? "BOTTOM"
-          : "TOP"
-      lines.push(
-        [
-          "|RECORD=Track",
-          ...(net ? [`NET=${net.index}`] : []),
-          `LAYER=${routeLayer}`,
-          "LOCKED=FALSE",
-          `X1=${formatMil(altiumStartPoint.x)}`,
-          `Y1=${formatMil(altiumStartPoint.y)}`,
-          `X2=${formatMil(altiumEndPoint.x)}`,
-          `Y2=${formatMil(altiumEndPoint.y)}`,
-          `WIDTH=${formatMil(asPositiveNumber(circuitRouteEnd.width, asPositiveNumber(circuitRouteStart.width, 0.2)) * MILLIMETERS_TO_MILS)}`,
-        ].join("|"),
-      )
-    }
-  }
+  lines.push(
+    ...createPcbTraceRecords({
+      circuitJson,
+      circuitToAltiumPcbPoint,
+      netByTraceId,
+    }),
+  )
 
   const pcbTraces = new Map<PcbTraceId, CircuitElement>(
     byType(circuitJson, "pcb_trace").map((trace) => [
@@ -377,45 +334,13 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     )
   }
 
-  for (const silkscreenPath of byType(circuitJson, "pcb_silkscreen_path")) {
-    const route = Array.isArray(silkscreenPath.route)
-      ? silkscreenPath.route.flatMap((routePoint) =>
-          isCircuitElement(routePoint) && asPoint(routePoint)
-            ? [routePoint]
-            : [],
-        )
-      : []
-    const altiumComponentIndex = componentIndex.get(
-      asString(silkscreenPath.pcb_component_id),
-    )
-    const silkscreenLayer =
-      asString(silkscreenPath.layer).toLowerCase() === "bottom"
-        ? "BOTTOMOVERLAY"
-        : "TOPOVERLAY"
-    for (let index = 1; index < route.length; index++) {
-      const circuitStartPoint = asPoint(route[index - 1])
-      const circuitEndPoint = asPoint(route[index])
-      if (!circuitStartPoint || !circuitEndPoint) continue
-      const altiumStartPoint = circuitToAltiumPcbPoint(circuitStartPoint)
-      const altiumEndPoint = circuitToAltiumPcbPoint(circuitEndPoint)
-      if (pointsEqual(altiumStartPoint, altiumEndPoint)) continue
-      lines.push(
-        [
-          "|RECORD=Track",
-          ...(altiumComponentIndex === undefined
-            ? []
-            : [`COMPONENT=${altiumComponentIndex}`]),
-          `LAYER=${silkscreenLayer}`,
-          "LOCKED=FALSE",
-          `X1=${formatMil(altiumStartPoint.x)}`,
-          `Y1=${formatMil(altiumStartPoint.y)}`,
-          `X2=${formatMil(altiumEndPoint.x)}`,
-          `Y2=${formatMil(altiumEndPoint.y)}`,
-          `WIDTH=${formatMil(asPositiveNumber(silkscreenPath.stroke_width, 0.15) * MILLIMETERS_TO_MILS)}`,
-        ].join("|"),
-      )
-    }
-  }
+  lines.push(
+    ...createPcbSilkscreenRecords({
+      circuitJson,
+      circuitToAltiumPcbPoint,
+      componentIndex,
+    }),
+  )
 
   for (const silkscreenText of byType(circuitJson, "pcb_silkscreen_text")) {
     lines.push(

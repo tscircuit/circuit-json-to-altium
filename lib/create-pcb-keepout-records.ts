@@ -1,9 +1,6 @@
 import { pcb_keepout } from "circuit-json"
-import {
-  createAltiumFillRecord,
-  createAltiumRegionRecord,
-  createCirclePoints,
-} from "./create-pcb-annotation-primitives"
+import { createAltiumFillRecord } from "./create-pcb-annotation-primitives"
+import { createPcbFullCircleArcRecord } from "./create-pcb-arc-record"
 import type { CircuitElement, PointTransform } from "./types"
 
 type CreatePcbKeepoutRecordsOptions = {
@@ -36,14 +33,13 @@ export function createPcbKeepoutRecords({
               layer,
               widthMm: keepout.width,
             })
-          : createAltiumRegionRecord({
-              circuitPoints: createCirclePoints({
-                center: keepout.center,
-                radiusMm: keepout.radius,
-              }),
+          : createPcbFullCircleArcRecord({
+              center: keepout.center,
               circuitToAltiumPcbPoint,
               isKeepout: true,
               layer,
+              radiusMm: keepout.radius,
+              widthMm: 0.1,
             }),
       )
     }
