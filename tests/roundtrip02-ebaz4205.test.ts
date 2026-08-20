@@ -20,7 +20,15 @@ test("round-trips the open-source EBAZ4205 Altium board", async () => {
   expect(result.rotationMismatchCount).toBe(0)
   expect(result.silkscreenTextMismatchCount).toBe(0)
   expect(result.sourcePrimitiveTotal).toBeGreaterThan(5_000)
-  await expect(
-    createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
-  ).toMatchSvgSnapshot(import.meta.path)
+  const comparisonSvg = createSideBySideSvg(
+    result.sourceSvg,
+    result.roundTripSvg,
+  )
+  if (process.env.CI) {
+    await Bun.write(
+      "tests/__snapshots__/roundtrip02-ebaz4205.received.svg",
+      comparisonSvg,
+    )
+  }
+  await expect(comparisonSvg).toMatchSvgSnapshot(import.meta.path)
 })
