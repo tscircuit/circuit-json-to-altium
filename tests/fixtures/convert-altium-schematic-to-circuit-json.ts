@@ -16,8 +16,10 @@ import {
   toCircuitLength,
   toCircuitPoint,
 } from "./altium-schematic-coordinate-utils"
+import { appendAltiumSchematicComponentGraphicElements } from "./append-altium-schematic-component-graphic-elements"
 import { appendAltiumSchematicSheetAnnotationElements } from "./append-altium-schematic-sheet-annotation-elements"
 import { applyAltiumNoConnectToSourcePorts } from "./apply-altium-no-connect-to-source-ports"
+import { isAltiumSchematicComponentRecordVisible } from "./is-altium-schematic-component-record-visible"
 
 type AltiumBounds = {
   maxX: number
@@ -97,30 +99,15 @@ function getGraphicRecordPoints(record: AltiumRecord): AltiumPoint[] {
   return []
 }
 
-function isRecordVisibleForComponent(
-  component: AltiumSchComponentRecord,
-  record: AltiumRecord,
-): boolean {
-  const ownerPartId = record.getNumber("OWNERPARTID")
-  const currentPartId = component.getNumber("CURRENTPARTID") ?? 1
-  const partMatches =
-    ownerPartId === undefined ||
-    ownerPartId <= 0 ||
-    ownerPartId === currentPartId
-  const ownerPartDisplayMode = record.getNumber("OWNERPARTDISPLAYMODE")
-  return (
-    partMatches &&
-    (ownerPartDisplayMode === undefined || ownerPartDisplayMode === 0)
-  )
-}
-
 function getComponentBounds(
   document: AltiumSchDoc,
   component: AltiumSchComponentRecord,
 ): AltiumBounds {
   const points = document
     .getOwnedRecords(component)
-    .filter((record) => isRecordVisibleForComponent(component, record))
+    .filter((record) =>
+      isAltiumSchematicComponentRecordVisible({ component, record }),
+    )
     .flatMap(getGraphicRecordPoints)
 
   if (points.length === 0) {
@@ -171,7 +158,10 @@ function isVisiblePin(
   const isHidden =
     pin.hidden === true ||
     (pinConglomerate !== undefined && (pinConglomerate & 0x04) !== 0)
-  return !isHidden && isRecordVisibleForComponent(component, pin)
+  return (
+    !isHidden &&
+    isAltiumSchematicComponentRecordVisible({ component, record: pin })
+  )
 }
 
 function getPinOrientation(pin: AltiumSchPinRecord): number {
@@ -297,6 +287,13 @@ function appendComponentElements({
       ...(comment ? { symbol_display_value: comment } : {}),
     },
   )
+
+  appendAltiumSchematicComponentGraphicElements({
+    component,
+    document,
+    elements,
+    schematicComponentId,
+  })
 
   const visiblePins = document
     .getOwnedRecords(component)

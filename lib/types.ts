@@ -41,6 +41,7 @@ export type CircuitJsonToAltiumConverterContext = {
 
 export type Point = { x: number; y: number }
 export type PointTransform = (circuitPoint: Point) => Point
+export type LengthTransform = (circuitLength: number) => number
 
 export type PcbComponentId = string
 export type PcbNetName = string

@@ -10,6 +10,9 @@ test("round-trips the open-source HERON systems PCB Altium schematic", async () 
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
+  expect(result.roundTripComponentGraphicCounts).toEqual(
+    result.sourceComponentGraphicCounts,
+  )
   expect(result.roundTripPortNames).toEqual(result.sourcePortNames)
   expect(result.roundTripNetLabelTexts).toEqual(result.sourceNetLabelTexts)
   expect(result.roundTripAnnotationSignatures).toEqual(
@@ -29,6 +32,7 @@ test("round-trips the open-source HERON systems PCB Altium schematic", async () 
   expect(result.sourceCounts.off_sheet_port).toBe(0)
   expect(result.sourceCounts.do_not_connect).toBe(8)
   expect(result.sourceCounts.power_port).toBe(38)
+  expect(result.sourceComponentGraphicCounts.total).toBe(102)
   expect({
     path: result.sourceCounts.schematic_path,
     rect: result.sourceCounts.schematic_rect,

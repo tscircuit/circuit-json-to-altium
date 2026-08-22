@@ -54,7 +54,7 @@ The converter validates its generated PCB and schematic documents before returni
 
 ## Supported content
 
-The current converter handles board outlines, components, pads, plated and non-plated holes, routed copper with vias, nets, PCB silkscreen, schematic components, component pins, intentionally unconnected source ports, off-sheet ports, labels, native power ports, junctions, traces, and free-standing schematic sheet text and graphics. It also preserves multiple schematic sheets and sanitizes Altium field and filename text.
+The current converter handles board outlines, components, pads, plated and non-plated holes, routed copper with vias, nets, PCB silkscreen, schematic components, custom component symbol graphics, component pins, intentionally unconnected source ports, off-sheet ports, labels, native power ports, junctions, traces, and free-standing schematic sheet text and graphics. It also preserves multiple schematic sheets and sanitizes Altium field and filename text.
 
 `altiumts` owns the Altium document model, parsing, and native binary serialization. This package owns the Circuit JSON-to-Altium mapping and archive assembly.
 

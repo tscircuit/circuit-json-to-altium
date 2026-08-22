@@ -1,3 +1,4 @@
+import { createAltiumSchematicComponentGraphicRecordFields } from "./create-altium-schematic-component-graphic-record-fields"
 import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-table"
 import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
@@ -14,6 +15,7 @@ import {
   sanitizeField,
 } from "./format"
 import { getSchematicTransform } from "./get-schematic-transform"
+import { isSchematicComponentGraphic } from "./is-schematic-component-graphic"
 import type {
   CircuitElement,
   Point,
@@ -170,6 +172,7 @@ export function createSchematicDocument({
       }),
   )
   const {
+    circuitToAltiumSchematicLength,
     circuitToAltiumSchematicPoint,
     width: altiumSheetWidth,
     height: altiumSheetHeight,
@@ -211,6 +214,17 @@ export function createSchematicDocument({
     SchematicComponentId,
     CircuitElement[]
   >()
+  const schematicGraphicsByComponentId = new Map<
+    SchematicComponentId,
+    CircuitElement[]
+  >()
+  for (const graphic of schematicElements.filter(isSchematicComponentGraphic)) {
+    const schematicComponentId = asString(graphic.schematic_component_id)
+    schematicGraphicsByComponentId.set(schematicComponentId, [
+      ...(schematicGraphicsByComponentId.get(schematicComponentId) ?? []),
+      graphic,
+    ])
+  }
   for (const schematicPort of schematicElements.filter(
     (element) => element.type === "schematic_port",
   )) {
@@ -267,13 +281,34 @@ export function createSchematicDocument({
       circuitComponentWidth,
       circuitToAltiumSchematicPoint,
     })
-    const schematicSymbolRecords = createAltiumSchematicSymbolRecords({
-      altiumComponentRecordIndex,
-      circuitComponentCenter,
-      circuitToAltiumSchematicPoint,
-      symbolName: asString(schematicComponent.symbol_name),
+    const schematicComponentId = asString(
+      schematicComponent.schematic_component_id,
+    )
+    const customGraphicRecordFields = (
+      schematicGraphicsByComponentId.get(schematicComponentId) ?? []
+    ).flatMap((graphic) => {
+      const recordFields = createAltiumSchematicComponentGraphicRecordFields({
+        altiumComponentRecordIndex,
+        circuitToAltiumSchematicLength,
+        circuitToAltiumSchematicPoint,
+        graphic,
+      })
+      return recordFields ? [recordFields] : []
     })
-    if (schematicSymbolRecords) {
+    const schematicSymbolRecords =
+      customGraphicRecordFields.length === 0
+        ? createAltiumSchematicSymbolRecords({
+            altiumComponentRecordIndex,
+            circuitComponentCenter,
+            circuitToAltiumSchematicPoint,
+            symbolName: asString(schematicComponent.symbol_name),
+          })
+        : undefined
+    if (customGraphicRecordFields.length > 0) {
+      for (const graphicRecordFields of customGraphicRecordFields) {
+        addSchematicRecord(graphicRecordFields, schematicRecordContext)
+      }
+    } else if (schematicSymbolRecords) {
       for (const graphicRecordFields of schematicSymbolRecords.graphicRecordFields) {
         addSchematicRecord(graphicRecordFields, schematicRecordContext)
       }
@@ -332,9 +367,6 @@ export function createSchematicDocument({
       schematicRecordContext,
     )
 
-    const schematicComponentId = asString(
-      schematicComponent.schematic_component_id,
-    )
     const schematicPorts =
       schematicPortsByComponentId.get(schematicComponentId) ?? []
     for (const [pinIndex, schematicPort] of schematicPorts.entries()) {
