@@ -4,7 +4,6 @@ import {
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS,
 } from "./create-altium-schematic-off-sheet-port-record-fields"
 import { asNumber, formatNumber } from "./format"
-import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
 import type { CircuitElement } from "./types"
 
 type AltiumSchematicFontId = number
@@ -41,28 +40,23 @@ export function createAltiumSchematicFontTable({
     ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID,
   )
 
-  const annotationFontSizesCircuitUnits = [
+  const schematicFontSizesCircuitUnits = [
     ...new Set(
       schematicElements.flatMap((element) => {
-        if (
-          element.type !== "schematic_text" ||
-          !isSchematicSheetAnnotation(element)
-        ) {
-          return []
-        }
-        const fontSizeCircuitUnits = asNumber(element.font_size)
+        const fontSizeCircuitUnits =
+          element.type === "schematic_text" ? asNumber(element.font_size) : 0
         return fontSizeCircuitUnits > 0 ? [fontSizeCircuitUnits] : []
       }),
     ),
   ].sort((left, right) => left - right)
 
-  const annotationFontRecordFields: string[] = []
+  const schematicFontRecordFields: string[] = []
   let nextFontId = ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID + 1
-  for (const fontSizeCircuitUnits of annotationFontSizesCircuitUnits) {
+  for (const fontSizeCircuitUnits of schematicFontSizesCircuitUnits) {
     if (fontIdBySizeCircuitUnits.has(fontSizeCircuitUnits)) continue
     const fontId = nextFontId++
     fontIdBySizeCircuitUnits.set(fontSizeCircuitUnits, fontId)
-    annotationFontRecordFields.push(
+    schematicFontRecordFields.push(
       `SIZE${fontId}=${formatNumber(fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT)}`,
       `FONTNAME${fontId}=${ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME}`,
     )
@@ -78,7 +72,7 @@ export function createAltiumSchematicFontTable({
       "FONTNAME2=Arial",
       `SIZE${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID}=${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS}`,
       `FONTNAME${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID}=${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_NAME}`,
-      ...annotationFontRecordFields,
+      ...schematicFontRecordFields,
     ],
   }
 }

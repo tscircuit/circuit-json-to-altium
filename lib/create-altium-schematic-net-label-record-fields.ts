@@ -1,4 +1,11 @@
-import type { Point } from "./types"
+import { getAltiumColorFromCss } from "./altium-color"
+import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-table"
+import { asNumber, asString } from "./format"
+import {
+  getAltiumSchematicTextJustification,
+  getAltiumSchematicTextOrientation,
+} from "./get-altium-schematic-text-presentation"
+import type { CircuitElement, Point } from "./types"
 
 type AltiumPowerPortDirection = "down" | "left" | "right" | "up"
 type AltiumPowerPortSymbolFamily = "ground" | "rail"
@@ -10,11 +17,14 @@ type AltiumPowerPortStyle = {
 
 type SchematicNetLabelRecordFieldsInput = {
   altiumLabelPosition: Point
+  fontTable: AltiumSchematicFontTable
   labelText: string
   symbolName: string
+  textPresentation: CircuitElement | undefined
 }
 
 const ALTIUM_SCHEMATIC_LABEL_FONT_ID = 2
+const ALTIUM_SCHEMATIC_LABEL_COLOR = 0x37_29_1f
 const ALTIUM_SCHEMATIC_POWER_PORT_COLOR_INDEX = 128
 
 const ALTIUM_ORIENTATION_INDEX_BY_POWER_PORT_DIRECTION: Record<
@@ -69,19 +79,31 @@ function getAltiumPowerPortStyle(
 
 export function createAltiumSchematicNetLabelRecordFields({
   altiumLabelPosition,
+  fontTable,
   labelText,
   symbolName,
+  textPresentation,
 }: SchematicNetLabelRecordFieldsInput): string[] {
   const powerPortStyle = getAltiumPowerPortStyle(symbolName)
+  const fontId =
+    fontTable.fontIdBySizeCircuitUnits.get(
+      asNumber(textPresentation?.font_size),
+    ) ?? ALTIUM_SCHEMATIC_LABEL_FONT_ID
+  const color = getAltiumColorFromCss({
+    cssColor: asString(textPresentation?.color),
+    fallbackAltiumColor: powerPortStyle
+      ? ALTIUM_SCHEMATIC_POWER_PORT_COLOR_INDEX
+      : ALTIUM_SCHEMATIC_LABEL_COLOR,
+  })
   if (powerPortStyle) {
     return [
       "RECORD=17",
       `LOCATION.X=${altiumLabelPosition.x}`,
       `LOCATION.Y=${altiumLabelPosition.y}`,
-      `FONTID=${ALTIUM_SCHEMATIC_LABEL_FONT_ID}`,
+      `FONTID=${fontId}`,
       `ORIENTATION=${powerPortStyle.orientationIndex}`,
       `STYLE=${powerPortStyle.styleIndex}`,
-      `COLOR=${ALTIUM_SCHEMATIC_POWER_PORT_COLOR_INDEX}`,
+      `COLOR=${color}`,
       "SHOWNETNAME=T",
       `TEXT=${labelText}`,
     ]
@@ -91,9 +113,10 @@ export function createAltiumSchematicNetLabelRecordFields({
     "RECORD=25",
     `LOCATION.X=${altiumLabelPosition.x}`,
     `LOCATION.Y=${altiumLabelPosition.y}`,
-    `FONTID=${ALTIUM_SCHEMATIC_LABEL_FONT_ID}`,
-    "ORIENTATION=0",
-    "JUSTIFICATION=0",
+    `FONTID=${fontId}`,
+    `ORIENTATION=${getAltiumSchematicTextOrientation(asNumber(textPresentation?.rotation))}`,
+    `JUSTIFICATION=${getAltiumSchematicTextJustification(asString(textPresentation?.anchor))}`,
+    `COLOR=${color}`,
     `TEXT=${labelText}`,
   ]
 }

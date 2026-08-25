@@ -10,10 +10,16 @@ test("round-trips the open-source SimpleFOC Shield V3 Altium schematic", async (
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
+  expect(result.roundTripSymbolPrimitiveCounts).toEqual(
+    result.sourceSymbolPrimitiveCounts,
+  )
   expect(result.roundTripPortNames).toEqual(result.sourcePortNames)
   expect(result.roundTripNetLabelTexts).toEqual(result.sourceNetLabelTexts)
   expect(result.roundTripAnnotationSignatures).toEqual(
     result.sourceAnnotationSignatures,
+  )
+  expect(result.roundTripComponentTextSignatures).toEqual(
+    result.sourceComponentTextSignatures,
   )
   expect(result.roundTripOffSheetPortSignatures).toEqual(
     result.sourceOffSheetPortSignatures,
@@ -32,11 +38,12 @@ test("round-trips the open-source SimpleFOC Shield V3 Altium schematic", async (
     new Set([11]),
   )
   expect(result.sourceCounts.power_port).toBe(26)
+  expect(result.sourceSymbolPrimitiveCounts.total).toBe(91)
   expect({
     path: result.sourceCounts.schematic_path,
     rect: result.sourceCounts.schematic_rect,
     text: result.sourceCounts.schematic_text,
-  }).toEqual({ path: 0, rect: 9, text: 16 })
+  }).toEqual({ path: 0, rect: 9, text: 381 })
   expect(result.sourceSupportedPrimitiveTotal).toBeGreaterThan(350)
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),

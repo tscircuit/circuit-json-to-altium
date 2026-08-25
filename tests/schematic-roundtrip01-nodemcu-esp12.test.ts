@@ -10,10 +10,16 @@ test("round-trips the open-source NodeMCU ESP-12 Altium schematic", async () => 
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
+  expect(result.roundTripSymbolPrimitiveCounts).toEqual(
+    result.sourceSymbolPrimitiveCounts,
+  )
   expect(result.roundTripPortNames).toEqual(result.sourcePortNames)
   expect(result.roundTripNetLabelTexts).toEqual(result.sourceNetLabelTexts)
   expect(result.roundTripAnnotationSignatures).toEqual(
     result.sourceAnnotationSignatures,
+  )
+  expect(result.roundTripComponentTextSignatures).toEqual(
+    result.sourceComponentTextSignatures,
   )
   expect(result.roundTripOffSheetPortSignatures).toEqual(
     result.sourceOffSheetPortSignatures,
@@ -29,11 +35,12 @@ test("round-trips the open-source NodeMCU ESP-12 Altium schematic", async () => 
   expect(result.sourceCounts.off_sheet_port).toBe(0)
   expect(result.sourceCounts.do_not_connect).toBe(6)
   expect(result.sourceCounts.power_port).toBe(37)
+  expect(result.sourceSymbolPrimitiveCounts.total).toBe(156)
   expect({
     path: result.sourceCounts.schematic_path,
     rect: result.sourceCounts.schematic_rect,
     text: result.sourceCounts.schematic_text,
-  }).toEqual({ path: 17, rect: 3, text: 63 })
+  }).toEqual({ path: 17, rect: 3, text: 384 })
   expect(result.sourceSupportedPrimitiveTotal).toBeGreaterThan(300)
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),

@@ -6,8 +6,13 @@ import {
   AltiumSchPinRecord,
   type AltiumSchPowerPortRecord,
   getSchematicRecordPoints,
+  resolveSchematicParameterReference,
 } from "altiumts"
-import type { CircuitElement, SourceNetId } from "../../lib/types"
+import type {
+  CircuitElement,
+  SchematicComponentId,
+  SourceNetId,
+} from "../../lib/types"
 import {
   type CircuitPoint,
   getRecordCorner,
@@ -16,8 +21,14 @@ import {
   toCircuitLength,
   toCircuitPoint,
 } from "./altium-schematic-coordinate-utils"
+import { appendAltiumSchematicComponentTextElements } from "./append-altium-schematic-component-text-elements"
+import { appendAltiumSchematicPinTextElements } from "./append-altium-schematic-pin-text-elements"
 import { appendAltiumSchematicSheetAnnotationElements } from "./append-altium-schematic-sheet-annotation-elements"
+import { appendAltiumSchematicSheetElements } from "./append-altium-schematic-sheet-elements"
+import { appendAltiumSchematicSymbolPrimitives } from "./append-altium-schematic-symbol-primitives"
 import { applyAltiumNoConnectToSourcePorts } from "./apply-altium-no-connect-to-source-ports"
+import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
+import { isAltiumSchematicComponentRecordVisible } from "./is-altium-schematic-component-record-visible"
 
 type AltiumBounds = {
   maxX: number
@@ -33,6 +44,14 @@ type SourceNetName = string
 type SchematicNetContext = {
   elements: CircuitElement[]
   sourceNetIdByName: Map<SourceNetName, SourceNetId>
+}
+
+type AppendNativeTextPresentationInput = {
+  document: AltiumSchDoc
+  elements: CircuitElement[]
+  record: AltiumRecord
+  schematicTextId: string
+  text: string
 }
 
 const ALTIUM_POWER_PORT_DIRECTION_BY_ORIENTATION_INDEX = [
@@ -58,6 +77,72 @@ const PIN_FACING_DIRECTION_BY_ORIENTATION = [
   "left",
   "down",
 ] as const
+
+const ALTIUM_PIN_NAME_VISIBLE_FLAG = 0x08
+const ALTIUM_PIN_NUMBER_VISIBLE_FLAG = 0x10
+
+function appendNativeTextPresentation({
+  document,
+  elements,
+  record,
+  schematicTextId,
+  text,
+}: AppendNativeTextPresentationInput): void {
+  elements.push({
+    type: "schematic_text",
+    schematic_text_id: schematicTextId,
+    text,
+    ...getAltiumSchematicTextPresentation({
+      document,
+      fallbackFontSizePoints: 9,
+      record,
+    }),
+  })
+}
+
+function hasComponentAncestor({
+  document,
+  record,
+}: {
+  document: AltiumSchDoc
+  record: AltiumRecord
+}): boolean {
+  const visitedRecords = new Set<AltiumRecord>()
+  let currentRecord: AltiumRecord | undefined = record
+  while (currentRecord && !visitedRecords.has(currentRecord)) {
+    visitedRecords.add(currentRecord)
+    const parentRecord = document.getParent(currentRecord)
+    if (parentRecord?.recordKind === "1") return true
+    currentRecord = parentRecord
+  }
+  return false
+}
+
+function appendUnownedVisibleParameterTextElements(
+  document: AltiumSchDoc,
+  elements: CircuitElement[],
+): void {
+  for (const [recordIndex, record] of document.records.entries()) {
+    const sourceText =
+      record.getDecoded("TEXT") ?? record.getDecoded("NAME") ?? ""
+    if (
+      record.recordKind !== "41" ||
+      !sourceText ||
+      record.getBoolean("ISHIDDEN") === true ||
+      hasComponentAncestor({ document, record })
+    ) {
+      continue
+    }
+    appendNativeTextPresentation({
+      document,
+      elements,
+      record,
+      schematicTextId: `schematic_text_unowned_parameter_${recordIndex}`,
+      text:
+        resolveSchematicParameterReference(document, sourceText) ?? sourceText,
+    })
+  }
+}
 
 function getGraphicRecordPoints(record: AltiumRecord): AltiumPoint[] {
   if (record.recordKind === "6" || record.recordKind === "7") {
@@ -97,30 +182,15 @@ function getGraphicRecordPoints(record: AltiumRecord): AltiumPoint[] {
   return []
 }
 
-function isRecordVisibleForComponent(
-  component: AltiumSchComponentRecord,
-  record: AltiumRecord,
-): boolean {
-  const ownerPartId = record.getNumber("OWNERPARTID")
-  const currentPartId = component.getNumber("CURRENTPARTID") ?? 1
-  const partMatches =
-    ownerPartId === undefined ||
-    ownerPartId <= 0 ||
-    ownerPartId === currentPartId
-  const ownerPartDisplayMode = record.getNumber("OWNERPARTDISPLAYMODE")
-  return (
-    partMatches &&
-    (ownerPartDisplayMode === undefined || ownerPartDisplayMode === 0)
-  )
-}
-
 function getComponentBounds(
   document: AltiumSchDoc,
   component: AltiumSchComponentRecord,
 ): AltiumBounds {
   const points = document
     .getOwnedRecords(component)
-    .filter((record) => isRecordVisibleForComponent(component, record))
+    .filter((record) =>
+      isAltiumSchematicComponentRecordVisible({ component, record }),
+    )
     .flatMap(getGraphicRecordPoints)
 
   if (points.length === 0) {
@@ -141,7 +211,7 @@ function getComponentBounds(
   }
 }
 
-function getOwnedParameterText({
+function getOwnedParameterRecord({
   component,
   document,
   parameterName,
@@ -151,16 +221,46 @@ function getOwnedParameterText({
   document: AltiumSchDoc
   parameterName: string
   requireVisible?: boolean
-}): string | undefined {
-  const parameter = document
+}): AltiumRecord | undefined {
+  return document
     .getOwnedRecords(component)
     .find(
       (record) =>
+        (record.recordKind === "34" || record.recordKind === "41") &&
         record.getDecoded("NAME")?.toLowerCase() ===
           parameterName.toLowerCase() &&
         (!requireVisible || record.getBoolean("ISHIDDEN") !== true),
     )
-  return parameter?.getDecoded("TEXT")
+}
+
+function appendComponentParameterText({
+  componentIndex,
+  document,
+  elements,
+  parameter,
+  parameterName,
+  schematicComponentId,
+}: {
+  componentIndex: number
+  document: AltiumSchDoc
+  elements: CircuitElement[]
+  parameter: AltiumRecord | undefined
+  parameterName: "comment" | "designator"
+  schematicComponentId: SchematicComponentId
+}): void {
+  const text = parameter?.getDecoded("TEXT") ?? ""
+  if (!parameter || !text || parameter.getBoolean("ISHIDDEN") === true) return
+  elements.push({
+    type: "schematic_text",
+    schematic_text_id: `schematic_text_component_${componentIndex}_${parameterName}`,
+    schematic_component_id: schematicComponentId,
+    text,
+    ...getAltiumSchematicTextPresentation({
+      document,
+      fallbackFontSizePoints: 9,
+      record: parameter,
+    }),
+  })
 }
 
 function isVisiblePin(
@@ -171,7 +271,10 @@ function isVisiblePin(
   const isHidden =
     pin.hidden === true ||
     (pinConglomerate !== undefined && (pinConglomerate & 0x04) !== 0)
-  return !isHidden && isRecordVisibleForComponent(component, pin)
+  return (
+    !isHidden &&
+    isAltiumSchematicComponentRecordVisible({ component, record: pin })
+  )
 }
 
 function getPinOrientation(pin: AltiumSchPinRecord): number {
@@ -260,23 +363,26 @@ function appendComponentElements({
 }): void {
   const sourceComponentId = `source_component_${componentIndex}`
   const schematicComponentId = `schematic_component_${componentIndex}`
+  const schematicSymbolId = `schematic_symbol_${componentIndex}`
   const bounds = getComponentBounds(document, component)
   const center = toCircuitPoint({
     x: (bounds.minX + bounds.maxX) / 2,
     y: (bounds.minY + bounds.maxY) / 2,
   })
-  const designator =
-    getOwnedParameterText({
-      component,
-      document,
-      parameterName: "Designator",
-    }) ?? `U${componentIndex + 1}`
-  const comment = getOwnedParameterText({
+  const designatorParameter = getOwnedParameterRecord({
+    component,
+    document,
+    parameterName: "Designator",
+  })
+  const commentParameter = getOwnedParameterRecord({
     component,
     document,
     parameterName: "Comment",
     requireVisible: true,
   })
+  const designator =
+    designatorParameter?.getDecoded("TEXT") ?? `U${componentIndex + 1}`
+  const comment = commentParameter?.getDecoded("TEXT")
 
   elements.push(
     {
@@ -285,18 +391,55 @@ function appendComponentElements({
       name: designator,
     },
     {
+      type: "schematic_symbol",
+      schematic_symbol_id: schematicSymbolId,
+      name: component.libraryReference ?? designator,
+    },
+    {
       type: "schematic_component",
       schematic_component_id: schematicComponentId,
       source_component_id: sourceComponentId,
+      schematic_symbol_id: schematicSymbolId,
       center,
       size: {
         width: toCircuitLength(Math.max(bounds.maxX - bounds.minX, 1)),
         height: toCircuitLength(Math.max(bounds.maxY - bounds.minY, 1)),
       },
-      symbol_name: component.libraryReference ?? designator,
       ...(comment ? { symbol_display_value: comment } : {}),
     },
   )
+
+  appendAltiumSchematicSymbolPrimitives({
+    component,
+    document,
+    elements,
+    schematicComponentId,
+    schematicSymbolId,
+  })
+
+  appendComponentParameterText({
+    componentIndex,
+    document,
+    elements,
+    parameter: designatorParameter,
+    parameterName: "designator",
+    schematicComponentId,
+  })
+  appendComponentParameterText({
+    componentIndex,
+    document,
+    elements,
+    parameter: commentParameter,
+    parameterName: "comment",
+    schematicComponentId,
+  })
+  appendAltiumSchematicComponentTextElements({
+    component,
+    document,
+    elements,
+    excludedRecords: new Set(commentParameter ? [commentParameter] : []),
+    schematicComponentId,
+  })
 
   const visiblePins = document
     .getOwnedRecords(component)
@@ -308,6 +451,13 @@ function appendComponentElements({
     const sourcePortId = `source_port_${componentIndex}_${pinIndex}`
     const pinNumber = getNumericPinNumber(pin.designator)
     const orientation = getPinOrientation(pin)
+    const pinConglomerate = pin.getNumber("PINCONGLOMERATE")
+    const isPinNameVisible =
+      pinConglomerate === undefined ||
+      (pinConglomerate & ALTIUM_PIN_NAME_VISIBLE_FLAG) !== 0
+    const isPinNumberVisible =
+      pinConglomerate === undefined ||
+      (pinConglomerate & ALTIUM_PIN_NUMBER_VISIBLE_FLAG) !== 0
     elements.push(
       {
         type: "source_port",
@@ -334,9 +484,22 @@ function appendComponentElements({
         ),
         facing_direction:
           PIN_FACING_DIRECTION_BY_ORIENTATION[orientation] ?? "right",
-        ...(pin.name ? { display_pin_label: pin.name } : {}),
+        ...(isPinNumberVisible && pinNumber !== undefined
+          ? { pin_number: pinNumber }
+          : {}),
+        ...(isPinNameVisible && pin.name
+          ? { display_pin_label: pin.name }
+          : {}),
       },
     )
+    appendAltiumSchematicPinTextElements({
+      componentIndex,
+      document,
+      elements,
+      pin,
+      pinIndex,
+      schematicComponentId,
+    })
   }
 }
 
@@ -441,6 +604,13 @@ function appendNetLabelElements(
       anchor_side: "left",
       text,
     })
+    appendNativeTextPresentation({
+      document,
+      elements,
+      record: label,
+      schematicTextId: `schematic_text_net_label_${labelIndex}`,
+      text,
+    })
   }
 
   for (const [powerPortIndex, powerPort] of document.powerPorts.entries()) {
@@ -466,6 +636,13 @@ function appendNetLabelElements(
       text,
       ...(symbolName ? { symbol_name: symbolName } : {}),
     })
+    appendNativeTextPresentation({
+      document,
+      elements,
+      record: powerPort,
+      schematicTextId: `schematic_text_power_port_${powerPortIndex}`,
+      text,
+    })
   }
 }
 
@@ -484,7 +661,9 @@ export function convertAltiumSchematicToCircuitJson(
   appendOffSheetPortElements(document, elements)
   appendWireElements(document, elements)
   appendNetLabelElements(document, elements)
+  appendUnownedVisibleParameterTextElements(document, elements)
   applyAltiumNoConnectToSourcePorts({ document, elements })
+  appendAltiumSchematicSheetElements(document, elements)
   appendAltiumSchematicSheetAnnotationElements(document, elements)
   return elements
 }

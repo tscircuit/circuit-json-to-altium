@@ -1,8 +1,8 @@
 import {
   type AltiumRecord,
   type AltiumSchDoc,
-  altiumColorToRgb,
   getSchematicRecordPoints,
+  resolveSchematicParameterReference,
 } from "altiumts"
 import type { CircuitElement } from "../../lib/types"
 import {
@@ -11,61 +11,11 @@ import {
   toCircuitLength,
   toCircuitPoint,
 } from "./altium-schematic-coordinate-utils"
-import {
-  getAltiumSchematicFont,
-  getAltiumSchematicTextFrameLines,
-  type SchematicTextAnchor,
-} from "./get-altium-schematic-text-frame-lines"
+import { getAltiumSchematicTextFrameLines } from "./get-altium-schematic-text-frame-lines"
+import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
+import { getCssColorFromAltiumRecord } from "./get-css-color-from-altium-record"
 
 const ANNOTATION_RECORD_KINDS = new Set(["4", "6", "7", "10", "14", "28"])
-
-const SCHEMATIC_TEXT_ANCHORS: SchematicTextAnchor[][] = [
-  ["bottom_left", "bottom_center", "bottom_right"],
-  ["center_left", "center", "center_right"],
-  ["top_left", "top_center", "top_right"],
-]
-
-function getCssColor({
-  fallbackCssColor,
-  fieldNames,
-  record,
-}: {
-  fallbackCssColor: string
-  fieldNames: string[]
-  record: AltiumRecord
-}): string {
-  const altiumColor = fieldNames.reduce<number | undefined>(
-    (resolvedColor, fieldName) => resolvedColor ?? record.getNumber(fieldName),
-    undefined,
-  )
-  if (altiumColor === undefined) return fallbackCssColor
-  const { blue, green, red } = altiumColorToRgb(altiumColor)
-  return `#${[red, green, blue]
-    .map((channel) => channel.toString(16).padStart(2, "0"))
-    .join("")}`
-}
-
-function getSchematicTextAnchor(record: AltiumRecord): SchematicTextAnchor {
-  const justification = Math.min(
-    Math.max(Math.round(record.getNumber("JUSTIFICATION") ?? 0), 0),
-    8,
-  )
-  const orientation =
-    ((Math.round(record.getNumber("ORIENTATION") ?? 0) % 4) + 4) % 4
-  const rowIndex = Math.floor(justification / 3)
-  const originalColumnIndex = justification % 3
-  const columnIndex =
-    orientation === 2 || orientation === 3
-      ? 2 - originalColumnIndex
-      : originalColumnIndex
-  return SCHEMATIC_TEXT_ANCHORS[rowIndex]?.[columnIndex] ?? "bottom_left"
-}
-
-function getSchematicTextRotationDegrees(record: AltiumRecord): number {
-  const orientation =
-    ((Math.round(record.getNumber("ORIENTATION") ?? 0) % 4) + 4) % 4
-  return orientation === 1 || orientation === 3 ? -90 : 0
-}
 
 function appendLabelAnnotation({
   annotationIndex,
@@ -78,24 +28,17 @@ function appendLabelAnnotation({
   elements: CircuitElement[]
   record: AltiumRecord
 }): void {
-  const text = record.getDecoded("TEXT") ?? ""
-  if (!text || record.getBoolean("ISHIDDEN") === true) return
-  const font = getAltiumSchematicFont({
-    document,
-    fallbackSizePoints: 9,
-    record,
-  })
+  const sourceText = record.getDecoded("TEXT") ?? ""
+  if (!sourceText || record.getBoolean("ISHIDDEN") === true) return
+  const text =
+    resolveSchematicParameterReference(document, sourceText) ?? sourceText
   elements.push({
     type: "schematic_text",
     schematic_text_id: `schematic_text_label_${annotationIndex}`,
     text,
-    font_size: toCircuitLength(font.sizePoints),
-    position: toCircuitPoint(getRecordLocation(record)),
-    rotation: getSchematicTextRotationDegrees(record),
-    anchor: getSchematicTextAnchor(record),
-    color: getCssColor({
-      fallbackCssColor: "#1f2937",
-      fieldNames: ["COLOR"],
+    ...getAltiumSchematicTextPresentation({
+      document,
+      fallbackFontSizePoints: 9,
       record,
     }),
   })
@@ -118,7 +61,7 @@ function appendPathAnnotation({
     schematic_path_id: `schematic_path_${annotationIndex}`,
     points,
     stroke_width: toCircuitLength(record.getNumber("LINEWIDTH") ?? 1),
-    stroke_color: getCssColor({
+    stroke_color: getCssColorFromAltiumRecord({
       fallbackCssColor: "#1f2937",
       fieldNames: ["COLOR"],
       record,
@@ -126,7 +69,7 @@ function appendPathAnnotation({
     is_filled: isFilled,
     ...(isFilled
       ? {
-          fill_color: getCssColor({
+          fill_color: getCssColorFromAltiumRecord({
             fallbackCssColor: "#ffffff",
             fieldNames: ["AREACOLOR"],
             record,
@@ -160,7 +103,7 @@ function appendRectAnnotation({
     height: toCircuitLength(Math.abs(corner.y - location.y)),
     rotation: 0,
     stroke_width: toCircuitLength(record.getNumber("LINEWIDTH") ?? 1),
-    color: getCssColor({
+    color: getCssColorFromAltiumRecord({
       fallbackCssColor: "#1f2937",
       fieldNames: ["COLOR"],
       record,
@@ -168,7 +111,7 @@ function appendRectAnnotation({
     is_filled: isFilled,
     ...(isFilled
       ? {
-          fill_color: getCssColor({
+          fill_color: getCssColorFromAltiumRecord({
             fallbackCssColor: "#ffffff",
             fieldNames: ["AREACOLOR"],
             record,
@@ -199,7 +142,7 @@ function appendTextFrameAnnotations({
   const isFilled = record.getBoolean("ISSOLID") === true
   const showsBorder = record.getBoolean("SHOWBORDER") === true
   if (isFilled || showsBorder) {
-    const fillColor = getCssColor({
+    const fillColor = getCssColorFromAltiumRecord({
       fallbackCssColor: "#ffffff",
       fieldNames: ["AREACOLOR"],
       record,
@@ -216,7 +159,7 @@ function appendTextFrameAnnotations({
       rotation: 0,
       stroke_width: toCircuitLength(1),
       color: showsBorder
-        ? getCssColor({
+        ? getCssColorFromAltiumRecord({
             fallbackCssColor: "#1f2937",
             fieldNames: ["COLOR"],
             record,
@@ -228,7 +171,7 @@ function appendTextFrameAnnotations({
     })
   }
 
-  const color = getCssColor({
+  const color = getCssColorFromAltiumRecord({
     fallbackCssColor: "#1f2937",
     fieldNames: ["TEXTCOLOR", "COLOR"],
     record,

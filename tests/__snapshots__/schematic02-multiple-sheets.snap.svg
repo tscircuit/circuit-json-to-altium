@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="391" viewBox="0 0 920.2 360.2" role="img" aria-label="Altium schematic sheet" class="altium-sheet" data-renderer="altiumts">
+  <title>Altium schematic sheet</title>
+  <rect width="100%" height="100%" fill="#e2e8f0"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <defs><clipPath id="altium-sheet-paper"><rect x="30.1" y="30.1" width="860" height="300"/></clipPath></defs>
+    <g data-record="SheetBorder" fill="#fffef8" stroke="#334155" stroke-width="1"><rect x="30.1" y="30.1" width="860" height="300"/><rect x="40.1" y="40.1" width="840" height="280" fill="none"/><path d="M 180.1 30.1 V 40.1 M 180.1 320.1 V 330.1"/><path d="M 320.1 30.1 V 40.1 M 320.1 320.1 V 330.1"/><path d="M 460.1 30.1 V 40.1 M 460.1 320.1 V 330.1"/><path d="M 600.1 30.1 V 40.1 M 600.1 320.1 V 330.1"/><path d="M 740.1 30.1 V 40.1 M 740.1 320.1 V 330.1"/><path d="M 30.1 110.1 H 40.1 M 880.1 110.1 H 890.1"/><path d="M 30.1 180.1 H 40.1 M 880.1 180.1 H 890.1"/><path d="M 30.1 250.1 H 40.1 M 880.1 250.1 H 890.1"/></g>
+    <g data-sheet-content="true" clip-path="url(#altium-sheet-paper)">
+    <rect data-record="15" x="470.1" y="90.1" width="160" height="60" fill="#ffffc2" stroke="#840000" stroke-width="1"/>
+    <text data-record="32" x="0" y="0" fill="#000080" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(470.1 80.1) rotate(0)">Sheet 1</text>
+    <text data-record="33" x="0" y="0" fill="#000080" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(470.1 90.1) rotate(0)">multi-01.SchDoc</text>
+    <g data-record="16"><polygon points="470.1,96.1 477.1,100.1 470.1,104.1" fill="#ffffc2" stroke="#840000" stroke-width="1"/><text x="479.1" y="100.1" text-anchor="start" dominant-baseline="central" fill="#840000" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none">VIN</text></g>
+    <g data-record="16"><polygon points="630.1,96.1 623.1,100.1 630.1,104.1" fill="#ffffc2" stroke="#840000" stroke-width="1"/><text x="621.1" y="100.1" text-anchor="end" dominant-baseline="central" fill="#840000" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none">VOUT</text></g>
+    <rect data-record="15" x="670.1" y="90.1" width="160" height="60" fill="#ffffc2" stroke="#840000" stroke-width="1"/>
+    <text data-record="32" x="0" y="0" fill="#000080" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(670.1 80.1) rotate(0)">Sheet 2</text>
+    <text data-record="33" x="0" y="0" fill="#000080" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(670.1 90.1) rotate(0)">multi-02.SchDoc</text>
+    <g data-record="16"><polygon points="670.1,96.1 677.1,100.1 670.1,104.1" fill="#ffffc2" stroke="#840000" stroke-width="1"/><text x="679.1" y="100.1" text-anchor="start" dominant-baseline="central" fill="#840000" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none">DATA</text></g>
+    <rect data-record="14" x="110.1" y="215.1" width="40" height="30" rx="0" fill="none" stroke="#880000" stroke-width="1"/>
+    <text data-record="34" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(110.1 203.1) rotate(0)">FREE1</text>
+    </g>
+  </g>
+</svg>
