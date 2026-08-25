@@ -28,7 +28,7 @@ test("preserves silkscreen text anchors, mirroring, and content", async () => {
       pcb_silkscreen_text_id: `text_${index}`,
       pcb_component_id: "pc1",
       layer: index >= 7 ? "bottom" : "top",
-      anchor_position: { x: index - 4, y: 0 },
+      anchor_position: { x: index - 4, y: index - 4 },
       anchor_alignment: anchorAlignment,
       text: index === 0 ? "  First line\nΩ second line" : anchorAlignment,
       font: "tscircuit2024",
@@ -66,5 +66,10 @@ test("preserves silkscreen text anchors, mirroring, and content", async () => {
   expect(texts[0].mirrored).toBe(true)
   expect(texts[7]?.getBoolean("MIRROR")).toBe(true)
   expect(texts[8]?.getBoolean("MIRROR")).toBe(false)
+  expect(texts.map((text) => text.getAltiumMeasurement("Y")?.toMils())).toEqual(
+    anchorAlignments.map((_, index) =>
+      expect.closeTo(1_000 + (index - 4 + 6) * (1_000 / 25.4), 4),
+    ),
+  )
   expectValidPcb(pcb)
 })

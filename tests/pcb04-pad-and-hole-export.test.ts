@@ -97,7 +97,7 @@ test("exports SMT, plated slots, and non-plated holes with ownership", async () 
   )
   expect(plated?.get("PLATED")).toBe("TRUE")
   expect(plated?.get("HOLESHAPE")).toBe("SLOT")
-  expect(plated?.get("HOLEROTATION")).toBe("270")
+  expect(plated?.get("HOLEROTATION")).toBe("90")
   expect(pcb.getComponentForRecord(plated as NonNullable<typeof plated>)).toBe(
     pcb.components[0],
   )

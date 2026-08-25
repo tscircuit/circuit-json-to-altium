@@ -54,6 +54,6 @@ test("exports top and bottom silkscreen paths and text", async () => {
   expect(text.get("LAYER")).toBe("BOTTOMOVERLAY")
   expect(text.get("MIRROR")).toBe("TRUE")
   expect(text.text).toBe("U1|BOTTOM\nLABEL")
-  expect(text.get("ROTATION")).toBe("270")
+  expect(text.get("ROTATION")).toBe("90")
   expectValidPcb(pcb)
 })

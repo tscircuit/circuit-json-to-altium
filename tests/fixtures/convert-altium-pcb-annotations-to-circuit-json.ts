@@ -364,7 +364,7 @@ function toCircuitVisibleLayer(layer: string): "bottom" | "top" {
 function toCircuitPoint(point: AltiumPoint): { x: number; y: number } {
   return {
     x: point.x * MILLIMETERS_PER_MIL,
-    y: -point.y * MILLIMETERS_PER_MIL,
+    y: point.y * MILLIMETERS_PER_MIL,
   }
 }
 
@@ -372,8 +372,8 @@ function toCircuitLength(mils: number): number {
   return mils * MILLIMETERS_PER_MIL
 }
 
-function toCircuitRotation(altiumClockwiseDegrees: number): number {
-  return (((360 - altiumClockwiseDegrees) % 360) + 360) % 360
+function toCircuitRotation(altiumCcwDegrees: number): number {
+  return ((altiumCcwDegrees % 360) + 360) % 360
 }
 
 function toCircuitTextAnchorAlignment(

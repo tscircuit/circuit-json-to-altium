@@ -52,7 +52,7 @@ type SourceNetLookupContext = {
 function toCircuitPoint(point: AltiumPoint): CircuitPoint {
   return {
     x: point.x * MILLIMETERS_PER_MIL,
-    y: -point.y * MILLIMETERS_PER_MIL,
+    y: point.y * MILLIMETERS_PER_MIL,
   }
 }
 
@@ -81,8 +81,8 @@ function getPoint(
   return x === undefined || y === undefined ? undefined : { x, y }
 }
 
-function toCircuitRotation(altiumClockwiseDegrees: number): number {
-  return normalizeAltiumAngle(360 - altiumClockwiseDegrees)
+function toCircuitRotation(altiumCcwDegrees: number): number {
+  return normalizeAltiumAngle(altiumCcwDegrees)
 }
 
 function normalizeLayer(layer: string | undefined): string {
