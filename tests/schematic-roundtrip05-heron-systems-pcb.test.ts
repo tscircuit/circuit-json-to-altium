@@ -38,6 +38,8 @@ test("round-trips the open-source HERON systems PCB Altium schematic", async () 
   expect(result.roundTripPowerPortSymbolNames).toEqual(
     result.sourcePowerPortSymbolNames,
   )
+  expect(result.roundTripWireColors).toEqual(result.sourceWireColors)
+  expect(result.roundTripJunctionColors).toEqual(result.sourceJunctionColors)
   expect(result.roundTripSheetSignatures).toEqual(result.sourceSheetSignatures)
   expect(result.geometryMaxDeltaCircuitUnits).toBeLessThan(0.06)
   expect(result.componentSizeMaxDeltaCircuitUnits).toBeLessThan(0.06)

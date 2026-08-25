@@ -30,6 +30,8 @@ test("round-trips the open-source NodeMCU ESP-12 Altium schematic", async () => 
   expect(result.roundTripPowerPortSymbolNames).toEqual(
     result.sourcePowerPortSymbolNames,
   )
+  expect(result.roundTripWireColors).toEqual(result.sourceWireColors)
+  expect(result.roundTripJunctionColors).toEqual(result.sourceJunctionColors)
   expect(result.geometryMaxDeltaCircuitUnits).toBeLessThan(0.06)
   expect(result.componentSizeMaxDeltaCircuitUnits).toBeLessThan(0.06)
   expect(result.sourceCounts.off_sheet_port).toBe(0)

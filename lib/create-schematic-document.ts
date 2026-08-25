@@ -88,6 +88,7 @@ const ALTIUM_PIN_STANDARD_FLAGS = 0x20
 const ALTIUM_PIN_NAME_VISIBLE_FLAG = 0x08
 const ALTIUM_PIN_DESIGNATOR_VISIBLE_FLAG = 0x10
 const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
+const ALTIUM_SCHEMATIC_DEFAULT_TRACE_COLOR = 0x00_88_00
 const ALTIUM_PIN_ORIENTATION_BY_FACING_DIRECTION: Record<string, number> = {
   left: 2,
   right: 0,
@@ -746,6 +747,10 @@ export function createSchematicDocument({
     (element) => element.type === "schematic_trace",
   )) {
     if (!Array.isArray(schematicTrace.edges)) continue
+    const altiumTraceColor = getAltiumColorFromCss({
+      cssColor: asString(schematicTrace.color),
+      fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_TRACE_COLOR,
+    })
     for (const edge of schematicTrace.edges) {
       if (!isCircuitElement(edge)) continue
       const circuitStartPoint = asPoint(edge.from)
@@ -762,7 +767,7 @@ export function createSchematicDocument({
           `Y1=${altiumStartPoint.y}`,
           `X2=${altiumEndPoint.x}`,
           `Y2=${altiumEndPoint.y}`,
-          "COLOR=34816",
+          `COLOR=${altiumTraceColor}`,
         ],
         schematicRecordContext,
       )
@@ -774,9 +779,20 @@ export function createSchematicDocument({
     (element) => element.type === "schematic_trace",
   )) {
     if (!Array.isArray(schematicTrace.junctions)) continue
+    const altiumTraceColor = getAltiumColorFromCss({
+      cssColor: asString(schematicTrace.color),
+      fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_TRACE_COLOR,
+    })
     for (const junction of schematicTrace.junctions) {
       const circuitJunctionPoint = asPoint(junction)
       if (!circuitJunctionPoint) continue
+      const junctionColor = isCircuitElement(junction)
+        ? asString(junction.color)
+        : ""
+      const altiumJunctionColor = getAltiumColorFromCss({
+        cssColor: junctionColor,
+        fallbackAltiumColor: altiumTraceColor,
+      })
       const altiumJunctionPoint =
         circuitToAltiumSchematicPoint(circuitJunctionPoint)
       const altiumJunctionPointKey = `${altiumJunctionPoint.x}:${altiumJunctionPoint.y}`
@@ -787,7 +803,7 @@ export function createSchematicDocument({
           "RECORD=29",
           `LOCATION.X=${altiumJunctionPoint.x}`,
           `LOCATION.Y=${altiumJunctionPoint.y}`,
-          "COLOR=34816",
+          `COLOR=${altiumJunctionColor}`,
         ],
         schematicRecordContext,
       )

@@ -28,6 +28,7 @@ import { appendAltiumSchematicSheetElements } from "./append-altium-schematic-sh
 import { appendAltiumSchematicSymbolPrimitives } from "./append-altium-schematic-symbol-primitives"
 import { applyAltiumNoConnectToSourcePorts } from "./apply-altium-no-connect-to-source-ports"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
+import { getCssColorFromAltiumRecord } from "./get-css-color-from-altium-record"
 import { isAltiumSchematicComponentRecordVisible } from "./is-altium-schematic-component-record-visible"
 
 type AltiumBounds = {
@@ -528,6 +529,11 @@ function appendWireElements(
         type: "schematic_trace",
         schematic_trace_id: `schematic_trace_wire_${wireIndex}`,
         source_trace_id: sourceTraceId,
+        color: getCssColorFromAltiumRecord({
+          fallbackCssColor: "#008800",
+          fieldNames: ["COLOR"],
+          record: wire,
+        }),
         edges,
         junctions: [],
       },
@@ -537,7 +543,14 @@ function appendWireElements(
   const junctions = document
     .getRecordsByKind("29")
     .filter((junction) => document.getParent(junction) === undefined)
-    .map((junction) => toCircuitPoint(getRecordLocation(junction)))
+    .map((junction) => ({
+      ...toCircuitPoint(getRecordLocation(junction)),
+      color: getCssColorFromAltiumRecord({
+        fallbackCssColor: "#008800",
+        fieldNames: ["COLOR"],
+        record: junction,
+      }),
+    }))
   if (junctions.length > 0) {
     elements.push({
       type: "schematic_trace",

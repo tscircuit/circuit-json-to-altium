@@ -110,7 +110,9 @@ export type SchematicRoundTripMetrics = {
   roundTripOffSheetPortSignatures: SchematicOffSheetPortSignature[]
   roundTripPowerPortSymbolNames: string[]
   roundTripSheetSignatures: SchematicSheetSignature[]
+  roundTripJunctionColors: string[]
   roundTripPortNames: string[]
+  roundTripWireColors: string[]
   sourceComponentNames: string[]
   sourceSymbolPrimitiveCounts: SchematicSymbolPrimitiveCounts
   sourceAnnotationSignatures: SchematicAnnotationSignature[]
@@ -120,8 +122,32 @@ export type SchematicRoundTripMetrics = {
   sourceOffSheetPortSignatures: SchematicOffSheetPortSignature[]
   sourcePowerPortSymbolNames: string[]
   sourceSheetSignatures: SchematicSheetSignature[]
+  sourceJunctionColors: string[]
   sourcePortNames: string[]
+  sourceWireColors: string[]
   sourceSupportedPrimitiveTotal: number
+}
+
+function getSchematicTraceColors(circuitJson: CircuitElement[]): {
+  junctionColors: string[]
+  wireColors: string[]
+} {
+  const junctionColors: string[] = []
+  const wireColors: string[] = []
+  for (const schematicTrace of circuitJson) {
+    if (schematicTrace.type !== "schematic_trace") continue
+    const wireColor = asString(schematicTrace.color)
+    if (Array.isArray(schematicTrace.edges)) {
+      wireColors.push(...schematicTrace.edges.map(() => wireColor))
+    }
+    if (!Array.isArray(schematicTrace.junctions)) continue
+    for (const junction of schematicTrace.junctions) {
+      junctionColors.push(
+        isCircuitElement(junction) ? asString(junction.color) : "",
+      )
+    }
+  }
+  return { junctionColors, wireColors }
 }
 
 function getSchematicSheetSignatures(
@@ -558,6 +584,8 @@ export function getSchematicRoundTripMetrics({
 }): SchematicRoundTripMetrics {
   const sourceCounts = countSchematicPrimitives(sourceCircuitJson)
   const roundTripCounts = countSchematicPrimitives(roundTripCircuitJson)
+  const sourceTraceColors = getSchematicTraceColors(sourceCircuitJson)
+  const roundTripTraceColors = getSchematicTraceColors(roundTripCircuitJson)
   return {
     componentSizeMaxDeltaCircuitUnits: getComponentSizeMaxDelta(
       sourceCircuitJson,
@@ -589,11 +617,13 @@ export function getSchematicRoundTripMetrics({
     roundTripPowerPortSymbolNames:
       getPowerPortSymbolNames(roundTripCircuitJson),
     roundTripSheetSignatures: getSchematicSheetSignatures(roundTripCircuitJson),
+    roundTripJunctionColors: roundTripTraceColors.junctionColors,
     roundTripPortNames: getStringFields({
       circuitJson: roundTripCircuitJson,
       elementType: "source_port",
       fieldName: "name",
     }),
+    roundTripWireColors: roundTripTraceColors.wireColors,
     sourceComponentNames: getStringFields({
       circuitJson: sourceCircuitJson,
       elementType: "source_component",
@@ -614,11 +644,13 @@ export function getSchematicRoundTripMetrics({
     sourceOffSheetPortSignatures: getOffSheetPortSignatures(sourceCircuitJson),
     sourcePowerPortSymbolNames: getPowerPortSymbolNames(sourceCircuitJson),
     sourceSheetSignatures: getSchematicSheetSignatures(sourceCircuitJson),
+    sourceJunctionColors: sourceTraceColors.junctionColors,
     sourcePortNames: getStringFields({
       circuitJson: sourceCircuitJson,
       elementType: "source_port",
       fieldName: "name",
     }),
+    sourceWireColors: sourceTraceColors.wireColors,
     sourceSupportedPrimitiveTotal:
       sourceCounts.schematic_component +
       sourceCounts.do_not_connect +
