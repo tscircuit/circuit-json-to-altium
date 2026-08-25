@@ -94,7 +94,10 @@ export type SchematicComponentTextSignature = {
 export type SchematicSheetSignature = {
   centerRelativeToFirstSheet: Point
   entryNames: string[]
+  isRoot: boolean
   name: string
+  pageCenter: Point
+  pageSize: CircuitSize
   size: CircuitSize
 }
 
@@ -148,8 +151,9 @@ function getSchematicSheetSignatures(
       )
       .map((component) => [asString(component.subcircuit_id), component]),
   )
+  const firstChildSheet = sheets.find((sheet) => sheet.is_root !== true)
   const firstSheetComponent = schematicComponentBySubcircuitId.get(
-    asString(sheets[0]?.subcircuit_id),
+    asString(firstChildSheet?.subcircuit_id),
   )
   const firstSheetCenter = asPoint(firstSheetComponent?.center) ?? {
     x: 0,
@@ -180,7 +184,13 @@ function getSchematicSheetSignatures(
             ]
           : [],
       ),
+      isRoot: sheet.is_root === true,
       name: asString(sheet.name),
+      pageCenter: asPoint(sheet.center) ?? { x: 0, y: 0 },
+      pageSize: {
+        height: asNumber(sheet.height),
+        width: asNumber(sheet.width),
+      },
       size: {
         height: asNumber(size.height),
         width: asNumber(size.width),

@@ -42,6 +42,7 @@ type CreateSchematicDocumentParams = {
   childSheets?: AltiumSchematicChildSheet[]
   circuitJson: CircuitElement[]
   includeAllSchematicElements: boolean
+  schematicSheet: CircuitElement | undefined
   schematicSheetId: SchematicSheetId | undefined
 }
 
@@ -243,6 +244,7 @@ export function createSchematicDocument({
   childSheets = [],
   circuitJson,
   includeAllSchematicElements,
+  schematicSheet,
   schematicSheetId,
 }: CreateSchematicDocumentParams): string {
   const schematicElements = circuitJson.filter(
@@ -255,12 +257,16 @@ export function createSchematicDocument({
         schematicSheetId,
       }),
   )
+  const schematicTransform = getSchematicTransform({
+    schematicElements,
+    schematicSheet,
+  })
   const {
+    altiumSheetHeight: baseAltiumSheetHeight,
+    altiumSheetWidth: baseAltiumSheetWidth,
     circuitToAltiumSchematicLength,
     circuitToAltiumSchematicPoint,
-    width: contentWidth,
-    height: contentHeight,
-  } = getSchematicTransform(schematicElements)
+  } = schematicTransform
   const sheetSymbolPlans = createAltiumSchematicSheetSymbolPlans({
     childSheets,
     circuitJson,
@@ -289,25 +295,31 @@ export function createSchematicDocument({
     0,
   )
   const sheetSymbolStartX =
-    schematicElements.length > 0 ? contentWidth + 40 : 60
+    schematicTransform.hasExplicitSheetBounds || schematicElements.length === 0
+      ? 60
+      : baseAltiumSheetWidth + 40
   const sheetSymbolLayoutWidth =
     sheetSymbolColumnCount * sheetSymbolColumnWidth +
     Math.max(sheetSymbolColumnCount - 1, 0) * 40
   const sheetSymbolLayoutHeight =
     sheetSymbolRowCount * sheetSymbolRowHeight +
     Math.max(sheetSymbolRowCount - 1, 0) * 40
-  const altiumSheetWidth = Math.max(
-    contentWidth,
-    automaticallyPlacedSheetSymbolPlans.length > 0
-      ? sheetSymbolStartX + sheetSymbolLayoutWidth + 60
-      : 0,
-  )
-  const altiumSheetHeight = Math.max(
-    contentHeight,
-    automaticallyPlacedSheetSymbolPlans.length > 0
-      ? sheetSymbolLayoutHeight + 120
-      : 0,
-  )
+  const altiumSheetWidth = schematicTransform.hasExplicitSheetBounds
+    ? baseAltiumSheetWidth
+    : Math.max(
+        baseAltiumSheetWidth,
+        automaticallyPlacedSheetSymbolPlans.length > 0
+          ? sheetSymbolStartX + sheetSymbolLayoutWidth + 60
+          : 0,
+      )
+  const altiumSheetHeight = schematicTransform.hasExplicitSheetBounds
+    ? baseAltiumSheetHeight
+    : Math.max(
+        baseAltiumSheetHeight,
+        automaticallyPlacedSheetSymbolPlans.length > 0
+          ? sheetSymbolLayoutHeight + 120
+          : 0,
+      )
   const altiumSchematicFontTable = createAltiumSchematicFontTable({
     schematicElements,
   })

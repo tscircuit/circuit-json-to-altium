@@ -10,6 +10,21 @@ export function appendAltiumSchematicSheetElements(
   document: AltiumSchDoc,
   elements: CircuitElement[],
 ): void {
+  const sheetRecord = document.getRecordsByKind("31")[0]
+  if (sheetRecord) {
+    const width = Math.max(sheetRecord.getNumber("CUSTOMX") ?? 1_000, 1)
+    const height = Math.max(sheetRecord.getNumber("CUSTOMY") ?? 800, 1)
+    elements.push({
+      type: "schematic_sheet",
+      schematic_sheet_id: "schematic_sheet_root",
+      sheet_index: -1,
+      center: toCircuitPoint({ x: width / 2, y: height / 2 }),
+      height: toCircuitLength(height),
+      is_root: true,
+      width: toCircuitLength(width),
+    })
+  }
+
   for (const [sheetIndex, sheetLink] of document.sheetLinks.entries()) {
     const schematicSheetId = `schematic_sheet_hierarchy_${sheetIndex}`
     const subcircuitId = `subcircuit_hierarchy_${sheetIndex}`

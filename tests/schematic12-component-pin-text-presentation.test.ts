@@ -111,8 +111,10 @@ test("preserves component and pin text presentation", async () => {
   const schematicElements = elements.filter(
     (element) => element.type?.startsWith("schematic_") === true,
   )
-  const pointTransform =
-    getSchematicTransform(schematicElements).circuitToAltiumSchematicPoint
+  const pointTransform = getSchematicTransform({
+    schematicElements,
+    schematicSheet: undefined,
+  }).circuitToAltiumSchematicPoint
   const expectedDesignatorPosition = pointTransform({ x: -0.8, y: 0.8 })
   const expectedValuePosition = pointTransform({ x: 0.8, y: -0.8 })
   const expectedPinNamePosition = pointTransform({ x: -0.9, y: 0 })

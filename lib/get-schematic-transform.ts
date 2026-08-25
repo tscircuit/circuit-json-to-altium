@@ -11,13 +11,39 @@ import type {
 } from "./types"
 
 type SchematicTransform = {
+  altiumSheetHeight: number
+  altiumSheetWidth: number
   circuitToAltiumSchematicLength: LengthTransform
   circuitToAltiumSchematicPoint: PointTransform
+  hasExplicitSheetBounds: boolean
+}
+
+type GetSchematicTransformParams = {
+  schematicElements: CircuitElement[]
+  schematicSheet: CircuitElement | undefined
+}
+
+type SchematicSheetBounds = {
+  center: Point
   height: number
   width: number
 }
 
 const ALTIUM_UNITS_PER_CIRCUIT_UNIT = 20
+const ALTIUM_SCHEMATIC_CONTENT_MARGIN = 100
+
+function getSchematicSheetBounds(
+  schematicSheet: CircuitElement | undefined,
+): SchematicSheetBounds | undefined {
+  const width = asNumber(schematicSheet?.width)
+  const height = asNumber(schematicSheet?.height)
+  if (width <= 0 || height <= 0) return undefined
+  return {
+    center: asPoint(schematicSheet?.center) ?? { x: 0, y: 0 },
+    height,
+    width,
+  }
+}
 
 function getAltiumSchematicPoint(
   circuitPoint: Point,
@@ -69,9 +95,10 @@ function appendSchematicSymbolPrimitivePoints({
   }
 }
 
-export function getSchematicTransform(
-  schematicElements: CircuitElement[],
-): SchematicTransform {
+export function getSchematicTransform({
+  schematicElements,
+  schematicSheet,
+}: GetSchematicTransformParams): SchematicTransform {
   const circuitPoints: Point[] = []
   for (const element of schematicElements) {
     const center = asPoint(element.center)
@@ -130,12 +157,15 @@ export function getSchematicTransform(
       }
     }
   }
-  const minX =
-    circuitPoints.length > 0
+  const schematicSheetBounds = getSchematicSheetBounds(schematicSheet)
+  const minX = schematicSheetBounds
+    ? schematicSheetBounds.center.x - schematicSheetBounds.width / 2
+    : circuitPoints.length > 0
       ? Math.min(...circuitPoints.map((point) => point.x))
       : 0
-  const minY =
-    circuitPoints.length > 0
+  const minY = schematicSheetBounds
+    ? schematicSheetBounds.center.y - schematicSheetBounds.height / 2
+    : circuitPoints.length > 0
       ? Math.min(...circuitPoints.map((point) => point.y))
       : 0
   const altiumGridMinX =
@@ -145,7 +175,10 @@ export function getSchematicTransform(
     Math.round(minY * ALTIUM_UNITS_PER_CIRCUIT_UNIT) /
     ALTIUM_UNITS_PER_CIRCUIT_UNIT
   const circuitToAltiumSchematicMatrix = compose(
-    translate(100, 100),
+    translate(
+      schematicSheetBounds ? 0 : ALTIUM_SCHEMATIC_CONTENT_MARGIN,
+      schematicSheetBounds ? 0 : ALTIUM_SCHEMATIC_CONTENT_MARGIN,
+    ),
     scale(ALTIUM_UNITS_PER_CIRCUIT_UNIT, ALTIUM_UNITS_PER_CIRCUIT_UNIT),
     translate(-altiumGridMinX, -altiumGridMinY),
   )
@@ -158,6 +191,32 @@ export function getSchematicTransform(
   })
 
   return {
+    altiumSheetWidth: schematicSheetBounds
+      ? Math.max(
+          1,
+          Math.round(
+            schematicSheetBounds.width * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+          ),
+        )
+      : Math.max(
+          400,
+          ...altiumPoints.map(
+            (point) => point.x + ALTIUM_SCHEMATIC_CONTENT_MARGIN,
+          ),
+        ),
+    altiumSheetHeight: schematicSheetBounds
+      ? Math.max(
+          1,
+          Math.round(
+            schematicSheetBounds.height * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+          ),
+        )
+      : Math.max(
+          300,
+          ...altiumPoints.map(
+            (point) => point.y + ALTIUM_SCHEMATIC_CONTENT_MARGIN,
+          ),
+        ),
     circuitToAltiumSchematicLength: (circuitLength) => {
       const altiumLengthPoint = applyToPoint(circuitToAltiumSchematicMatrix, {
         x: circuitLength,
@@ -167,7 +226,6 @@ export function getSchematicTransform(
     },
     circuitToAltiumSchematicPoint: (circuitPoint) =>
       getAltiumSchematicPoint(circuitPoint, circuitToAltiumSchematicMatrix),
-    width: Math.max(400, ...altiumPoints.map((point) => point.x + 100)),
-    height: Math.max(300, ...altiumPoints.map((point) => point.y + 100)),
+    hasExplicitSheetBounds: schematicSheetBounds !== undefined,
   }
 }
