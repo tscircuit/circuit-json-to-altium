@@ -1,4 +1,5 @@
 import { getAltiumColorFromCss } from "./altium-color"
+import { createAltiumSchematicConfigRecordFields } from "./create-altium-schematic-config-record-fields"
 import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-table"
 import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
@@ -14,6 +15,7 @@ import { createAltiumSchematicSymbolPrimitiveRecordFields } from "./create-altiu
 import { createAltiumSchematicSymbolRecords } from "./create-altium-schematic-symbol-records"
 import { createAltiumSchematicTextRecordFields } from "./create-altium-schematic-text-record-fields"
 import { findSchematicComponentText } from "./find-schematic-component-text"
+import { findSchematicConfig } from "./find-schematic-config"
 import { findSchematicTextPresentation } from "./find-schematic-text-presentation"
 import {
   asNumber,
@@ -248,6 +250,7 @@ export function createSchematicDocument({
   const schematicElements = circuitJson.filter(
     (element) =>
       element.type?.startsWith("schematic_") === true &&
+      element.type !== "schematic_config" &&
       element.type !== "schematic_sheet" &&
       doesElementBelongToSchematicSheet({
         element,
@@ -311,6 +314,10 @@ export function createSchematicDocument({
   const altiumSchematicFontTable = createAltiumSchematicFontTable({
     schematicElements,
   })
+  const schematicConfig = findSchematicConfig({
+    circuitJson,
+    schematicSheetId,
+  })
   const schematicRecordContext: SchematicRecordContext = {
     lines: [
       "|HEADER=Protel for Windows - Schematic Capture Ascii File Version 5.0",
@@ -321,6 +328,10 @@ export function createSchematicDocument({
     [
       "RECORD=31",
       ...altiumSchematicFontTable.sheetRecordFields,
+      ...createAltiumSchematicConfigRecordFields({
+        circuitToAltiumSchematicLength,
+        schematicConfig,
+      }),
       `CUSTOMX=${altiumSheetWidth}`,
       `CUSTOMY=${altiumSheetHeight}`,
       "USECUSTOMSHEET=T",

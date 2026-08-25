@@ -22,6 +22,7 @@ import {
   toCircuitPoint,
 } from "./altium-schematic-coordinate-utils"
 import { appendAltiumSchematicComponentTextElements } from "./append-altium-schematic-component-text-elements"
+import { appendAltiumSchematicConfigElement } from "./append-altium-schematic-config-element"
 import { appendAltiumSchematicPinTextElements } from "./append-altium-schematic-pin-text-elements"
 import { appendAltiumSchematicSheetAnnotationElements } from "./append-altium-schematic-sheet-annotation-elements"
 import { appendAltiumSchematicSheetElements } from "./append-altium-schematic-sheet-elements"
@@ -650,6 +651,7 @@ export function convertAltiumSchematicToCircuitJson(
   document: AltiumSchDoc,
 ): CircuitElement[] {
   const elements: CircuitElement[] = []
+  appendAltiumSchematicConfigElement({ document, elements })
   for (const [componentIndex, component] of document.components.entries()) {
     appendComponentElements({
       component,
