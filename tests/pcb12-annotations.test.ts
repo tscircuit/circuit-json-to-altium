@@ -111,6 +111,12 @@ test("preserves courtyards, keepouts, and fabrication annotations", async () => 
   expect(
     tracks.filter((track) => track.get("LAYER") === "MECHANICAL16"),
   ).toHaveLength(48)
+  const courtyardLayers = tracks
+    .map((track) => track.get("LAYER"))
+    .filter((layer) => layer === "MECHANICAL15" || layer === "MECHANICAL16")
+  expect(courtyardLayers.lastIndexOf("MECHANICAL16")).toBeLessThan(
+    courtyardLayers.indexOf("MECHANICAL15"),
+  )
   expect(
     tracks.filter((track) => track.get("LAYER") === "MECHANICAL1"),
   ).toHaveLength(6)
