@@ -13,7 +13,10 @@ const preservedPrimitiveTypes = [
   "pcb_trace",
   "pcb_via",
   "pcb_copper_pour",
+  "pcb_silkscreen_circle",
+  "pcb_silkscreen_path",
   "pcb_silkscreen_text",
+  "pcb_courtyard_circle",
   "pcb_courtyard_outline",
   "pcb_keepout",
   "pcb_fabrication_note_path",
@@ -49,6 +52,7 @@ type RotationElementType = (typeof rotationElementTypes)[number]
 export type PreservedPrimitiveCounts = Record<PreservedPrimitiveType, number>
 
 export type PcbRoundTripMetrics = {
+  arcGeometryMismatches: string[]
   geometryMaxDeltaMm: number
   rotationMismatchCount: number
   roundTripCounts: PreservedPrimitiveCounts
@@ -57,6 +61,180 @@ export type PcbRoundTripMetrics = {
   sourceNetNames: string[]
   sourcePrimitiveTotal: number
   silkscreenTextMismatchCount: number
+}
+
+function getArcGeometrySignatures(circuitJson: CircuitElement[]): string[] {
+  const anchor = getCircuitGeometryAnchor(circuitJson)
+  const signatures: string[] = []
+  for (const element of circuitJson) {
+    const pathPoints = getArcPathPoints(element)
+    for (let pointIndex = 1; pointIndex < pathPoints.length; pointIndex++) {
+      const start = pathPoints[pointIndex - 1]
+      const end = pathPoints[pointIndex]
+      if (!start || !end || Math.abs(start.bulge ?? 0) < 1e-12) continue
+      const normalizedStart = {
+        x: start.x - anchor.x,
+        y: start.y - anchor.y,
+      }
+      const normalizedEnd = {
+        x: end.x - anchor.x,
+        y: end.y - anchor.y,
+      }
+      const reverseSegment = comparePoints(normalizedStart, normalizedEnd) > 0
+      const firstPoint = reverseSegment ? normalizedEnd : normalizedStart
+      const secondPoint = reverseSegment ? normalizedStart : normalizedEnd
+      const normalizedBulge = reverseSegment
+        ? -(start.bulge ?? 0)
+        : (start.bulge ?? 0)
+      const layer = element.type === "pcb_trace" ? start.layer : element.layer
+      const widthMm =
+        element.type === "pcb_trace" ? start.width : element.stroke_width
+      signatures.push(
+        [
+          element.type,
+          layer,
+          formatMetricNumber(widthMm, 6),
+          formatMetricNumber(firstPoint.x, 4),
+          formatMetricNumber(firstPoint.y, 4),
+          formatMetricNumber(secondPoint.x, 4),
+          formatMetricNumber(secondPoint.y, 4),
+          formatMetricNumber(normalizedBulge, 5),
+        ].join("|"),
+      )
+    }
+
+    if (!isArcCircleElement(element) || !isPoint(element.center)) continue
+    signatures.push(
+      [
+        element.type,
+        element.layer,
+        formatMetricNumber(element.center.x - anchor.x, 4),
+        formatMetricNumber(element.center.y - anchor.y, 4),
+        formatMetricNumber(element.radius, 6),
+      ].join("|"),
+    )
+  }
+  return signatures.sort()
+}
+
+function getArcGeometryMismatches(
+  sourceCircuitJson: CircuitElement[],
+  roundTripCircuitJson: CircuitElement[],
+): string[] {
+  const sourceSignatures = getArcGeometrySignatures(sourceCircuitJson)
+  const roundTripSignatures = getArcGeometrySignatures(roundTripCircuitJson)
+  return [
+    ...getMissingSignatures(sourceSignatures, roundTripSignatures).map(
+      (signature) => `missing after round trip: ${signature}`,
+    ),
+    ...getMissingSignatures(roundTripSignatures, sourceSignatures).map(
+      (signature) => `added after round trip: ${signature}`,
+    ),
+  ]
+}
+
+function getMissingSignatures(
+  expectedSignatures: string[],
+  actualSignatures: string[],
+): string[] {
+  const remainingActualSignatures = [...actualSignatures]
+  return expectedSignatures.filter((expectedSignature) => {
+    const matchIndex = remainingActualSignatures.indexOf(expectedSignature)
+    if (matchIndex < 0) return true
+    remainingActualSignatures.splice(matchIndex, 1)
+    return false
+  })
+}
+
+function getArcPathPoints(element: CircuitElement): Array<{
+  bulge?: number
+  layer?: unknown
+  width?: unknown
+  x: number
+  y: number
+}> {
+  const pathPoints =
+    element.type === "pcb_courtyard_outline" ? element.outline : element.route
+  if (
+    element.type !== "pcb_trace" &&
+    element.type !== "pcb_silkscreen_path" &&
+    element.type !== "pcb_courtyard_outline" &&
+    element.type !== "pcb_fabrication_note_path" &&
+    element.type !== "pcb_note_path"
+  ) {
+    return []
+  }
+  if (!Array.isArray(pathPoints)) return []
+  return pathPoints.flatMap((pathPoint) => {
+    if (!isPoint(pathPoint)) return []
+    const bulge =
+      "bulge" in pathPoint && typeof pathPoint.bulge === "number"
+        ? pathPoint.bulge
+        : undefined
+    return [
+      {
+        x: pathPoint.x,
+        y: pathPoint.y,
+        ...(bulge === undefined ? {} : { bulge }),
+        ...(element.type === "pcb_trace" && "layer" in pathPoint
+          ? { layer: pathPoint.layer }
+          : {}),
+        ...(element.type === "pcb_trace" && "width" in pathPoint
+          ? { width: pathPoint.width }
+          : {}),
+      },
+    ]
+  })
+}
+
+function getCircuitGeometryAnchor(circuitJson: CircuitElement[]): {
+  x: number
+  y: number
+} {
+  for (const element of circuitJson) {
+    if (element.type === "pcb_component" && isPoint(element.center)) {
+      return element.center
+    }
+  }
+  return { x: 0, y: 0 }
+}
+
+function isArcCircleElement(element: CircuitElement): boolean {
+  return (
+    element.type === "pcb_silkscreen_circle" ||
+    element.type === "pcb_courtyard_circle" ||
+    (element.type === "pcb_keepout" && element.shape === "circle")
+  )
+}
+
+function isPoint(pointCandidate: unknown): pointCandidate is {
+  x: number
+  y: number
+} {
+  return (
+    typeof pointCandidate === "object" &&
+    pointCandidate !== null &&
+    "x" in pointCandidate &&
+    "y" in pointCandidate &&
+    typeof pointCandidate.x === "number" &&
+    typeof pointCandidate.y === "number"
+  )
+}
+
+function comparePoints(
+  firstPoint: { x: number; y: number },
+  secondPoint: { x: number; y: number },
+): number {
+  return firstPoint.x - secondPoint.x || firstPoint.y - secondPoint.y
+}
+
+function formatMetricNumber(
+  metricNumber: unknown,
+  fractionDigits: number,
+): string {
+  return typeof metricNumber === "number"
+    ? metricNumber.toFixed(fractionDigits)
+    : ""
 }
 
 function getSourceNetNames(circuitJson: CircuitElement[]): string[] {
@@ -275,6 +453,10 @@ export function getPcbRoundTripMetrics({
   const roundTripCounts = countPreservedPrimitives(roundTripCircuitJson)
 
   return {
+    arcGeometryMismatches: getArcGeometryMismatches(
+      sourceCircuitJson,
+      roundTripCircuitJson,
+    ),
     geometryMaxDeltaMm: getGeometryMaxDeltaMm(
       sourceCircuitJson,
       roundTripCircuitJson,

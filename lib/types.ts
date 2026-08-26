@@ -40,6 +40,7 @@ export type CircuitJsonToAltiumConverterContext = {
 }
 
 export type Point = { x: number; y: number }
+export type PointWithBulge = Point & { bulge?: number }
 export type PointTransform = (circuitPoint: Point) => Point
 export type LengthTransform = (circuitLength: number) => number
 

@@ -8,6 +8,7 @@ import {
 import type { NinePointAnchor } from "circuit-json"
 import type { CircuitElement } from "../../lib/types"
 import {
+  type AltiumPcbAnnotationPoint,
   getAltiumCircleFromPath,
   getAltiumPcbAnnotationPaths,
   getAltiumPcbMeasurementMils,
@@ -48,13 +49,25 @@ function convertCourtyardPaths({
   })
   const elements: CircuitElement[] = []
   for (const [pathIndex, path] of paths.entries()) {
+    const circle = getAltiumCircleFromPath(path)
+    if (path.componentId && circle) {
+      elements.push({
+        type: "pcb_courtyard_circle",
+        pcb_courtyard_circle_id: `pcb_courtyard_circle_${pathIndex}`,
+        pcb_component_id: path.componentId,
+        layer: toCircuitVisibleLayer(path.layer),
+        center: toCircuitPoint(circle.center),
+        radius: toCircuitLength(circle.radiusMils),
+      })
+      continue
+    }
     if (path.componentId && isClosedAltiumPath(path)) {
       elements.push({
         type: "pcb_courtyard_outline",
         pcb_courtyard_outline_id: `pcb_courtyard_outline_${pathIndex}`,
         pcb_component_id: path.componentId,
         layer: toCircuitVisibleLayer(path.layer),
-        outline: path.points.map(toCircuitPoint),
+        outline: path.points.map(toCircuitAnnotationPoint),
       })
       continue
     }
@@ -65,14 +78,14 @@ function convertCourtyardPaths({
             pcb_fabrication_note_path_id: `pcb_fabrication_note_path_courtyard_${pathIndex}`,
             pcb_component_id: path.componentId,
             layer: toCircuitVisibleLayer(path.layer),
-            route: path.points.map(toCircuitPoint),
+            route: path.points.map(toCircuitAnnotationPoint),
             stroke_width: toCircuitLength(path.strokeWidthMils),
           }
         : {
             type: "pcb_note_path",
             pcb_note_path_id: `pcb_note_path_courtyard_${pathIndex}`,
             layer: toCircuitVisibleLayer(path.layer),
-            route: path.points.map(toCircuitPoint),
+            route: path.points.map(toCircuitAnnotationPoint),
             stroke_width: toCircuitLength(path.strokeWidthMils),
           },
     )
@@ -99,14 +112,14 @@ function convertDocumentationPaths({
           pcb_fabrication_note_path_id: `pcb_fabrication_note_path_${pathIndex}`,
           pcb_component_id: path.componentId,
           layer: toCircuitVisibleLayer(path.layer),
-          route: path.points.map(toCircuitPoint),
+          route: path.points.map(toCircuitAnnotationPoint),
           stroke_width: toCircuitLength(path.strokeWidthMils),
         }
       : {
           type: "pcb_note_path",
           pcb_note_path_id: `pcb_note_path_${pathIndex}`,
           layer: toCircuitVisibleLayer(path.layer),
-          route: path.points.map(toCircuitPoint),
+          route: path.points.map(toCircuitAnnotationPoint),
           stroke_width: toCircuitLength(path.strokeWidthMils),
         },
   )
@@ -365,6 +378,17 @@ function toCircuitPoint(point: AltiumPoint): { x: number; y: number } {
   return {
     x: point.x * MILLIMETERS_PER_MIL,
     y: point.y * MILLIMETERS_PER_MIL,
+  }
+}
+
+function toCircuitAnnotationPoint(point: AltiumPcbAnnotationPoint): {
+  bulge?: number
+  x: number
+  y: number
+} {
+  return {
+    ...toCircuitPoint(point),
+    ...(point.bulge === undefined ? {} : { bulge: point.bulge }),
   }
 }
 

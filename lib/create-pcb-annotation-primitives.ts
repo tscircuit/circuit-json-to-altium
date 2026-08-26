@@ -1,30 +1,31 @@
 import { applyToPoint, compose, rotate, translate } from "transformation-matrix"
 import { convertCircuitPcbCcwRotationDegreesToAltium } from "./convert-circuit-pcb-ccw-rotation-degrees-to-altium"
+import { createPcbArcRecordFromBulge } from "./create-pcb-arc-record"
 import {
   formatMil,
   formatNumber,
   MILLIMETERS_TO_MILS,
   pointsEqual,
 } from "./format"
-import type { Point, PointTransform } from "./types"
+import type { Point, PointTransform, PointWithBulge } from "./types"
 
-type CreateAltiumTrackRecordsOptions = {
+type CreateAltiumPcbPathRecordsOptions = {
   altiumComponentIndex?: number
-  circuitPoints: readonly Point[]
+  circuitPoints: readonly PointWithBulge[]
   circuitToAltiumPcbPoint: PointTransform
   closePath?: boolean
   layer: string
   strokeWidthMm: number
 }
 
-export function createAltiumTrackRecords({
+export function createAltiumPcbPathRecords({
   altiumComponentIndex,
   circuitPoints,
   circuitToAltiumPcbPoint,
   closePath = false,
   layer,
   strokeWidthMm,
-}: CreateAltiumTrackRecordsOptions): string[] {
+}: CreateAltiumPcbPathRecordsOptions): string[] {
   const points = closePath ? closePointLoop(circuitPoints) : [...circuitPoints]
   const records: string[] = []
 
@@ -32,6 +33,21 @@ export function createAltiumTrackRecords({
     const circuitStart = points[pointIndex - 1]
     const circuitEnd = points[pointIndex]
     if (!circuitStart || !circuitEnd) continue
+    const bulge = circuitStart.bulge ?? 0
+    if (Math.abs(bulge) >= 1e-12) {
+      records.push(
+        createPcbArcRecordFromBulge({
+          altiumComponentIndex,
+          bulge,
+          circuitEndPoint: circuitEnd,
+          circuitStartPoint: circuitStart,
+          circuitToAltiumPcbPoint,
+          layer,
+          widthMm: strokeWidthMm,
+        }),
+      )
+      continue
+    }
     const altiumStart = circuitToAltiumPcbPoint(circuitStart)
     const altiumEnd = circuitToAltiumPcbPoint(circuitEnd)
     if (pointsEqual(altiumStart, altiumEnd)) continue
@@ -136,23 +152,6 @@ export function createAltiumRegionRecord({
   ].join("|")
 }
 
-export function createCirclePoints({
-  center,
-  radiusMm,
-}: {
-  center: Point
-  radiusMm: number
-}): Point[] {
-  const segmentCount = 48
-  return Array.from({ length: segmentCount }, (_, segmentIndex) => {
-    const angleRadians = (segmentIndex * Math.PI * 2) / segmentCount
-    return {
-      x: center.x + Math.cos(angleRadians) * radiusMm,
-      y: center.y + Math.sin(angleRadians) * radiusMm,
-    }
-  })
-}
-
 export function createRoundedRectPoints({
   center,
   cornerRadiusMm,
@@ -230,7 +229,7 @@ function createRoundedCornerPoints({
   )
 }
 
-function closePointLoop(points: readonly Point[]): Point[] {
+function closePointLoop(points: readonly PointWithBulge[]): PointWithBulge[] {
   const loop = [...points]
   const firstPoint = loop[0]
   const lastPoint = loop.at(-1)

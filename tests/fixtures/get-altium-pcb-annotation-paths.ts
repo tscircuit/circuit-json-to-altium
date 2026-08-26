@@ -9,9 +9,20 @@ import {
 
 export type AltiumPcbAnnotationPath = {
   componentId?: string
+  fullCircle?: {
+    center: AltiumPoint
+    radiusMils: number
+  }
   layer: string
-  points: AltiumPoint[]
+  points: AltiumPcbAnnotationPoint[]
   strokeWidthMils: number
+}
+
+export type AltiumPcbAnnotationPoint = AltiumPoint & { bulge?: number }
+
+type AltiumPcbRecordPathGeometry = {
+  fullCircle?: AltiumPcbAnnotationPath["fullCircle"]
+  points: AltiumPcbAnnotationPoint[]
 }
 
 type AnnotationPathGroupKey = string
@@ -58,14 +69,17 @@ export function getAltiumPcbAnnotationPaths({
   const paths: AltiumPcbAnnotationPath[] = []
   for (const record of document.records) {
     if (!includeRecord(record)) continue
-    const points = getRecordPathPoints(record)
-    if (points.length < 2) continue
+    const pathGeometry = getRecordPathGeometry(record)
+    if (pathGeometry.points.length < 2) continue
     const component = document.getComponentForRecord(record)
     const componentId = component ? componentIds.get(component) : undefined
     paths.push({
       ...(componentId ? { componentId } : {}),
+      ...(pathGeometry.fullCircle
+        ? { fullCircle: pathGeometry.fullCircle }
+        : {}),
       layer: record.getDecoded("LAYER") ?? "",
-      points,
+      points: pathGeometry.points,
       strokeWidthMils:
         getAltiumPcbMeasurementMils({
           fieldNames: ["WIDTH", "LINEWIDTH"],
@@ -87,6 +101,7 @@ export function isClosedAltiumPath(path: AltiumPcbAnnotationPath): boolean {
 export function getAltiumCircleFromPath(
   path: AltiumPcbAnnotationPath,
 ): { center: AltiumPoint; radiusMils: number } | undefined {
+  if (path.fullCircle) return path.fullCircle
   if (!isClosedAltiumPath(path) || path.points.length < 9) return undefined
   const distinctPoints = path.points.slice(0, -1)
   const minX = Math.min(...distinctPoints.map(getPointX))
@@ -114,6 +129,7 @@ export function getAltiumRectFromPath(
   path: AltiumPcbAnnotationPath,
 ): { center: AltiumPoint; heightMils: number; widthMils: number } | undefined {
   if (!isClosedAltiumPath(path) || path.points.length < 5) return undefined
+  if (path.points.some((point) => point.bulge !== undefined)) return undefined
   const distinctPoints = path.points.slice(0, -1)
   const minX = Math.min(...distinctPoints.map(getPointX))
   const maxX = Math.max(...distinctPoints.map(getPointX))
@@ -142,7 +158,9 @@ export function getAltiumRectFromPath(
   }
 }
 
-function getRecordPathPoints(record: AltiumRecord): AltiumPoint[] {
+function getRecordPathGeometry(
+  record: AltiumRecord,
+): AltiumPcbRecordPathGeometry {
   if (record.recordKind === "Track") {
     const start = getAltiumPcbPoint({
       record,
@@ -154,16 +172,18 @@ function getRecordPathPoints(record: AltiumRecord): AltiumPoint[] {
       xFieldName: "X2",
       yFieldName: "Y2",
     })
-    return start && end ? [start, end] : []
+    return { points: start && end ? [start, end] : [] }
   }
-  if (record.recordKind === "Arc") return createAltiumArcPoints(record)
+  if (record.recordKind === "Arc") return getAltiumArcPathGeometry(record)
   if (record.recordKind === "Region" || record.recordKind === "RegionFill") {
-    return getPcbRegionGeometry(record).outline.points
+    return { points: getPcbRegionGeometry(record).outline.points }
   }
-  return []
+  return { points: [] }
 }
 
-function createAltiumArcPoints(record: AltiumRecord): AltiumPoint[] {
+function getAltiumArcPathGeometry(
+  record: AltiumRecord,
+): AltiumPcbRecordPathGeometry {
   const center =
     getAltiumPcbPoint({
       record,
@@ -174,30 +194,58 @@ function createAltiumArcPoints(record: AltiumRecord): AltiumPoint[] {
     fieldNames: ["RADIUS"],
     record,
   })
-  if (!center || radiusMils === undefined || radiusMils <= 0) return []
+  if (!center || radiusMils === undefined || radiusMils <= 0) {
+    return { points: [] }
+  }
   const startAngleDegrees = record.getNumber("STARTANGLE") ?? 0
   const endAngleDegrees = record.getNumber("ENDANGLE") ?? 360
-  const sweepDegrees = endAngleDegrees - startAngleDegrees || 360
-  const segmentCount = Math.max(8, Math.ceil(Math.abs(sweepDegrees) / 7.5))
-  return Array.from({ length: segmentCount + 1 }, (_, segmentIndex) => {
-    const angleDegrees =
-      startAngleDegrees + (sweepDegrees * segmentIndex) / segmentCount
-    const angleRadians = (angleDegrees * Math.PI) / 180
-    return {
-      x: center.x + Math.cos(angleRadians) * radiusMils,
-      y: center.y + Math.sin(angleRadians) * radiusMils,
-    }
+  const rawSweepDegrees = endAngleDegrees - startAngleDegrees
+  const isFullCircle =
+    Math.abs(rawSweepDegrees) >= 360 - 1e-9 || rawSweepDegrees === 0
+  const ccwSweepDegrees = isFullCircle ? 360 : rawSweepDegrees
+  const segmentCount = isFullCircle ? 4 : 1
+  const segmentSweepDegrees = ccwSweepDegrees / segmentCount
+  const bulge = Math.tan((segmentSweepDegrees * Math.PI) / 720)
+  const points = Array.from({ length: segmentCount + 1 }, (_, pointIndex) => {
+    const point = getPointOnCircle({
+      angleDegrees: startAngleDegrees + segmentSweepDegrees * pointIndex,
+      center,
+      radiusMils,
+    })
+    return pointIndex === segmentCount ? point : { ...point, bulge }
   })
+  return {
+    ...(isFullCircle ? { fullCircle: { center, radiusMils } } : {}),
+    points,
+  }
+}
+
+function getPointOnCircle({
+  angleDegrees,
+  center,
+  radiusMils,
+}: {
+  angleDegrees: number
+  center: AltiumPoint
+  radiusMils: number
+}): AltiumPoint {
+  const angleRadians = (angleDegrees * Math.PI) / 180
+  return {
+    x: center.x + Math.cos(angleRadians) * radiusMils,
+    y: center.y + Math.sin(angleRadians) * radiusMils,
+  }
 }
 
 function stitchConnectedAltiumPaths(
   paths: AltiumPcbAnnotationPath[],
 ): AltiumPcbAnnotationPath[] {
+  const fullCirclePaths = paths.filter((path) => path.fullCircle)
+  const stitchablePaths = paths.filter((path) => !path.fullCircle)
   const pathsByGroup = new Map<
     AnnotationPathGroupKey,
     AltiumPcbAnnotationPath[]
   >()
-  for (const path of deduplicateAltiumPaths(paths)) {
+  for (const path of deduplicateAltiumPaths(stitchablePaths)) {
     const groupKey = [
       path.componentId ?? "",
       normalizeLayer(path.layer),
@@ -208,7 +256,10 @@ function stitchConnectedAltiumPaths(
     pathsByGroup.set(groupKey, group)
   }
 
-  return [...pathsByGroup.values()].flatMap(stitchAltiumPathGroup)
+  return [
+    ...deduplicateAltiumPaths(fullCirclePaths),
+    ...[...pathsByGroup.values()].flatMap(stitchAltiumPathGroup),
+  ]
 }
 
 function stitchAltiumPathGroup(
@@ -247,13 +298,18 @@ function appendConnectedPath({
     const candidateEnd = candidate.points.at(-1)
     if (!candidateStart || !candidateEnd) continue
     if (altiumPointsEqual(stitchedEnd, candidateStart)) {
-      stitchedPath.points.push(...candidate.points.slice(1))
+      appendAltiumPathPoints(stitchedPath.points, candidate.points)
     } else if (altiumPointsEqual(stitchedEnd, candidateEnd)) {
-      stitchedPath.points.push(...candidate.points.toReversed().slice(1))
+      appendAltiumPathPoints(
+        stitchedPath.points,
+        reverseAltiumPathPoints(candidate.points),
+      )
     } else if (altiumPointsEqual(stitchedStart, candidateEnd)) {
       stitchedPath.points.unshift(...candidate.points.slice(0, -1))
     } else if (altiumPointsEqual(stitchedStart, candidateStart)) {
-      stitchedPath.points.unshift(...candidate.points.toReversed().slice(0, -1))
+      stitchedPath.points.unshift(
+        ...reverseAltiumPathPoints(candidate.points).slice(0, -1),
+      )
     } else {
       continue
     }
@@ -261,6 +317,36 @@ function appendConnectedPath({
     return true
   }
   return false
+}
+
+function appendAltiumPathPoints(
+  targetPoints: AltiumPcbAnnotationPoint[],
+  appendedPoints: AltiumPcbAnnotationPoint[],
+): void {
+  const targetEnd = targetPoints.at(-1)
+  const appendedStart = appendedPoints[0]
+  if (!targetEnd || !appendedStart) return
+  if (appendedStart.bulge === undefined) {
+    delete targetEnd.bulge
+  } else {
+    targetEnd.bulge = appendedStart.bulge
+  }
+  targetPoints.push(...appendedPoints.slice(1))
+}
+
+function reverseAltiumPathPoints(
+  points: AltiumPcbAnnotationPoint[],
+): AltiumPcbAnnotationPoint[] {
+  return points.toReversed().map((point, reversedPointIndex) => {
+    const sourceSegmentStart = points.at(-2 - reversedPointIndex)
+    return {
+      x: point.x,
+      y: point.y,
+      ...(sourceSegmentStart?.bulge === undefined
+        ? {}
+        : { bulge: -sourceSegmentStart.bulge }),
+    }
+  })
 }
 
 function deduplicateAltiumPaths(
@@ -271,8 +357,12 @@ function deduplicateAltiumPaths(
     const signature = [
       path.componentId ?? "",
       normalizeLayer(path.layer),
+      path.fullCircle
+        ? `${path.fullCircle.center.x.toFixed(4)},${path.fullCircle.center.y.toFixed(4)},${path.fullCircle.radiusMils.toFixed(4)}`
+        : "",
       ...path.points.map(
-        (point) => `${point.x.toFixed(4)},${point.y.toFixed(4)}`,
+        (point) =>
+          `${point.x.toFixed(4)},${point.y.toFixed(4)},${point.bulge?.toFixed(12) ?? ""}`,
       ),
     ].join("|")
     if (seenSignatures.has(signature)) return false

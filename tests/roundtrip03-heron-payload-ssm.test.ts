@@ -9,6 +9,9 @@ test("round-trips the open-source HERON payload SSM Altium board", async () => {
   })
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  expect(result.sourceNativeArcCount).toBe(68)
+  expect(result.roundTripNativeArcCount).toBe(result.sourceNativeArcCount)
+  expect(result.arcGeometryMismatches).toEqual([])
   expect(result.roundTripSourceNetNames).toEqual(result.sourceNetNames)
   expect(result.geometryMaxDeltaMm).toBeLessThan(0.03)
   expect(result.rotationMismatchCount).toBe(0)

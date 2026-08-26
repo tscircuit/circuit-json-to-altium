@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test"
-import { AltiumDimensionRecord, serializeAltiumPcbToSvg } from "altiumts"
+import {
+  AltiumArcRecord,
+  AltiumDimensionRecord,
+  serializeAltiumPcbToSvg,
+} from "altiumts"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import {
@@ -102,21 +106,38 @@ test("preserves courtyards, keepouts, and fabrication annotations", async () => 
     },
   ]
   const { pcb } = await extractArchive(elements)
+  const arcs = pcb
+    .getRecordsByKind("Arc")
+    .filter((arc): arc is AltiumArcRecord => arc instanceof AltiumArcRecord)
   const tracks = pcb.getRecordsByKind("Track")
   const dimensions = pcb.getRecordsByKind("Dimension")
 
   expect(
     tracks.filter((track) => track.get("LAYER") === "MECHANICAL15"),
   ).toHaveLength(4)
-  expect(
-    tracks.filter((track) => track.get("LAYER") === "MECHANICAL16"),
-  ).toHaveLength(48)
+  expect(arcs).toHaveLength(2)
+  expect(arcs).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        componentIndex: 0,
+        isFullCircle: true,
+        layer: "MECHANICAL16",
+        radiusMils: 98.4252,
+      }),
+      expect.objectContaining({
+        isFullCircle: true,
+        layer: "KEEPOUT",
+        radiusMils: 55.1181,
+      }),
+    ]),
+  )
   expect(
     tracks.filter((track) => track.get("LAYER") === "MECHANICAL1"),
   ).toHaveLength(6)
   expect(pcb.getRecordsByKind("Fill")[0]?.getBoolean("KEEPOUT")).toBe(true)
-  expect(pcb.getRecordsByKind("Region")[0]?.get("LAYER")).toBe("KEEPOUT")
-  expect(pcb.getRecordsByKind("Region")[0]?.getBoolean("KEEPOUT")).toBe(true)
+  expect(
+    arcs.find((arc) => arc.layer === "KEEPOUT")?.getBoolean("KEEPOUT"),
+  ).toBe(true)
   expect(pcb.getRecordsByKind("Text")[0]?.get("LAYER")).toBe("MECHANICAL1")
   expect(dimensions).toHaveLength(1)
   expect(dimensions[0]).toBeInstanceOf(AltiumDimensionRecord)
