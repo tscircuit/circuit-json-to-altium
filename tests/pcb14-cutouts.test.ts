@@ -128,39 +128,7 @@ describe("PCB board cutouts", () => {
     expect(heightMm).toBeCloseTo(slotWidthMm, 1)
   })
 
-  test("exports dashed path cutouts as separate regions", () => {
-    const doc = createPcbDocument([
-      board({ width: 20, height: 20 }),
-      {
-        type: "pcb_cutout",
-        pcb_cutout_id: "dashed_slot",
-        shape: "path",
-        route: [
-          { x: -5, y: 0 },
-          { x: 5, y: 0 },
-        ],
-        slot_width: 1,
-        slot_length: 2,
-        space_between_slots: 1,
-        slot_corner_radius: 0,
-      },
-    ])
-
-    const regions = parseAltiumPcbDoc(doc).getRecordsByKind("Region")
-    expect(regions).toHaveLength(4)
-    for (const region of regions) {
-      expect(region.get("REGIONKIND")).toBe("BOARDCUTOUT")
-    }
-    const regionRecords = doc
-      .split("\r\n")
-      .filter((line) => line.includes("REGIONKIND=BOARDCUTOUT"))
-    expect(regionRecords).toHaveLength(4)
-    for (const regionRecord of regionRecords) {
-      expect(regionRecord.match(/\|VX\d+=/g)).toHaveLength(5)
-    }
-  })
-
-  test("handles repeated route points without geometry-specific tolerances", () => {
+  test("uses robust path offsetting for routes with repeated points", () => {
     const doc = createPcbDocument([
       board({ width: 20, height: 20 }),
       {
@@ -180,6 +148,25 @@ describe("PCB board cutouts", () => {
     const [region] = parseAltiumPcbDoc(doc).getRecordsByKind("Region")
     expect(region).toBeDefined()
     expect(doc).not.toMatch(/V[XY]\d+=(?:NaN|Infinity|-Infinity)/)
+  })
+
+  test("rejects unsupported dashed path semantics instead of approximating them", () => {
+    const dashedCutout: CircuitElement = {
+      type: "pcb_cutout",
+      pcb_cutout_id: "dashed_slot",
+      shape: "path",
+      route: [
+        { x: -5, y: 0 },
+        { x: 5, y: 0 },
+      ],
+      slot_width: 1,
+      slot_length: 2,
+      space_between_slots: 1,
+    }
+
+    expect(() => createPcbDocument([board(), dashedCutout])).toThrow(
+      "Dashed path cutouts are not supported",
+    )
   })
 
   test("throws when encountering an unsupported cutout shape", () => {

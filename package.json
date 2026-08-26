@@ -31,6 +31,7 @@
   "dependencies": {
     "altiumts": "github:tscircuit/altiumts#7d5fe23983ca1b4cf70b1492873e7c193218077d",
     "circuit-json": "^0.0.469",
+    "clipper2-ts": "^2.0.1-18",
     "jszip": "^3.10.1",
     "schematic-symbols": "^0.0.239",
     "transformation-matrix": "^3.1.0"
