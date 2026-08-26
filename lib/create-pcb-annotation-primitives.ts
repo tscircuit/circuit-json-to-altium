@@ -98,18 +98,26 @@ export function createAltiumFillRecord({
   ].join("|")
 }
 
+export type AltiumRegionKind =
+  | "COPPER"
+  | "BOARDCUTOUT"
+  | "POLYGON_CUTOUT"
+  | "CAVITY_DEFINITION"
+
 export function createAltiumRegionRecord({
   altiumComponentIndex,
   circuitPoints,
   circuitToAltiumPcbPoint,
   isKeepout = false,
   layer,
+  regionKind = "COPPER",
 }: {
   altiumComponentIndex?: number
   circuitPoints: readonly Point[]
   circuitToAltiumPcbPoint: PointTransform
   isKeepout?: boolean
   layer: string
+  regionKind?: AltiumRegionKind
 }): string {
   const altiumPoints = closePointLoop(circuitPoints).map(
     circuitToAltiumPcbPoint,
@@ -126,7 +134,7 @@ export function createAltiumRegionRecord({
     "LOCKED=FALSE",
     `KEEPOUT=${isKeepout ? "TRUE" : "FALSE"}`,
     "TEARDROP=FALSE",
-    "REGIONKIND=COPPER",
+    `REGIONKIND=${regionKind}`,
     "HOLECOUNT=0",
     ...altiumPoints.flatMap((point, vertexIndex) => [
       `KIND${vertexIndex}=0`,
