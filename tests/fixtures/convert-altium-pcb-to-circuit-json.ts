@@ -12,6 +12,7 @@ import {
 } from "altiumts"
 import type { NinePointAnchor } from "circuit-json"
 import type { CircuitElement } from "../../lib/types"
+import { appendAltiumPcbSolderPasteElements } from "./append-altium-pcb-solder-paste-elements"
 import { convertAltiumPcbAnnotationsToCircuitJson } from "./convert-altium-pcb-annotations-to-circuit-json"
 import { convertAltiumPcbComponentBodiesToCircuitJson } from "./convert-altium-pcb-component-bodies-to-circuit-json"
 
@@ -540,6 +541,8 @@ export function convertAltiumPcbToCircuitJson(
       })
     }
   }
+
+  appendAltiumPcbSolderPasteElements({ componentIds, document, elements })
 
   for (const [trackIndex, track] of document
     .getRecordsByKind("Track")

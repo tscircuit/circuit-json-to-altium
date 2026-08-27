@@ -1,4 +1,5 @@
 import type { CircuitElement } from "../../lib/types"
+import { getSolderPasteMismatchCount } from "./get-solder-paste-mismatch-count"
 
 const preservedPrimitiveTypes = [
   "source_net",
@@ -13,6 +14,7 @@ const preservedPrimitiveTypes = [
   "pcb_trace",
   "pcb_via",
   "pcb_copper_pour",
+  "pcb_solder_paste",
   "pcb_silkscreen_text",
   "pcb_courtyard_outline",
   "pcb_keepout",
@@ -59,6 +61,7 @@ export type PcbRoundTripMetrics = {
   sourceNetNames: string[]
   sourcePrimitiveTotal: number
   silkscreenTextMismatchCount: number
+  solderPasteMismatchCount: number
 }
 
 function getPoint3(
@@ -417,5 +420,9 @@ export function getPcbRoundTripMetrics({
       sourceCircuitJson,
       roundTripCircuitJson,
     ),
+    solderPasteMismatchCount: getSolderPasteMismatchCount({
+      roundTripCircuitJson,
+      sourceCircuitJson,
+    }),
   }
 }

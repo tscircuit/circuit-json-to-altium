@@ -31,7 +31,7 @@
   "dependencies": {
     "altiumts": "github:tscircuit/altiumts#f95e9b1a859bc433444c25ec3fd283718c032408",
     "cfb": "^1.2.2",
-    "circuit-json": "^0.0.480",
+    "circuit-json": "github:tscircuit/circuit-json#467a68b36cfb8bb0765558b9d034bb8f43b1aaac",
     "jszip": "^3.10.1",
     "schematic-symbols": "^0.0.239",
     "transformation-matrix": "^3.1.0"

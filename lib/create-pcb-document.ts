@@ -8,6 +8,7 @@ import { createPcbDocumentationRecords } from "./create-pcb-documentation-record
 import { createPcbKeepoutRecords } from "./create-pcb-keepout-records"
 import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
+import { createPcbSolderPasteRecords } from "./create-pcb-solder-paste-records"
 import {
   asNumber,
   asPoint,
@@ -166,6 +167,14 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
 
   lines.push(
     ...createPcbComponentBodyRecords({
+      circuitJson,
+      circuitToAltiumPcbPoint,
+      componentIndex,
+    }),
+  )
+
+  lines.push(
+    ...createPcbSolderPasteRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
       componentIndex,
