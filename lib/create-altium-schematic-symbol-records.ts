@@ -8,7 +8,7 @@ import {
   transformSchematicSymbolPoint,
 } from "./create-altium-schematic-graphic-record-fields"
 import { sanitizeField } from "./format"
-import type { Point, PointTransform } from "./types"
+import type { AltiumPartId, Point, PointTransform } from "./types"
 
 type AltiumSchematicTextPlacement = {
   justification: number
@@ -35,6 +35,7 @@ export type AltiumSchematicSymbolRecords = {
 
 type CreateAltiumSchematicSymbolRecordsOptions = {
   altiumComponentRecordIndex: number
+  altiumPartId: AltiumPartId
   circuitComponentCenter: Point
   circuitToAltiumSchematicPoint: PointTransform
   symbolName: string
@@ -42,6 +43,7 @@ type CreateAltiumSchematicSymbolRecordsOptions = {
 
 export function createAltiumSchematicSymbolRecords({
   altiumComponentRecordIndex,
+  altiumPartId,
   circuitComponentCenter,
   circuitToAltiumSchematicPoint,
   symbolName,
@@ -57,6 +59,7 @@ export function createAltiumSchematicSymbolRecords({
   )
   const symbolMapping: AltiumSchematicSymbolMapping = {
     altiumComponentRecordIndex,
+    altiumPartId,
     circuitToAltiumSchematicPoint,
     symbolToCircuitMatrix,
   }
@@ -119,9 +122,10 @@ function createAltiumTextRecordFields({
   })
   return [
     "RECORD=4",
-    ...createOwnedSchematicRecordFields(
-      symbolMapping.altiumComponentRecordIndex,
-    ),
+    ...createOwnedSchematicRecordFields({
+      altiumComponentRecordIndex: symbolMapping.altiumComponentRecordIndex,
+      altiumPartId: symbolMapping.altiumPartId,
+    }),
     `LOCATION.X=${placement.position.x}`,
     `LOCATION.Y=${placement.position.y}`,
     "FONTID=2",
