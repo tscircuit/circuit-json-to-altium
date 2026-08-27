@@ -3,6 +3,7 @@ import { createCircuitToAltiumPcbPointTransform } from "./create-circuit-to-alti
 import { createPcbComponentBodyRecords } from "./create-pcb-component-body-records"
 import { createPcbCopperPourRecords } from "./create-pcb-copper-pour-records"
 import { createPcbCourtyardRecords } from "./create-pcb-courtyard-records"
+import { createPcbCutoutRecords } from "./create-pcb-cutout-records"
 import { createPcbDocumentationRecords } from "./create-pcb-documentation-records"
 import { createPcbKeepoutRecords } from "./create-pcb-keepout-records"
 import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
@@ -113,6 +114,13 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       `|RECORD=Net|ID=${net.index}|NAME=${sanitizeField(net.name)}|VISIBLE=FALSE|JUMPERSVISIBLE=FALSE`,
     )
   }
+
+  lines.push(
+    ...createPcbCutoutRecords({
+      circuitJson,
+      circuitToAltiumPcbPoint,
+    }),
+  )
 
   lines.push(
     ...createPcbCopperPourRecords({

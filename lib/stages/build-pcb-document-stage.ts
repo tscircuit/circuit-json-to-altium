@@ -1,6 +1,6 @@
-import { serializeAltiumPcbDocToBinary } from "altiumts"
 import { ConverterStage } from "../converter-stage"
 import { createPcbDocument } from "../create-pcb-document"
+import { serializeAltiumPcbDocWithBoardCutouts } from "../serialize-altium-pcb-doc-with-board-cutouts"
 import type { AltiumPcbFile, NormalizedCircuitJson } from "../types"
 
 export class BuildPcbDocumentStage extends ConverterStage<
@@ -11,7 +11,7 @@ export class BuildPcbDocumentStage extends ConverterStage<
     const asciiContent = createPcbDocument(this.input)
     this.context.pcb = {
       asciiContent,
-      content: serializeAltiumPcbDocToBinary(asciiContent),
+      content: serializeAltiumPcbDocWithBoardCutouts(asciiContent),
       filename: `${this.context.safeProjectName}.PcbDoc`,
     }
     this.finished = true
