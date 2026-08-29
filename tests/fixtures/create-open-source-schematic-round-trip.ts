@@ -31,6 +31,28 @@ type OpenSourceSchematicRoundTripOptions = {
 }
 
 const ALTIUM_SCHEMATIC_PORT_FALLBACK_FONT_SIZE_POINTS = 8
+const ALTIUM_SCHEMATIC_DEFAULT_PAPER_WIDTH = 1000
+const ALTIUM_SCHEMATIC_DEFAULT_PAPER_HEIGHT = 800
+
+function getReferencePaperComparisonViewBox(
+  document: AltiumSchDoc,
+): NonNullable<AltiumSheetSvgOptions["viewBox"]> {
+  const sheetRecord = document.getRecordsByKind("31")[0]
+  const paperWidth = Math.max(
+    sheetRecord?.getNumber("CUSTOMX") ?? ALTIUM_SCHEMATIC_DEFAULT_PAPER_WIDTH,
+    1,
+  )
+  const paperHeight = Math.max(
+    sheetRecord?.getNumber("CUSTOMY") ?? ALTIUM_SCHEMATIC_DEFAULT_PAPER_HEIGHT,
+    1,
+  )
+  return {
+    x: 0,
+    y: 0,
+    width: paperWidth,
+    height: paperHeight,
+  }
+}
 
 function getOffSheetPortFontSizePoints(document: AltiumSchDoc): number[] {
   const sheetRecord = document.getRecordsByKind("31")[0]
@@ -104,6 +126,12 @@ export async function createOpenSourceSchematicRoundTrip({
   const roundTripDocument = parseSchematicDocument(generatedSchematic.content)
   const roundTripCircuitJson =
     convertAltiumSchematicToCircuitJson(roundTripDocument)
+  const comparisonSvgRenderOptions: AltiumSheetSvgOptions = {
+    ...sharedSvgRenderOptions,
+    viewBox:
+      sharedSvgRenderOptions?.viewBox ??
+      getReferencePaperComparisonViewBox(sourceDocument),
+  }
 
   return {
     ...getSchematicRoundTripMetrics({
@@ -114,13 +142,13 @@ export async function createOpenSourceSchematicRoundTrip({
       getOffSheetPortFontSizePoints(roundTripDocument),
     roundTripSvg: serializeAltiumSheetToSvg(
       roundTripDocument,
-      sharedSvgRenderOptions,
+      comparisonSvgRenderOptions,
     ),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
     sourceSvg: serializeAltiumSheetToSvg(sourceDocument, {
       ...sourceProjectContext,
-      ...sharedSvgRenderOptions,
+      ...comparisonSvgRenderOptions,
     }),
   }
 }
