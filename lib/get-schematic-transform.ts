@@ -79,6 +79,16 @@ export function getSchematicTransform(
   for (const element of schematicElements) {
     const center = asPoint(element.center)
     if (center) circuitPoints.push(center)
+    if (element.type === "schematic_graphic" && center) {
+      const width = asNumber(element.width)
+      const height = asNumber(element.height)
+      if (width > 0 && height > 0) {
+        circuitPoints.push(
+          { x: center.x - width / 2, y: center.y - height / 2 },
+          { x: center.x + width / 2, y: center.y + height / 2 },
+        )
+      }
+    }
     if (
       isSchematicSymbolPrimitive(element) &&
       (asString(element.schematic_symbol_id) ||

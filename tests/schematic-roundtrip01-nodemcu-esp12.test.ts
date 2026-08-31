@@ -9,6 +9,9 @@ test("round-trips the open-source NodeMCU ESP-12 Altium schematic", async () => 
   })
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  expect(result.roundTripEmbeddedImagePngSha256).toEqual(
+    result.sourceEmbeddedImagePngSha256,
+  )
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,
@@ -35,6 +38,7 @@ test("round-trips the open-source NodeMCU ESP-12 Altium schematic", async () => 
   expect(result.sourceCounts.off_sheet_port).toBe(0)
   expect(result.sourceCounts.do_not_connect).toBe(6)
   expect(result.sourceCounts.power_port).toBe(37)
+  expect(result.sourceCounts.schematic_graphic).toBe(1)
   expect(result.sourceSymbolPrimitiveCounts.total).toBe(156)
   expect({
     path: result.sourceCounts.schematic_path,
