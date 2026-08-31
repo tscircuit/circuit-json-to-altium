@@ -280,6 +280,9 @@ function getSilkscreenTextMismatchCount(
     const matches =
       sourceText.text === roundTripText.text &&
       sourceText.anchor_alignment === roundTripText.anchor_alignment &&
+      sourceText.font_family === roundTripText.font_family &&
+      sourceText.font_weight === roundTripText.font_weight &&
+      sourceText.font_style === roundTripText.font_style &&
       sourceText.is_mirrored === roundTripText.is_mirrored &&
       sourceText.layer === roundTripText.layer
     return mismatchCount + (matches ? 0 : 1)

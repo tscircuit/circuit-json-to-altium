@@ -61,7 +61,10 @@ export type SchematicAnnotationSignature =
   | {
       anchor: string
       color: string
+      fontFamily: string
       fontSizeCircuitUnits: number
+      fontStyle: string
+      fontWeight: string
       rotationDegrees: number
       text: string
       type: "schematic_text"
@@ -85,7 +88,10 @@ export type SchematicAnnotationSignature =
 export type SchematicComponentTextSignature = {
   anchor: string
   color: string
+  fontFamily: string
   fontSizeCircuitUnits: number
+  fontStyle: string
+  fontWeight: string
   positionRelativeToFirstText: Point
   rotationDegrees: number
   text: string
@@ -206,7 +212,10 @@ function getSchematicComponentTextSignatures(
     return {
       anchor: asString(element.anchor),
       color: asString(element.color),
+      fontFamily: asString(element.font_family),
       fontSizeCircuitUnits: asNumber(element.font_size),
+      fontStyle: asString(element.font_style),
+      fontWeight: asString(element.font_weight),
       positionRelativeToFirstText: {
         x: roundToAltiumSchematicGrid(
           roundToAltiumSchematicGrid(position.x) -
@@ -349,7 +358,10 @@ function getSchematicAnnotationSignatures(
       signatures.push({
         anchor: asString(element.anchor),
         color: asString(element.color),
+        fontFamily: asString(element.font_family),
         fontSizeCircuitUnits: asNumber(element.font_size),
+        fontStyle: asString(element.font_style),
+        fontWeight: asString(element.font_weight),
         rotationDegrees: asNumber(element.rotation),
         text: asString(element.text),
         type: element.type,

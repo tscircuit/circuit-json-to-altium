@@ -133,6 +133,9 @@ function convertDocumentationTexts({
     const componentId = component ? componentIds.get(component) : undefined
     const sharedFields = {
       font: "tscircuit2024",
+      font_family: text.getDecoded("FONTNAME") || "Arial",
+      font_weight: text.getBoolean("BOLD") === true ? "bold" : "normal",
+      font_style: text.getBoolean("ITALIC") === true ? "italic" : "normal",
       font_size: toCircuitLength(
         getAltiumPcbMeasurementMils({
           fieldNames: ["HEIGHT"],

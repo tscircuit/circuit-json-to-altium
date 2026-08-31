@@ -29,6 +29,9 @@ export type AltiumSchematicTextPresentation = {
   anchor: SchematicTextAnchor
   color: string
   font_size: number
+  font_family: string
+  font_style: "italic" | "normal"
+  font_weight: "bold" | "normal"
   position: CircuitPoint
   rotation: number
 }
@@ -79,6 +82,9 @@ export function getAltiumSchematicTextPresentation({
       record,
     }),
     font_size: toCircuitLength(font.sizePoints),
+    font_family: font.family,
+    font_style: font.style,
+    font_weight: font.weight,
     position: toCircuitPoint(getRecordLocation(record)),
     rotation: getSchematicTextRotationDegrees(record),
   }

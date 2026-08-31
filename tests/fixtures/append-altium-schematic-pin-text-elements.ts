@@ -5,7 +5,10 @@ import {
   toCircuitLength,
   toCircuitPoint,
 } from "./altium-schematic-coordinate-utils"
-import { getAltiumSchematicFont } from "./get-altium-schematic-text-frame-lines"
+import {
+  type AltiumSchematicFont,
+  getAltiumSchematicFont,
+} from "./get-altium-schematic-text-frame-lines"
 import { getCssColorFromAltiumRecord } from "./get-css-color-from-altium-record"
 
 type AppendAltiumSchematicPinTextElementsInput = {
@@ -40,7 +43,7 @@ function appendPinText({
   anchor,
   componentIndex,
   elements,
-  fontSizeCircuitUnits,
+  font,
   pinColor,
   pinIndex,
   position,
@@ -52,7 +55,7 @@ function appendPinText({
   anchor: SchematicTextAnchor
   componentIndex: number
   elements: CircuitElement[]
-  fontSizeCircuitUnits: number
+  font: AltiumSchematicFont
   pinColor: string
   pinIndex: number
   position: { x: number; y: number }
@@ -69,7 +72,10 @@ function appendPinText({
     text,
     anchor,
     color: pinColor,
-    font_size: fontSizeCircuitUnits,
+    font_size: toCircuitLength(font.sizePoints),
+    font_family: font.family,
+    font_weight: font.weight,
+    font_style: font.style,
     position,
     rotation: rotationDegrees,
   })
@@ -120,7 +126,7 @@ export function appendAltiumSchematicPinTextElements({
       anchor: designatorAnchor,
       componentIndex,
       elements,
-      fontSizeCircuitUnits: toCircuitLength(pinFont.sizePoints),
+      font: pinFont,
       pinColor,
       pinIndex,
       position: toCircuitPoint({
@@ -138,7 +144,7 @@ export function appendAltiumSchematicPinTextElements({
       anchor: nameAnchor,
       componentIndex,
       elements,
-      fontSizeCircuitUnits: toCircuitLength(pinFont.sizePoints),
+      font: pinFont,
       pinColor,
       pinIndex,
       position: toCircuitPoint({
