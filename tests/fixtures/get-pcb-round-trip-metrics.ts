@@ -54,8 +54,10 @@ export type PcbRoundTripMetrics = {
   geometryMaxDeltaMm: number
   rotationMismatchCount: number
   roundTripCounts: PreservedPrimitiveCounts
+  roundTripCurvedTraceCount: number
   roundTripSourceNetNames: string[]
   sourceCounts: PreservedPrimitiveCounts
+  sourceCurvedTraceCount: number
   sourceNetNames: string[]
   sourcePrimitiveTotal: number
   silkscreenTextMismatchCount: number
@@ -196,6 +198,23 @@ function countPreservedPrimitives(
     ]),
   )
   return counts as PreservedPrimitiveCounts
+}
+
+function getCurvedTraceCount(circuitJson: CircuitElement[]): number {
+  return circuitJson.filter((element) => {
+    if (element.type !== "pcb_trace" || !Array.isArray(element.route)) {
+      return false
+    }
+    return element.route.some(
+      (routePoint) =>
+        typeof routePoint === "object" &&
+        routePoint !== null &&
+        "bulge" in routePoint &&
+        typeof routePoint.bulge === "number" &&
+        Number.isFinite(routePoint.bulge) &&
+        routePoint.bulge !== 0,
+    )
+  }).length
 }
 
 function getGeometryPoints(
@@ -406,8 +425,10 @@ export function getPcbRoundTripMetrics({
       roundTripCircuitJson,
     ),
     roundTripCounts,
+    roundTripCurvedTraceCount: getCurvedTraceCount(roundTripCircuitJson),
     roundTripSourceNetNames: getSourceNetNames(roundTripCircuitJson),
     sourceCounts,
+    sourceCurvedTraceCount: getCurvedTraceCount(sourceCircuitJson),
     sourceNetNames: getSourceNetNames(sourceCircuitJson),
     sourcePrimitiveTotal: Object.values(sourceCounts).reduce(
       (sum, count) => sum + count,

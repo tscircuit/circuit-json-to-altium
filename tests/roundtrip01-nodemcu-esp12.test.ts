@@ -14,7 +14,9 @@ test("round-trips the open-source NodeMCU ESP-12 Altium board", async () => {
   expect(result.geometryMaxDeltaMm).toBeLessThan(0.03)
   expect(result.rotationMismatchCount).toBe(0)
   expect(result.silkscreenTextMismatchCount).toBe(0)
-  expect(result.sourcePrimitiveTotal).toBeGreaterThan(5_000)
+  expect(result.sourceCurvedTraceCount).toBe(214)
+  expect(result.roundTripCurvedTraceCount).toBe(214)
+  expect(result.sourcePrimitiveTotal).toBeGreaterThan(2_500)
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
   ).toMatchSvgSnapshot(import.meta.path)

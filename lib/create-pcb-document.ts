@@ -8,6 +8,7 @@ import { createPcbDocumentationRecords } from "./create-pcb-documentation-record
 import { createPcbKeepoutRecords } from "./create-pcb-keepout-records"
 import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
+import { createPcbTraceSegmentRecord } from "./create-pcb-trace-segment-record"
 import {
   asNumber,
   asPoint,
@@ -349,17 +350,18 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
           ? "BOTTOM"
           : "TOP"
       lines.push(
-        [
-          "|RECORD=Track",
-          ...(net ? [`NET=${net.index}`] : []),
-          `LAYER=${routeLayer}`,
-          "LOCKED=FALSE",
-          `X1=${formatMil(altiumStartPoint.x)}`,
-          `Y1=${formatMil(altiumStartPoint.y)}`,
-          `X2=${formatMil(altiumEndPoint.x)}`,
-          `Y2=${formatMil(altiumEndPoint.y)}`,
-          `WIDTH=${formatMil(asPositiveNumber(circuitRouteEnd.width, asPositiveNumber(circuitRouteStart.width, 0.2)) * MILLIMETERS_TO_MILS)}`,
-        ].join("|"),
+        createPcbTraceSegmentRecord({
+          altiumEndPoint,
+          altiumStartPoint,
+          bulge: asNumber(circuitRouteStart.bulge),
+          layer: routeLayer,
+          netIndex: net?.index,
+          widthMils:
+            asPositiveNumber(
+              circuitRouteEnd.width,
+              asPositiveNumber(circuitRouteStart.width, 0.2),
+            ) * MILLIMETERS_TO_MILS,
+        }),
       )
     }
   }
