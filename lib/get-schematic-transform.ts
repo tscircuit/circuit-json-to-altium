@@ -13,6 +13,7 @@ import type {
 type SchematicTransform = {
   circuitToAltiumSchematicLength: LengthTransform
   circuitToAltiumSchematicPoint: PointTransform
+  circuitToAltiumSchematicPrecisePoint: PointTransform
   height: number
   width: number
 }
@@ -195,6 +196,8 @@ export function getSchematicTransform(
     },
     circuitToAltiumSchematicPoint: (circuitPoint) =>
       getAltiumSchematicPoint(circuitPoint, circuitToAltiumSchematicMatrix),
+    circuitToAltiumSchematicPrecisePoint: (circuitPoint) =>
+      applyToPoint(circuitToAltiumSchematicMatrix, circuitPoint),
     width: sheetWidth,
     height: sheetHeight,
   }

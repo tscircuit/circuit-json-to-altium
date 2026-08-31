@@ -273,6 +273,7 @@ export function createSchematicDocument({
   const {
     circuitToAltiumSchematicLength,
     circuitToAltiumSchematicPoint,
+    circuitToAltiumSchematicPrecisePoint,
     width: contentWidth,
     height: contentHeight,
   } = getSchematicTransform(schematicElements)
@@ -563,6 +564,7 @@ export function createSchematicDocument({
           altiumComponentRecordIndex,
           circuitComponentCenter,
           circuitToAltiumSchematicPoint,
+          circuitToAltiumSchematicPrecisePoint,
           symbolName: asString(schematicComponent.symbol_name),
         })
       : undefined

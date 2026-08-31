@@ -43,6 +43,7 @@ type CreateAltiumSchematicSymbolRecordsOptions = {
   altiumComponentRecordIndex: number
   circuitComponentCenter: Point
   circuitToAltiumSchematicPoint: PointTransform
+  circuitToAltiumSchematicPrecisePoint: PointTransform
   symbolName: string
 }
 
@@ -50,6 +51,7 @@ export function createAltiumSchematicSymbolRecords({
   altiumComponentRecordIndex,
   circuitComponentCenter,
   circuitToAltiumSchematicPoint,
+  circuitToAltiumSchematicPrecisePoint,
   symbolName,
 }: CreateAltiumSchematicSymbolRecordsOptions):
   | AltiumSchematicSymbolRecords
@@ -61,9 +63,31 @@ export function createAltiumSchematicSymbolRecords({
     translate(circuitComponentCenter.x, circuitComponentCenter.y),
     translate(-schematicSymbol.center.x, -schematicSymbol.center.y),
   )
+  const roundedAltiumComponentCenter = circuitToAltiumSchematicPoint(
+    circuitComponentCenter,
+  )
+  const preciseAltiumComponentCenter = circuitToAltiumSchematicPrecisePoint(
+    circuitComponentCenter,
+  )
   const symbolMapping: AltiumSchematicSymbolMapping = {
     altiumComponentRecordIndex,
     circuitToAltiumSchematicPoint,
+    // Preserve primitive detail relative to the component's integer-grid
+    // origin so paths remain aligned with native Altium pins and text.
+    circuitToAltiumSchematicPrecisePoint: (circuitPoint) => {
+      const preciseAltiumPoint =
+        circuitToAltiumSchematicPrecisePoint(circuitPoint)
+      return {
+        x:
+          preciseAltiumPoint.x +
+          roundedAltiumComponentCenter.x -
+          preciseAltiumComponentCenter.x,
+        y:
+          preciseAltiumPoint.y +
+          roundedAltiumComponentCenter.y -
+          preciseAltiumComponentCenter.y,
+      }
+    },
     symbolToCircuitMatrix,
   }
   const graphicRecordFields: string[][] = []
