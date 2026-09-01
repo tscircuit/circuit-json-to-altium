@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test"
 import { serializeAltiumSheetToSvg } from "altiumts"
+import { type CircuitJson, schematic_component } from "circuit-json"
+import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import {
   board,
   type CircuitElement,
@@ -7,6 +9,7 @@ import {
   extractArchive,
   sourceComponent,
 } from "./fixtures"
+import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
 
 test("creates a root schematic with sorted child sheet links", async () => {
   const elements: CircuitElement[] = [
@@ -163,9 +166,17 @@ test("creates a root schematic with sorted child sheet links", async () => {
     rootSchematic.components.map((component) => component.get("UNIQUEID")),
   ).toEqual(["sch-free"])
   for (const schematic of result.schematics) expectValidSchematic(schematic)
-  await expect(serializeAltiumSheetToSvg(rootSchematic)).toMatchSvgSnapshot(
-    import.meta.path,
+  const circuitJsonSvg = convertCircuitJsonToSchematicSvg(
+    elements.filter(
+      (element) =>
+        element.type !== "schematic_component" ||
+        schematic_component.safeParse(element).success,
+    ) as CircuitJson,
   )
+  const altiumSvg = serializeAltiumSheetToSvg(rootSchematic)
+  await expect(
+    createSideBySideSvg(circuitJsonSvg, altiumSvg),
+  ).toMatchSvgSnapshot(import.meta.path)
 })
 
 test("does not reserve sheet space for hierarchy metadata", async () => {

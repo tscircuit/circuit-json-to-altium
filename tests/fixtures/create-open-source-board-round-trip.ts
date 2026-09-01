@@ -6,7 +6,15 @@ import {
   parseAltiumFile,
   serializeAltiumPcbToSvg,
 } from "altiumts"
+import {
+  type CircuitJson,
+  pcb_hole,
+  pcb_plated_hole,
+  pcb_smtpad,
+} from "circuit-json"
+import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { CircuitJsonToAltiumConverter } from "../../lib"
+import type { CircuitElement } from "../../lib/types"
 import { convertAltiumPcbToCircuitJson } from "./convert-altium-pcb-to-circuit-json"
 import { getPcbRoundTripMetrics } from "./get-pcb-round-trip-metrics"
 
@@ -31,6 +39,23 @@ function parsePcbDoc(pcbDocBytes: Uint8Array): AltiumPcbDocument {
     throw new Error(`Expected an Altium PCB document, got ${document.type}`)
   }
   return document
+}
+
+function createRenderableSourceCircuitJson(
+  circuitJson: CircuitElement[],
+): CircuitJson {
+  return circuitJson.filter((element) => {
+    if (element.type === "pcb_smtpad") {
+      return pcb_smtpad.safeParse(element).success
+    }
+    if (element.type === "pcb_plated_hole") {
+      return pcb_plated_hole.safeParse(element).success
+    }
+    if (element.type === "pcb_hole") {
+      return pcb_hole.safeParse(element).success
+    }
+    return true
+  }) as CircuitJson
 }
 
 export async function createOpenSourceBoardRoundTrip({
@@ -63,6 +88,9 @@ export async function createOpenSourceBoardRoundTrip({
   return {
     ...metrics,
     roundTripSvg: serializeAltiumPcbToSvg(roundTripDocument),
-    sourceSvg: serializeAltiumPcbToSvg(sourceDocument),
+    sourceSvg: convertCircuitJsonToPcbSvg(
+      createRenderableSourceCircuitJson(sourceCircuitJson),
+      { showCourtyards: true },
+    ),
   }
 }

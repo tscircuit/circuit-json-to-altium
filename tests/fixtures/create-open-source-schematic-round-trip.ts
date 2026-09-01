@@ -5,6 +5,8 @@ import {
   parseAltiumFile,
   serializeAltiumSheetToSvg,
 } from "altiumts"
+import type { CircuitJson } from "circuit-json"
+import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { CircuitJsonToAltiumConverter } from "../../lib"
 import { convertAltiumSchematicToCircuitJson } from "./convert-altium-schematic-to-circuit-json"
 import { getSchematicRoundTripMetrics } from "./get-schematic-round-trip-metrics"
@@ -112,6 +114,8 @@ export async function createOpenSourceSchematicRoundTrip({
     roundTripSvg: serializeAltiumSheetToSvg(roundTripDocument),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
-    sourceSvg: serializeAltiumSheetToSvg(sourceDocument, sourceProjectContext),
+    sourceSvg: convertCircuitJsonToSchematicSvg(
+      sourceCircuitJson as CircuitJson,
+    ),
   }
 }
