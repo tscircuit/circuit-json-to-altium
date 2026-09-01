@@ -127,6 +127,58 @@ const references: ReferenceSpec[] = [
       "jdekarske/Quadcopter@b4285601a1ea73d0453a2065c9580b026611e01c (MIT)",
     url: "https://raw.githubusercontent.com/jdekarske/Quadcopter/b4285601a1ea73d0453a2065c9580b026611e01c/PCB/fororder.PcbDoc",
   },
+  {
+    filename: "simplefoc-stepmini.SchDoc",
+    sha256: "e984cbb27cc081d02e7688efd112c87d1f015b206d243d1117247c92f56fcbca",
+    source:
+      "simplefoc/SimpleFOC-StepMini@5795cb31faceba53602c9b6bb3b50872cde26345 (MIT)",
+    url: "https://raw.githubusercontent.com/simplefoc/SimpleFOC-StepMini/5795cb31faceba53602c9b6bb3b50872cde26345/Altium/simplefoc-stepmini_2024-05-25.schdoc",
+  },
+  {
+    filename: "pidp11-io-expander.SchDoc",
+    sha256: "8555c4ece52cebd911b6152bd211d4e8b7dc59f003fc5a031e1c7d525ff4325d",
+    source:
+      "sstallion/PCB-PiDP11IOExpander@d97b81645091da8404661b37f75e4872c1788f79 (BSD-2-Clause)",
+    url: "https://media.githubusercontent.com/media/sstallion/PCB-PiDP11IOExpander/d97b81645091da8404661b37f75e4872c1788f79/PiDP11IOExpander.SchDoc",
+  },
+  {
+    filename: "cobra-ch341.SchDoc",
+    sha256: "45ec889000b819c2c98e3cb99fb734ffd131c2eaf8ce1798cee4cd34eaf8d0da",
+    source: "pengwon/cobra@1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d (MIT)",
+    url: "https://media.githubusercontent.com/media/pengwon/cobra/1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d/hw/sch/ch341.SchDoc",
+  },
+  {
+    filename: "cobra-m3406.SchDoc",
+    sha256: "c4db4274f1157553145265353774fbbd5b492359bf31b60530415f58a2990d41",
+    source: "pengwon/cobra@1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d (MIT)",
+    url: "https://media.githubusercontent.com/media/pengwon/cobra/1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d/hw/sch/m3406.SchDoc",
+  },
+  {
+    filename: "cobra-mlx90640.SchDoc",
+    sha256: "29e8f7c9460a00ebd5cb883a2647a372b2f7e686731780c2111395fcf9c28cee",
+    source: "pengwon/cobra@1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d (MIT)",
+    url: "https://media.githubusercontent.com/media/pengwon/cobra/1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d/hw/sch/mlx90640.SchDoc",
+  },
+  {
+    filename: "cobra-type-c.SchDoc",
+    sha256: "87b5a4518faa91a0fd85fd4765dab8ce6d699d44cfb7dec6ed959dafd3a62510",
+    source: "pengwon/cobra@1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d (MIT)",
+    url: "https://media.githubusercontent.com/media/pengwon/cobra/1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d/hw/sch/type-c.SchDoc",
+  },
+  {
+    filename: "ch582.SchDoc",
+    sha256: "83dd858dc3c3c5e9b6b762780245b7419623a897c3762bef8f30ef96623659e6",
+    source:
+      "iot-lorawan/CH582_PCB_SCH@b65bce802295c6c40413c5bc3ea54682820619c1 (MIT)",
+    url: "https://raw.githubusercontent.com/iot-lorawan/CH582_PCB_SCH/b65bce802295c6c40413c5bc3ea54682820619c1/Sheet_1_2022-06-16.schdoc",
+  },
+  {
+    filename: "quadcopter-controller.SchDoc",
+    sha256: "d52222e392732da74edea81b6545fa215459d22e5396ce15604659bb640d43ba",
+    source:
+      "jdekarske/Quadcopter@b4285601a1ea73d0453a2065c9580b026611e01c (MIT)",
+    url: "https://raw.githubusercontent.com/jdekarske/Quadcopter/b4285601a1ea73d0453a2065c9580b026611e01c/PCB/fororder.SchDoc",
+  },
 ]
 
 const referencesDirectory = resolve(import.meta.dir, "..", "references")
