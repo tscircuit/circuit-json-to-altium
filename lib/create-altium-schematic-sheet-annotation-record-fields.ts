@@ -101,6 +101,31 @@ function createRectRecordFields({
   ]
 }
 
+function createLineRecordFields({
+  annotation,
+  circuitToAltiumSchematicPoint,
+}: CreateAltiumSchematicSheetAnnotationRecordFieldsInput): string[] {
+  const altiumStart = circuitToAltiumSchematicPoint({
+    x: asNumber(annotation.x1),
+    y: asNumber(annotation.y1),
+  })
+  const altiumEnd = circuitToAltiumSchematicPoint({
+    x: asNumber(annotation.x2),
+    y: asNumber(annotation.y2),
+  })
+
+  return [
+    "RECORD=13",
+    `LOCATION.X=${altiumStart.x}`,
+    `LOCATION.Y=${altiumStart.y}`,
+    `CORNER.X=${altiumEnd.x}`,
+    `CORNER.Y=${altiumEnd.y}`,
+    `LINEWIDTH=${getAltiumLineWidth(annotation)}`,
+    `LINESTYLE=${annotation.is_dashed === true ? 1 : 0}`,
+    `COLOR=${getAltiumColor({ annotation, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR })}`,
+  ]
+}
+
 function createPathRecordFields({
   annotation,
   circuitToAltiumSchematicPoint,
@@ -140,6 +165,9 @@ export function createAltiumSchematicSheetAnnotationRecordFields(
   if (!isSchematicSheetAnnotation(input.annotation)) return undefined
   if (input.annotation.type === "schematic_text") {
     return createTextRecordFields(input)
+  }
+  if (input.annotation.type === "schematic_line") {
+    return createLineRecordFields(input)
   }
   if (input.annotation.type === "schematic_rect") {
     return createRectRecordFields(input)
