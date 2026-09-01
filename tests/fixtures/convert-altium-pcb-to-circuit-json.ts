@@ -50,6 +50,28 @@ type SourceNetLookupContext = {
   sourceNetIds: Map<AltiumNetRecord, string>
 }
 
+type AltiumArcGeometry = {
+  bulge?: number
+  center: AltiumPoint
+  end: AltiumPoint
+  endAngleDegrees: number
+  isFullCircle: boolean
+  radiusMils: number
+  start: AltiumPoint
+  startAngleDegrees: number
+}
+
+type AppendCopperTraceOptions = {
+  bulge?: number
+  elements: CircuitElement[]
+  end: AltiumPoint
+  layer: "bottom" | "top"
+  sourceNetId?: string
+  sourceTraceId: string
+  start: AltiumPoint
+  widthMils: number
+}
+
 function toCircuitPoint(point: AltiumPoint): CircuitPoint {
   return {
     x: point.x * MILLIMETERS_PER_MIL,
@@ -152,25 +174,75 @@ function toCircuitPadShape(shape: string | undefined): "circle" | "rect" {
     : "rect"
 }
 
-function createArcPoints(record: AltiumRecord): AltiumPoint[] {
-  const center =
-    getPoint(record, "LOCATION.X", "LOCATION.Y") ?? getPoint(record, "X", "Y")
-  const radius = getMeasurementMils(record, "RADIUS")
-  if (!center || radius === undefined || radius <= 0) return []
-
-  const startAngle = record.getNumber("STARTANGLE") ?? 0
-  const endAngle = record.getNumber("ENDANGLE") ?? 360
-  const sweep = endAngle - startAngle || 360
+function createAltiumArcApproximationPoints(
+  record: AltiumRecord,
+): AltiumPoint[] {
+  const geometry = getAltiumArcGeometry(record)
+  if (!geometry) return []
+  const sweep = geometry.isFullCircle
+    ? 360
+    : geometry.endAngleDegrees - geometry.startAngleDegrees
   const segmentCount = Math.max(8, Math.ceil(Math.abs(sweep) / 7.5))
 
   return Array.from({ length: segmentCount + 1 }, (_, index) => {
-    const angle = startAngle + (sweep * index) / segmentCount
+    const angle = geometry.startAngleDegrees + (sweep * index) / segmentCount
     const radians = (angle * Math.PI) / 180
     return {
-      x: center.x + Math.cos(radians) * radius,
-      y: center.y + Math.sin(radians) * radius,
+      x: geometry.center.x + Math.cos(radians) * geometry.radiusMils,
+      y: geometry.center.y + Math.sin(radians) * geometry.radiusMils,
     }
   })
+}
+
+function getAltiumArcGeometry(
+  record: AltiumRecord,
+): AltiumArcGeometry | undefined {
+  const center =
+    getPoint(record, "LOCATION.X", "LOCATION.Y") ?? getPoint(record, "X", "Y")
+  const radiusMils = getMeasurementMils(record, "RADIUS")
+  if (!center || radiusMils === undefined || radiusMils <= 0) return undefined
+
+  const startAngleDegrees = record.getNumber("STARTANGLE") ?? 0
+  const endAngleDegrees = record.getNumber("ENDANGLE") ?? 360
+  const rawSweepDegrees = endAngleDegrees - startAngleDegrees
+  const isFullCircle =
+    Math.abs(rawSweepDegrees) >= 360 - 1e-9 || rawSweepDegrees === 0
+  return {
+    ...(isFullCircle
+      ? {}
+      : { bulge: Math.tan((rawSweepDegrees * Math.PI) / 720) }),
+    center,
+    end: getAltiumArcPoint({
+      angleDegrees: endAngleDegrees,
+      center,
+      radiusMils,
+    }),
+    endAngleDegrees,
+    isFullCircle,
+    radiusMils,
+    start: getAltiumArcPoint({
+      angleDegrees: startAngleDegrees,
+      center,
+      radiusMils,
+    }),
+    startAngleDegrees,
+  }
+}
+
+function getAltiumArcPoint({
+  angleDegrees,
+  center,
+  radiusMils,
+}: {
+  angleDegrees: number
+  center: AltiumPoint
+  radiusMils: number
+}): AltiumPoint {
+  const angleRadians = (angleDegrees * Math.PI) / 180
+  return {
+    x: center.x + Math.cos(angleRadians) * radiusMils,
+    y: center.y + Math.sin(angleRadians) * radiusMils,
+  }
 }
 
 function getText(record: AltiumRecord): string {
@@ -242,26 +314,36 @@ function appendNetConnection(
   })
 }
 
-function appendCopperTrace(
-  elements: CircuitElement[],
-  sourceTraceId: string,
-  sourceNetId: string | undefined,
-  layer: "bottom" | "top",
-  widthMils: number,
-  start: AltiumPoint,
-  end: AltiumPoint,
-): void {
+function appendCopperTrace({
+  bulge,
+  elements,
+  end,
+  layer,
+  sourceNetId,
+  sourceTraceId,
+  start,
+  widthMils,
+}: AppendCopperTraceOptions): void {
   appendNetConnection(elements, sourceTraceId, sourceNetId)
   elements.push({
     type: "pcb_trace",
     pcb_trace_id: sourceTraceId.replace("source_trace", "pcb_trace"),
     source_trace_id: sourceTraceId,
-    route: [start, end].map((point) => ({
-      ...toCircuitPoint(point),
-      layer,
-      route_type: "wire",
-      width: toCircuitLength(widthMils),
-    })),
+    route: [
+      {
+        ...toCircuitPoint(start),
+        ...(bulge === undefined ? {} : { bulge }),
+        layer,
+        route_type: "wire",
+        width: toCircuitLength(widthMils),
+      },
+      {
+        ...toCircuitPoint(end),
+        layer,
+        route_type: "wire",
+        width: toCircuitLength(widthMils),
+      },
+    ],
   })
 }
 
@@ -550,15 +632,15 @@ export function convertAltiumPcbToCircuitJson(
     if (!start || !end || (start.x === end.x && start.y === end.y)) continue
     const widthMils = getMeasurementMils(track, "WIDTH") ?? 4
     if (isCopperLayer(layer)) {
-      appendCopperTrace(
+      appendCopperTrace({
         elements,
-        `source_trace_track_${trackIndex}`,
-        getSourceNetId(track, sourceNetLookupContext),
-        toCircuitLayer(layer),
-        widthMils,
-        start,
         end,
-      )
+        layer: toCircuitLayer(layer),
+        sourceNetId: getSourceNetId(track, sourceNetLookupContext),
+        sourceTraceId: `source_trace_track_${trackIndex}`,
+        start,
+        widthMils,
+      })
     } else if (isOverlayLayer(layer)) {
       const pcbComponentId = getOwnedComponentId(document, componentIds, track)
       elements.push({
@@ -573,23 +655,35 @@ export function convertAltiumPcbToCircuitJson(
   }
 
   for (const [arcIndex, arc] of document.getRecordsByKind("Arc").entries()) {
-    const points = createArcPoints(arc)
+    const geometry = getAltiumArcGeometry(arc)
+    const points = createAltiumArcApproximationPoints(arc)
     const layer = arc.getDecoded("LAYER")
     const widthMils = getMeasurementMils(arc, "WIDTH") ?? 4
-    if (isCopperLayer(layer)) {
+    if (isCopperLayer(layer) && geometry && !geometry.isFullCircle) {
+      appendCopperTrace({
+        bulge: geometry.bulge,
+        elements,
+        end: geometry.end,
+        layer: toCircuitLayer(layer),
+        sourceNetId: getSourceNetId(arc, sourceNetLookupContext),
+        sourceTraceId: `source_trace_arc_${arcIndex}`,
+        start: geometry.start,
+        widthMils,
+      })
+    } else if (isCopperLayer(layer)) {
       for (let segmentIndex = 1; segmentIndex < points.length; segmentIndex++) {
         const start = points[segmentIndex - 1]
         const end = points[segmentIndex]
         if (!start || !end) continue
-        appendCopperTrace(
+        appendCopperTrace({
           elements,
-          `source_trace_arc_${arcIndex}_${segmentIndex - 1}`,
-          getSourceNetId(arc, sourceNetLookupContext),
-          toCircuitLayer(layer),
-          widthMils,
-          start,
           end,
-        )
+          layer: toCircuitLayer(layer),
+          sourceNetId: getSourceNetId(arc, sourceNetLookupContext),
+          sourceTraceId: `source_trace_arc_${arcIndex}_${segmentIndex - 1}`,
+          start,
+          widthMils,
+        })
       }
     } else if (isOverlayLayer(layer) && points.length > 1) {
       const pcbComponentId = getOwnedComponentId(document, componentIds, arc)
