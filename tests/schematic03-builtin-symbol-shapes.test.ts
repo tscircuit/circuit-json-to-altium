@@ -126,7 +126,13 @@ test("preserves sub-grid path details in built-in LED arrows", async () => {
       nextArrowPoint.y - arrowStart.y,
     ),
   ).toBeCloseTo(0.2, 8)
-  expect(arrowShaft.fields.some(({ key }) => key.endsWith("_FRAC"))).toBe(true)
+  const fractionalCoordinateFields = arrowShaft.fields.filter(({ key }) =>
+    key.endsWith("_FRAC"),
+  )
+  expect(fractionalCoordinateFields.length).toBeGreaterThan(0)
+  expect(
+    fractionalCoordinateFields.every(({ value }) => /^\d{5}$/u.test(value)),
+  ).toBe(true)
   expectValidSchematic(schematic)
 })
 
