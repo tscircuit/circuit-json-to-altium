@@ -263,10 +263,23 @@ export function createSchematicDocument({
   includeAllSchematicElements,
   schematicSheetId,
 }: CreateSchematicDocumentParams): string {
+  const sourcePorts = new Map<SourcePortId, CircuitElement>(
+    byType(circuitJson, "source_port").map((sourcePort) => [
+      asString(sourcePort.source_port_id),
+      sourcePort,
+    ]),
+  )
   const schematicElements = circuitJson.filter(
     (element) =>
       element.type?.startsWith("schematic_") === true &&
       element.type !== "schematic_sheet" &&
+      !(
+        element.type === "schematic_port" &&
+        !asString(element.schematic_component_id) &&
+        element.is_connected === false &&
+        sourcePorts.get(asString(element.source_port_id))?.do_not_connect !==
+          true
+      ) &&
       doesElementBelongToSchematicSheet({
         element,
         includeAllSchematicElements,
@@ -276,6 +289,7 @@ export function createSchematicDocument({
   const {
     circuitToAltiumSchematicLength,
     circuitToAltiumSchematicPoint,
+    circuitToAltiumSchematicPrecisePoint,
     width: contentWidth,
     height: contentHeight,
   } = getSchematicTransform(schematicElements)
@@ -422,12 +436,6 @@ export function createSchematicDocument({
       .filter((element) => typeof element.source_component_id === "string")
       .map((element) => [asString(element.source_component_id), element]),
   )
-  const sourcePorts = new Map<SourcePortId, CircuitElement>(
-    byType(circuitJson, "source_port").map((sourcePort) => [
-      asString(sourcePort.source_port_id),
-      sourcePort,
-    ]),
-  )
   const schematicSymbols = new Map<SchematicSymbolId, CircuitElement>(
     byType(circuitJson, "schematic_symbol").map((schematicSymbol) => [
       asString(schematicSymbol.schematic_symbol_id),
@@ -567,6 +575,7 @@ export function createSchematicDocument({
           altiumComponentRecordIndex,
           circuitComponentCenter,
           circuitToAltiumSchematicPoint,
+          circuitToAltiumSchematicPrecisePoint,
           symbolName: asString(schematicComponent.symbol_name),
         })
       : undefined
@@ -685,18 +694,24 @@ export function createSchematicDocument({
       const pinDesignator =
         sanitizeField(sourcePort?.pin_number) || `${pinIndex + 1}`
       const pinGeometryLabels = [
-        pinDesignator,
+        asString(schematicPort.display_pin_label),
         asString(sourcePort?.name),
         ...(Array.isArray(sourcePort?.port_hints)
           ? sourcePort.port_hints.flatMap((portHint) =>
               typeof portHint === "string" ? [portHint] : [],
             )
           : []),
-        asString(schematicPort.display_pin_label),
+        pinDesignator,
       ]
-      const builtinPinGeometry = pinGeometryLabels
-        .map((label) => schematicSymbolRecords?.pinGeometryByLabel.get(label))
-        .find((pinGeometry) => pinGeometry !== undefined)
+      const altiumPinTerminal =
+        circuitToAltiumSchematicPoint(circuitPinTerminal)
+      const builtinPinGeometry =
+        schematicSymbolRecords?.pinGeometryByTerminal.get(
+          `${altiumPinTerminal.x}:${altiumPinTerminal.y}`,
+        ) ??
+        pinGeometryLabels
+          .map((label) => schematicSymbolRecords?.pinGeometryByLabel.get(label))
+          .find((pinGeometry) => pinGeometry !== undefined)
       const altiumPinLocation =
         builtinPinGeometry?.location ??
         (schematicSymbolRecords

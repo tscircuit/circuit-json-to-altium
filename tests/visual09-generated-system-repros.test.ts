@@ -33,6 +33,20 @@ function expectPinNameAndDesignatorBaselines(svg: string): number {
 
 const repros: GeneratedSystemRepro[] = [
   {
+    fixtureName: "generated-system-blood-pressure-monitor.circuit.json",
+    projectName: "blood-pressure-monitor",
+    title: "blood pressure monitor generated system",
+    expectedSheetNames: [
+      "Input + Reference",
+      "Connectors + Jumpers + Test Points",
+      "Programming",
+      "INA + Filter",
+      "MCU",
+      "Pressure Sensor + ADC Filter",
+      "Motor Driver",
+    ],
+  },
+  {
     fixtureName: "generated-system-automotive-mirror.circuit.json",
     projectName: "automotive-mirror-system",
     title: "automotive mirror generated system",
