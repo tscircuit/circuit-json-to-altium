@@ -53,6 +53,17 @@ const elements: CircuitElement[] = [
     is_dashed: false,
   },
   {
+    type: "schematic_line",
+    schematic_line_id: "feedback_line",
+    x1: 3,
+    y1: -2,
+    x2: 4,
+    y2: -1,
+    stroke_width: 0.1,
+    color: "#008000",
+    is_dashed: true,
+  },
+  {
     type: "schematic_path",
     schematic_path_id: "leader",
     points: [
@@ -87,6 +98,7 @@ test("writes schematic sheet annotations as native records", async () => {
   const sheetRecord = schematic.getRecordsByKind("31")[0]
   const labels = schematic.getRecordsByKind("4")
   const rectangle = schematic.getRecordsByKind("14")[0]
+  const line = schematic.getRecordsByKind("13")[0]
   const polyline = schematic.getRecordsByKind("6")[0]
   const polygon = schematic.getRecordsByKind("7")[0]
 
@@ -129,6 +141,15 @@ test("writes schematic sheet annotations as native records", async () => {
     areaColor: 0x66_55_44,
     color: 0x33_22_11,
     isSolid: true,
+    lineWidth: 2,
+  })
+  expect({
+    color: line?.getNumber("COLOR"),
+    lineStyle: line?.getNumber("LINESTYLE"),
+    lineWidth: line?.getNumber("LINEWIDTH"),
+  }).toEqual({
+    color: 0x00_80_00,
+    lineStyle: 1,
     lineWidth: 2,
   })
   expect({

@@ -58,9 +58,22 @@ const elements: CircuitElement[] = [
       },
     ]
   }),
+  {
+    type: "source_port",
+    source_port_id: "source_port_unconnected",
+    name: "UNCONNECTED",
+  },
+  {
+    type: "schematic_port",
+    schematic_port_id: "schematic_port_unconnected",
+    source_port_id: "source_port_unconnected",
+    center: { x: 8, y: 0 },
+    display_pin_label: "UNCONNECTED",
+    is_connected: false,
+  },
 ]
 
-test("writes componentless schematic ports as native off-sheet ports", async () => {
+test("writes visible componentless schematic ports as native off-sheet ports", async () => {
   const { schematics } = await extractArchive(elements)
   const schematic = schematics[0] as AltiumSchDoc
   const sheetRecord = schematic.getRecordsByKind("31")[0]

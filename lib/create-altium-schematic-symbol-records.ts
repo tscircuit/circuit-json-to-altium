@@ -37,6 +37,7 @@ export type AltiumSchematicSymbolRecords = {
   designatorPlacement?: AltiumSchematicTextPlacement
   graphicRecordFields: string[][]
   pinGeometryByLabel: Map<string, AltiumSchematicPinGeometry>
+  pinGeometryByTerminal: Map<string, AltiumSchematicPinGeometry>
 }
 
 type CreateAltiumSchematicSymbolRecordsOptions = {
@@ -91,10 +92,11 @@ export function createAltiumSchematicSymbolRecords({
     symbolToCircuitMatrix,
   }
   const graphicRecordFields: string[][] = []
-  const pinGeometryByLabel = createAltiumPinGeometryByLabel({
-    schematicSymbol,
-    symbolMapping,
-  })
+  const { pinGeometryByLabel, pinGeometryByTerminal } =
+    createAltiumPinGeometryMaps({
+      schematicSymbol,
+      symbolMapping,
+    })
   let commentPlacement: AltiumSchematicTextPlacement | undefined
   let designatorPlacement: AltiumSchematicTextPlacement | undefined
 
@@ -132,17 +134,26 @@ export function createAltiumSchematicSymbolRecords({
     designatorPlacement,
     graphicRecordFields,
     pinGeometryByLabel,
+    pinGeometryByTerminal,
   }
 }
 
-function createAltiumPinGeometryByLabel({
+function getPointKey(point: Point): string {
+  return `${point.x}:${point.y}`
+}
+
+function createAltiumPinGeometryMaps({
   schematicSymbol,
   symbolMapping,
 }: {
   schematicSymbol: SchSymbol
   symbolMapping: AltiumSchematicSymbolMapping
-}): Map<string, AltiumSchematicPinGeometry> {
+}): Pick<
+  AltiumSchematicSymbolRecords,
+  "pinGeometryByLabel" | "pinGeometryByTerminal"
+> {
   const pinGeometryByLabel = new Map<string, AltiumSchematicPinGeometry>()
+  const pinGeometryByTerminal = new Map<string, AltiumSchematicPinGeometry>()
 
   for (const port of schematicSymbol.ports) {
     const connectedPrimitivePoints = schematicSymbol.primitives.flatMap(
@@ -187,6 +198,7 @@ function createAltiumPinGeometryByLabel({
       ),
       location: altiumBodyPoint,
     }
+    pinGeometryByTerminal.set(getPointKey(altiumTerminalPoint), pinGeometry)
     for (const label of port.labels) {
       if (!pinGeometryByLabel.has(label)) {
         pinGeometryByLabel.set(label, pinGeometry)
@@ -194,7 +206,7 @@ function createAltiumPinGeometryByLabel({
     }
   }
 
-  return pinGeometryByLabel
+  return { pinGeometryByLabel, pinGeometryByTerminal }
 }
 
 function findSchematicSymbol(symbolName: string): SchSymbol | undefined {
