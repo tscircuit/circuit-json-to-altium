@@ -1,2 +1,3 @@
 export const ALTIUM_SCHEMATIC_GRAPHIC_COLOR = 132
+export const ALTIUM_SCHEMATIC_SHEET_AREA_COLOR = 0xf8_fc_ff
 export const ALTIUM_SCHEMATIC_WHITE = 0xff_ff_ff

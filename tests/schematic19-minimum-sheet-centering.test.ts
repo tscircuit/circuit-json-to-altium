@@ -31,6 +31,7 @@ test("centers compact schematic content on the minimum-size sheet", async () => 
   const sheet = schematic.getRecordsByKind("31")[0]
 
   expect({
+    areaColor: sheet?.getNumber("AREACOLOR"),
     height: sheet?.getNumber("CUSTOMY"),
     labelLocations: schematic.netLabels.map((label) => ({
       x: label.getNumber("LOCATION.X"),
@@ -38,6 +39,7 @@ test("centers compact schematic content on the minimum-size sheet", async () => 
     })),
     width: sheet?.getNumber("CUSTOMX"),
   }).toEqual({
+    areaColor: 0xf8_fc_ff,
     height: 300,
     labelLocations: [
       { x: 180, y: 150 },
