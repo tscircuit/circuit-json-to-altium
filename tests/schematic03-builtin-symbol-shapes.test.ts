@@ -129,3 +129,71 @@ test("preserves sub-grid path details in built-in LED arrows", async () => {
   expect(arrowShaft.fields.some(({ key }) => key.endsWith("_FRAC"))).toBe(true)
   expectValidSchematic(schematic)
 })
+
+test("matches built-in pin geometry by semantic labels before pin numbers", async () => {
+  const elements: CircuitElement[] = [
+    board(),
+    sourceComponent("source_opamp", "U1A"),
+    ...[
+      { displayLabel: "inp1", name: "IN_POS_A", pinNumber: 3 },
+      { displayLabel: "inp2", name: "IN_NEG_A", pinNumber: 2 },
+      { displayLabel: "out", name: "OUT_A", pinNumber: 1 },
+    ].flatMap(({ displayLabel, name, pinNumber }) => {
+      const sourcePortId = `source_opamp_port_${pinNumber}`
+      return [
+        {
+          type: "source_port",
+          source_port_id: sourcePortId,
+          source_component_id: "source_opamp",
+          pin_number: pinNumber,
+          name,
+          port_hints: [name, displayLabel, `pin${pinNumber}`],
+        },
+        {
+          type: "schematic_port",
+          schematic_port_id: `schematic_opamp_port_${pinNumber}`,
+          schematic_component_id: "schematic_opamp",
+          source_port_id: sourcePortId,
+          center:
+            displayLabel === "out"
+              ? { x: 0.5, y: 0 }
+              : { x: -0.5, y: displayLabel === "inp1" ? 0.15 : -0.15 },
+          facing_direction: displayLabel === "out" ? "right" : "left",
+          display_pin_label: displayLabel,
+        },
+      ]
+    }),
+    {
+      type: "schematic_component",
+      schematic_component_id: "schematic_opamp",
+      source_component_id: "source_opamp",
+      center: { x: 0, y: 0 },
+      symbol_name: "opamp_no_power_right",
+    },
+  ]
+
+  const { schematics } = await extractArchive(elements)
+  const schematic = schematics[0]
+  if (!schematic) throw new Error("Expected one generated schematic")
+  const opamp = schematic.components.find(
+    (component) => component.libraryReference === "opamp_no_power_right",
+  )
+  if (!opamp) throw new Error("Expected a generated op-amp component")
+  const pins = schematic
+    .getOwnedRecords(opamp)
+    .filter((record) => record.recordKind === "2")
+  const positiveInputPin = pins.find(
+    (pin) => pin.getDecoded("DESIGNATOR") === "3",
+  )
+  const outputPin = pins.find((pin) => pin.getDecoded("DESIGNATOR") === "1")
+
+  expect(positiveInputPin?.getNumber("LOCATION.X")).toBeLessThan(
+    opamp.position?.x ?? 0,
+  )
+  expect(positiveInputPin?.getNumber("PINCONGLOMERATE")).toBe(34)
+  expect(outputPin?.getNumber("LOCATION.X")).toBeGreaterThan(
+    opamp.position?.x ?? 0,
+  )
+  expect(outputPin?.getNumber("PINCONGLOMERATE")).toBe(32)
+  expectValidSchematic(schematic)
+})

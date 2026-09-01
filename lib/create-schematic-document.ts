@@ -690,14 +690,14 @@ export function createSchematicDocument({
       const pinDesignator =
         sanitizeField(sourcePort?.pin_number) || `${pinIndex + 1}`
       const pinGeometryLabels = [
-        pinDesignator,
+        asString(schematicPort.display_pin_label),
         asString(sourcePort?.name),
         ...(Array.isArray(sourcePort?.port_hints)
           ? sourcePort.port_hints.flatMap((portHint) =>
               typeof portHint === "string" ? [portHint] : [],
             )
           : []),
-        asString(schematicPort.display_pin_label),
+        pinDesignator,
       ]
       const builtinPinGeometry = pinGeometryLabels
         .map((label) => schematicSymbolRecords?.pinGeometryByLabel.get(label))
