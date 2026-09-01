@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="374" viewBox="0 0 971.56 363.56" role="img" aria-label="Altium schematic sheet" class="altium-sheet" data-renderer="altiumts">
   <title>Altium schematic sheet</title>
-  <rect width="100%" height="100%" fill="#e2e8f0"/>
+  <rect width="100%" height="100%" fill="#000000"/>
   <g stroke-linecap="round" stroke-linejoin="round">
     <defs><clipPath id="altium-sheet-paper"><rect x="31.78" y="31.78" width="908" height="300"/></clipPath></defs>
     <g data-record="SheetBorder" fill="#fffef8" stroke="#334155" stroke-width="1"><rect x="31.78" y="31.78" width="908" height="300"/><rect x="41.78" y="41.78" width="888" height="280" fill="none"/><path d="M 189.78 31.78 V 41.78 M 189.78 321.78 V 331.78"/><path d="M 337.78 31.78 V 41.78 M 337.78 321.78 V 331.78"/><path d="M 485.78 31.78 V 41.78 M 485.78 321.78 V 331.78"/><path d="M 633.78 31.78 V 41.78 M 633.78 321.78 V 331.78"/><path d="M 781.78 31.78 V 41.78 M 781.78 321.78 V 331.78"/><path d="M 31.78 111.78 H 41.78 M 929.78 111.78 H 939.78"/><path d="M 31.78 181.78 H 41.78 M 929.78 181.78 H 939.78"/><path d="M 31.78 251.78 H 41.78 M 929.78 251.78 H 939.78"/></g>
