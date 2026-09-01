@@ -197,3 +197,70 @@ test("matches built-in pin geometry by semantic labels before pin numbers", asyn
   expect(outputPin?.getNumber("PINCONGLOMERATE")).toBe(32)
   expectValidSchematic(schematic)
 })
+
+test("maps stacked physical switch pins to their shared visual terminals", async () => {
+  const elements: CircuitElement[] = [
+    board(),
+    sourceComponent("source_switch", "S1"),
+    ...[1, 2, 3, 4].flatMap((pinNumber) => {
+      const sourcePortId = `source_switch_port_${pinNumber}`
+      const isLeftTerminal = pinNumber <= 2
+      return [
+        {
+          type: "source_port",
+          source_port_id: sourcePortId,
+          source_component_id: "source_switch",
+          pin_number: pinNumber,
+          name: `pin${pinNumber}`,
+          port_hints: [`pin${pinNumber}`, `${pinNumber}`],
+        },
+        {
+          type: "schematic_port",
+          schematic_port_id: `schematic_switch_port_${pinNumber}`,
+          schematic_component_id: "schematic_switch",
+          source_port_id: sourcePortId,
+          center: { x: isLeftTerminal ? -0.47 : 0.47, y: -0.05 },
+          facing_direction: isLeftTerminal ? "left" : "right",
+        },
+      ]
+    }),
+    {
+      type: "schematic_component",
+      schematic_component_id: "schematic_switch",
+      source_component_id: "source_switch",
+      center: { x: 0, y: 0 },
+      size: { width: 0.94, height: 0.7189107 },
+      symbol_name: "push_button_normally_open_momentary_right",
+    },
+  ]
+
+  const { schematics } = await extractArchive(elements)
+  const schematic = schematics[0]
+  if (!schematic) throw new Error("Expected one generated schematic")
+  const switchComponent = schematic.components.find(
+    (component) =>
+      component.libraryReference ===
+      "push_button_normally_open_momentary_right",
+  )
+  if (!switchComponent) throw new Error("Expected a generated switch")
+  const pins = schematic
+    .getOwnedRecords(switchComponent)
+    .filter((record) => record.recordKind === "2")
+  const pinByDesignator = new Map(
+    pins.map((pin) => [pin.getDecoded("DESIGNATOR"), pin]),
+  )
+  const pin1 = pinByDesignator.get("1")
+  const pin2 = pinByDesignator.get("2")
+  const pin3 = pinByDesignator.get("3")
+  const pin4 = pinByDesignator.get("4")
+
+  expect(pin1?.getNumber("LOCATION.X")).toBe(pin2?.getNumber("LOCATION.X"))
+  expect(pin3?.getNumber("LOCATION.X")).toBe(pin4?.getNumber("LOCATION.X"))
+  expect(pin1?.getNumber("LOCATION.X")).toBeLessThan(
+    switchComponent.position?.x ?? 0,
+  )
+  expect(pin3?.getNumber("LOCATION.X")).toBeGreaterThan(
+    switchComponent.position?.x ?? 0,
+  )
+  expectValidSchematic(schematic)
+})

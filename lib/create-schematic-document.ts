@@ -699,9 +699,15 @@ export function createSchematicDocument({
           : []),
         pinDesignator,
       ]
-      const builtinPinGeometry = pinGeometryLabels
-        .map((label) => schematicSymbolRecords?.pinGeometryByLabel.get(label))
-        .find((pinGeometry) => pinGeometry !== undefined)
+      const altiumPinTerminal =
+        circuitToAltiumSchematicPoint(circuitPinTerminal)
+      const builtinPinGeometry =
+        schematicSymbolRecords?.pinGeometryByTerminal.get(
+          `${altiumPinTerminal.x}:${altiumPinTerminal.y}`,
+        ) ??
+        pinGeometryLabels
+          .map((label) => schematicSymbolRecords?.pinGeometryByLabel.get(label))
+          .find((pinGeometry) => pinGeometry !== undefined)
       const altiumPinLocation =
         builtinPinGeometry?.location ??
         (schematicSymbolRecords
