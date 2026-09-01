@@ -14,6 +14,7 @@ import {
 } from "./create-altium-schematic-sheet-symbol-records"
 import { createAltiumSchematicSymbolPrimitiveRecordFields } from "./create-altium-schematic-symbol-primitive-record-fields"
 import { createAltiumSchematicSymbolRecords } from "./create-altium-schematic-symbol-records"
+import { createAltiumSchematicTableCellRecordFields } from "./create-altium-schematic-table-cell-record-fields"
 import { createAltiumSchematicTextRecordFields } from "./create-altium-schematic-text-record-fields"
 import { findSchematicComponentText } from "./find-schematic-component-text"
 import { findSchematicTextPresentation } from "./find-schematic-text-presentation"
@@ -436,6 +437,12 @@ export function createSchematicDocument({
     byType(circuitJson, "schematic_symbol").map((schematicSymbol) => [
       asString(schematicSymbol.schematic_symbol_id),
       schematicSymbol,
+    ]),
+  )
+  const schematicTables = new Map<string, CircuitElement>(
+    byType(circuitJson, "schematic_table").map((schematicTable) => [
+      asString(schematicTable.schematic_table_id),
+      schematicTable,
     ]),
   )
   const schematicPortsByComponentId = new Map<
@@ -921,6 +928,19 @@ export function createSchematicDocument({
       })
     if (!annotationRecordFields) continue
     addSchematicRecord(annotationRecordFields, schematicRecordContext)
+  }
+
+  for (const tableCell of schematicElements.filter(
+    (element) => element.type === "schematic_table_cell",
+  )) {
+    for (const recordFields of createAltiumSchematicTableCellRecordFields({
+      cell: tableCell,
+      circuitToAltiumSchematicPoint,
+      fontTable: altiumSchematicFontTable,
+      table: schematicTables.get(asString(tableCell.schematic_table_id)),
+    })) {
+      addSchematicRecord(recordFields, schematicRecordContext)
+    }
   }
 
   return `${schematicRecordContext.lines.join("\r\n")}\r\n`

@@ -24,7 +24,7 @@ function addCanvasBackground(svg: string): string {
   )
 }
 
-test("reproduces the missing table on the full SparkFun TXS0108E board", async () => {
+test("exports the table on the full SparkFun TXS0108E board", async () => {
   const circuitJson = JSON.parse(
     await readFile(fixtureUrl, "utf8"),
   ) as CircuitJson
@@ -77,10 +77,66 @@ test("reproduces the missing table on the full SparkFun TXS0108E board", async (
   const rootLabels = schematic
     .getRecordsByKind("4")
     .filter((record) => schematic.getParent(record) === undefined)
-  expect(rootRectangles).toHaveLength(sourceRectangles.length)
+  expect(rootRectangles).toHaveLength(
+    sourceRectangles.length + tableCells.length,
+  )
+
+  const tableRectangles = rootRectangles.slice(sourceRectangles.length)
+  const tableLabels = tableCells.map((cell) =>
+    rootLabels.find((record) => record.getDecoded("TEXT") === cell.text),
+  )
+  expect(tableRectangles).toHaveLength(tableCells.length)
+  expect(tableLabels.every(Boolean)).toBe(true)
+
+  const u1Component = schematic
+    .getRecordsByKind("1")
+    .find((record) => record.getDecoded("UNIQUEID") === "schematic_component_0")
+  const u1Body = schematic
+    .getRecordsByKind("14")
+    .find((record) => schematic.getParent(record) === u1Component)
+  const tableBottom = Math.min(
+    ...tableRectangles.flatMap((record) => [
+      record.getNumber("LOCATION.Y") ?? 0,
+      record.getNumber("CORNER.Y") ?? 0,
+    ]),
+  )
+  const u1Top = Math.max(
+    u1Body?.getNumber("LOCATION.Y") ?? 0,
+    u1Body?.getNumber("CORNER.Y") ?? 0,
+  )
+  const titleRectangle = tableRectangles[0]
+  const titleCenterX =
+    ((titleRectangle?.getNumber("LOCATION.X") ?? 0) +
+      (titleRectangle?.getNumber("CORNER.X") ?? 0)) /
+    2
+  expect(u1Component).toBeDefined()
+  expect(u1Body).toBeDefined()
+  expect(tableBottom).toBeGreaterThan(u1Top)
   expect(
-    rootLabels.some((record) => record.getDecoded("TEXT") === "VCCA Range:"),
-  ).toBe(false)
+    Math.abs(titleCenterX - (u1Component?.getNumber("LOCATION.X") ?? 0)),
+  ).toBeLessThanOrEqual(0.5)
+
+  const vccaLabel = tableLabels[1]
+  const vccaRectangle = tableRectangles[1]
+  expect(vccaRectangle).toBeDefined()
+  expect(vccaLabel).toBeDefined()
+  const rectangleCenter = {
+    x:
+      ((vccaRectangle?.getNumber("LOCATION.X") ?? 0) +
+        (vccaRectangle?.getNumber("CORNER.X") ?? 0)) /
+      2,
+    y:
+      ((vccaRectangle?.getNumber("LOCATION.Y") ?? 0) +
+        (vccaRectangle?.getNumber("CORNER.Y") ?? 0)) /
+      2,
+  }
+  expect(vccaLabel?.getNumber("JUSTIFICATION")).toBe(4)
+  expect(
+    Math.abs((vccaLabel?.getNumber("LOCATION.X") ?? 0) - rectangleCenter.x),
+  ).toBeLessThanOrEqual(0.5)
+  expect(
+    Math.abs((vccaLabel?.getNumber("LOCATION.Y") ?? 0) - rectangleCenter.y),
+  ).toBeLessThanOrEqual(0.5)
 
   const sourceSvg = await convertCircuitJsonToSchematicSvg(circuitJson)
   const altiumSvg = serializeAltiumSheetToSvg(schematic, {

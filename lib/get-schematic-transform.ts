@@ -1,6 +1,7 @@
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint, compose, scale, translate } from "transformation-matrix"
 import { asNumber, asPoint, asString, isCircuitElement } from "./format"
+import { getSchematicTableCellGeometry } from "./get-schematic-table-cell-geometry"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
 import { isSchematicSymbolPrimitive } from "./is-schematic-symbol-primitive"
 import type {
@@ -77,6 +78,11 @@ export function getSchematicTransform(
   schematicElements: CircuitElement[],
 ): SchematicTransform {
   const circuitPoints: Point[] = []
+  const schematicTables = new Map<string, CircuitElement>(
+    schematicElements
+      .filter((element) => element.type === "schematic_table")
+      .map((table) => [asString(table.schematic_table_id), table]),
+  )
   for (const element of schematicElements) {
     const center = asPoint(element.center)
     if (center) circuitPoints.push(center)
@@ -92,6 +98,24 @@ export function getSchematicTransform(
     }
     const anchor = asPoint(element.anchor_position)
     if (anchor) circuitPoints.push(anchor)
+    if (element.type === "schematic_table_cell") {
+      const geometry = getSchematicTableCellGeometry({
+        cell: element,
+        table: schematicTables.get(asString(element.schematic_table_id)),
+      })
+      if (geometry) {
+        circuitPoints.push(
+          {
+            x: geometry.center.x - geometry.width / 2,
+            y: geometry.center.y - geometry.height / 2,
+          },
+          {
+            x: geometry.center.x + geometry.width / 2,
+            y: geometry.center.y + geometry.height / 2,
+          },
+        )
+      }
+    }
     const isSheetAnnotation = isSchematicSheetAnnotation(element)
     const position = isSheetAnnotation ? asPoint(element.position) : undefined
     if (position) circuitPoints.push(position)
