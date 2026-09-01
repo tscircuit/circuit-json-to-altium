@@ -93,6 +93,40 @@ const references: ReferenceSpec[] = [
       "simplefoc/Arduino-SimpleFOCShield@2a83626b86debd5fc5f309ba06b3fb36e3b25533 (MIT)",
     url: "https://raw.githubusercontent.com/simplefoc/Arduino-SimpleFOCShield/2a83626b86debd5fc5f309ba06b3fb36e3b25533/altium/SimpleFOCShieldV3.SchDoc_2024-06-23.schdoc",
   },
+  {
+    filename: "simplefoc-stepmini.PcbDoc",
+    sha256: "1b8384490277d89b499a7a5963ed29bd0cf548ec8d50fe0354f242cf3148ee02",
+    source:
+      "simplefoc/SimpleFOC-StepMini@5795cb31faceba53602c9b6bb3b50872cde26345 (MIT)",
+    url: "https://raw.githubusercontent.com/simplefoc/SimpleFOC-StepMini/5795cb31faceba53602c9b6bb3b50872cde26345/Altium/simplefoc-stepmini_2024-05-25.pcbdoc",
+  },
+  {
+    filename: "pidp11-io-expander.PcbDoc",
+    sha256: "1ff7234670ec5e20092d23ecf0cd5e7380e842ef7efff2b5cb992f53f84c9c69",
+    source:
+      "sstallion/PCB-PiDP11IOExpander@d97b81645091da8404661b37f75e4872c1788f79 (BSD-2-Clause)",
+    url: "https://media.githubusercontent.com/media/sstallion/PCB-PiDP11IOExpander/d97b81645091da8404661b37f75e4872c1788f79/PiDP11IOExpander.PcbDoc",
+  },
+  {
+    filename: "cobra.PcbDoc",
+    sha256: "d0913643166660cfdcc5490d63283b12f4ff08b0dbbaa05e409a9cd9196aa9c5",
+    source: "pengwon/cobra@1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d (MIT)",
+    url: "https://media.githubusercontent.com/media/pengwon/cobra/1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d/hw/pcb/cobra.PcbDoc",
+  },
+  {
+    filename: "ch582.PcbDoc",
+    sha256: "dcf82249e19f9a58f3874e9c56509bab42f3fdf00dc3dd0d52ba9a4f4aeb0649",
+    source:
+      "iot-lorawan/CH582_PCB_SCH@b65bce802295c6c40413c5bc3ea54682820619c1 (MIT)",
+    url: "https://raw.githubusercontent.com/iot-lorawan/CH582_PCB_SCH/b65bce802295c6c40413c5bc3ea54682820619c1/PCB_ch582_2022-06-16.pcbdoc",
+  },
+  {
+    filename: "quadcopter-controller.PcbDoc",
+    sha256: "6d9ea33155ea5fd68942e57f94003110497ca0e16af616e941fe7c25513faea6",
+    source:
+      "jdekarske/Quadcopter@b4285601a1ea73d0453a2065c9580b026611e01c (MIT)",
+    url: "https://raw.githubusercontent.com/jdekarske/Quadcopter/b4285601a1ea73d0453a2065c9580b026611e01c/PCB/fororder.PcbDoc",
+  },
 ]
 
 const referencesDirectory = resolve(import.meta.dir, "..", "references")
