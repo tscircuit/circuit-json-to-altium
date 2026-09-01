@@ -2,6 +2,7 @@ import { resolve } from "node:path"
 import {
   AltiumPrjPcb,
   AltiumSchDoc,
+  type AltiumSheetSvgOptions,
   parseAltiumFile,
   serializeAltiumSheetToSvg,
 } from "altiumts"
@@ -21,6 +22,7 @@ export type OpenSourceSchematicRoundTrip = ReturnType<
 type OpenSourceSchematicRoundTripOptions = {
   filename: string
   projectName: string
+  sharedSvgRenderOptions?: AltiumSheetSvgOptions
   sourceProject?: {
     documentName: string
     filename: string
@@ -73,6 +75,7 @@ async function readReference(filename: string): Promise<Uint8Array> {
 export async function createOpenSourceSchematicRoundTrip({
   filename,
   projectName,
+  sharedSvgRenderOptions,
   sourceProject,
 }: OpenSourceSchematicRoundTripOptions): Promise<OpenSourceSchematicRoundTrip> {
   const sourceBytes = await readReference(filename)
@@ -109,9 +112,15 @@ export async function createOpenSourceSchematicRoundTrip({
     }),
     roundTripOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(roundTripDocument),
-    roundTripSvg: serializeAltiumSheetToSvg(roundTripDocument),
+    roundTripSvg: serializeAltiumSheetToSvg(
+      roundTripDocument,
+      sharedSvgRenderOptions,
+    ),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
-    sourceSvg: serializeAltiumSheetToSvg(sourceDocument, sourceProjectContext),
+    sourceSvg: serializeAltiumSheetToSvg(sourceDocument, {
+      ...sourceProjectContext,
+      ...sharedSvgRenderOptions,
+    }),
   }
 }

@@ -2,10 +2,23 @@ import { expect, test } from "bun:test"
 import { createOpenSourceSchematicRoundTrip } from "./fixtures/create-open-source-schematic-round-trip"
 import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
 
+// The source retains a top row above its declared paper, while the generated
+// document places that row farther right and higher. Use one shared frame so
+// neither panel clips valid records and both remain at the same scale.
+const HERON_PAY_SSM_COMPARISON_VIEW_BOX = {
+  x: -20,
+  y: -20,
+  width: 1620,
+  height: 1320,
+}
+
 test("round-trips the open-source HERON PAY-SSM Altium schematic", async () => {
   const result = await createOpenSourceSchematicRoundTrip({
     filename: "heron-pay-ssm-top.SchDoc",
     projectName: "HERON PAY-SSM schematic",
+    sharedSvgRenderOptions: {
+      viewBox: HERON_PAY_SSM_COMPARISON_VIEW_BOX,
+    },
     sourceProject: {
       documentName: "TOP.SchDoc",
       filename: "heron-pay-ssm.PrjPCB",
@@ -61,6 +74,8 @@ test("round-trips the open-source HERON PAY-SSM Altium schematic", async () => {
     text: result.sourceCounts.schematic_text,
   }).toEqual({ path: 0, rect: 9, text: 386 })
   expect(result.sourceSupportedPrimitiveTotal).toBeGreaterThan(300)
+  expect(result.sourceSvg).toContain('viewBox="0 0 1620 1320"')
+  expect(result.roundTripSvg).toContain('viewBox="0 0 1620 1320"')
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
   ).toMatchSvgSnapshot(import.meta.path)
