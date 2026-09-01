@@ -4,7 +4,6 @@ import { cropSvgViewBox } from "./crop-svg-view-box"
 type SchematicSource = Parameters<typeof serializeAltiumSheetToSvg>[0]
 type DetailViewBox = Parameters<typeof cropSvgViewBox>[1]
 
-const COMPARISON_BACKGROUND_COLOR = "rgb(245, 241, 237)"
 const COMPARISON_WIDTH = 1100
 const COMPARISON_HEIGHT = 600
 
@@ -14,7 +13,6 @@ export function renderAltiumSchematicDetail(
 ): string {
   return cropSvgViewBox(
     serializeAltiumSheetToSvg(source, {
-      backgroundColor: COMPARISON_BACKGROUND_COLOR,
       height: COMPARISON_HEIGHT,
       margin: 0,
       showBorder: false,
