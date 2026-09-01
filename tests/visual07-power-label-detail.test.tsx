@@ -65,7 +65,6 @@ test("snapshots a VCC and GND power-label detail", async () => {
   const circuitJsonSvg = await convertCircuitJsonToSchematicSvg(circuitJson)
   const altiumSvg = cropSvgViewBox(
     serializeAltiumSheetToSvg(altiumSchematic, {
-      backgroundColor: "rgb(245, 241, 237)",
       height: 600,
       margin: 0,
       showBorder: false,
