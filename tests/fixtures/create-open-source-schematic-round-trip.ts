@@ -12,8 +12,12 @@ import { getSchematicRoundTripMetrics } from "./get-schematic-round-trip-metrics
 export type OpenSourceSchematicRoundTrip = ReturnType<
   typeof getSchematicRoundTripMetrics
 > & {
+  roundTripEmbeddedImageDataUrl?: string
+  roundTripEmbeddedImagePngSha256: string[]
   roundTripOffSheetPortFontSizePoints: number[]
   roundTripSvg: string
+  sourceEmbeddedImageDataUrl?: string
+  sourceEmbeddedImagePngSha256: string[]
   sourceOffSheetPortFontSizePoints: number[]
   sourceSvg: string
 }
@@ -39,6 +43,14 @@ function getOffSheetPortFontSizePoints(document: AltiumSchDoc): number[] {
       ALTIUM_SCHEMATIC_PORT_FALLBACK_FONT_SIZE_POINTS
     )
   })
+}
+
+function getEmbeddedImagePngSha256(document: AltiumSchDoc): string[] {
+  return document.embeddedImages.map((embeddedImage) =>
+    new Bun.CryptoHasher("sha256")
+      .update(embeddedImage.getPngBytes())
+      .digest("hex"),
+  )
 }
 
 function parseSchematicDocument(schematicBytes: Uint8Array): AltiumSchDoc {
@@ -107,9 +119,15 @@ export async function createOpenSourceSchematicRoundTrip({
       roundTripCircuitJson,
       sourceCircuitJson,
     }),
+    roundTripEmbeddedImagePngSha256:
+      getEmbeddedImagePngSha256(roundTripDocument),
+    roundTripEmbeddedImageDataUrl:
+      roundTripDocument.embeddedImages[0]?.getDataUrl(),
     roundTripOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(roundTripDocument),
     roundTripSvg: serializeAltiumSheetToSvg(roundTripDocument),
+    sourceEmbeddedImagePngSha256: getEmbeddedImagePngSha256(sourceDocument),
+    sourceEmbeddedImageDataUrl: sourceDocument.embeddedImages[0]?.getDataUrl(),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
     sourceSvg: serializeAltiumSheetToSvg(sourceDocument, sourceProjectContext),

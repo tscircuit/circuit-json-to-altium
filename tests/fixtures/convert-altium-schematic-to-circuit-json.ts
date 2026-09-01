@@ -656,6 +656,35 @@ function appendNetLabelElements(
   }
 }
 
+function appendEmbeddedImageElements(
+  document: AltiumSchDoc,
+  elements: CircuitElement[],
+): void {
+  for (const [imageIndex, embeddedImage] of document.embeddedImages.entries()) {
+    const firstCorner = getRecordLocation(embeddedImage.record)
+    const secondCorner = getRecordCorner(embeddedImage.record)
+    const center = toCircuitPoint({
+      x: (firstCorner.x + secondCorner.x) / 2,
+      y: (firstCorner.y + secondCorner.y) / 2,
+    })
+    elements.push({
+      type: "schematic_graphic",
+      schematic_graphic_id: `schematic_graphic_${imageIndex}`,
+      asset: {
+        project_relative_path:
+          embeddedImage.record.fileName || embeddedImage.name,
+        url: embeddedImage.getDataUrl(),
+        mimetype: "image/png",
+      },
+      center,
+      width: toCircuitLength(Math.abs(secondCorner.x - firstCorner.x)),
+      height: toCircuitLength(Math.abs(secondCorner.y - firstCorner.y)),
+      keep_aspect_ratio:
+        embeddedImage.record.getBoolean("KEEPASPECT") !== false,
+    })
+  }
+}
+
 export function convertAltiumSchematicToCircuitJson(
   document: AltiumSchDoc,
   projectContext?: AltiumSchematicProjectContext,
@@ -672,6 +701,7 @@ export function convertAltiumSchematicToCircuitJson(
   appendOffSheetPortElements(document, elements)
   appendWireElements(document, elements)
   appendNetLabelElements(document, elements)
+  appendEmbeddedImageElements(document, elements)
   appendUnownedVisibleParameterTextElements({
     document,
     elements,

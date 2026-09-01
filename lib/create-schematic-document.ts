@@ -1,6 +1,10 @@
 import { getAltiumColorFromCss } from "./altium-color"
 import { ALTIUM_SCHEMATIC_GRAPHIC_COLOR } from "./altium-schematic-colors"
 import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-table"
+import {
+  type CreatedAltiumSchematicImage,
+  createAltiumSchematicImage,
+} from "./create-altium-schematic-image"
 import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
 import { createAltiumSchematicOffSheetPortRecordFields } from "./create-altium-schematic-off-sheet-port-record-fields"
@@ -46,6 +50,11 @@ type CreateSchematicDocumentParams = {
   circuitJson: CircuitElement[]
   includeAllSchematicElements: boolean
   schematicSheetId: SchematicSheetId | undefined
+}
+
+type CreatedSchematicDocument = {
+  asciiContent: string
+  embeddedPngImages: CreatedAltiumSchematicImage["embeddedPngImage"][]
 }
 
 type SchematicSheetMembershipParams = {
@@ -259,7 +268,7 @@ export function createSchematicDocument({
   circuitJson,
   includeAllSchematicElements,
   schematicSheetId,
-}: CreateSchematicDocumentParams): string {
+}: CreateSchematicDocumentParams): CreatedSchematicDocument {
   const schematicElements = circuitJson.filter(
     (element) =>
       element.type?.startsWith("schematic_") === true &&
@@ -351,6 +360,20 @@ export function createSchematicDocument({
     ],
     schematicRecordContext,
   )
+
+  const createdSchematicImages = schematicElements
+    .filter((element) => element.type === "schematic_graphic")
+    .flatMap((schematicGraphic, graphicIndex) => {
+      const createdImage = createAltiumSchematicImage({
+        circuitToAltiumSchematicPoint,
+        graphicIndex,
+        schematicGraphic,
+      })
+      return createdImage ? [createdImage] : []
+    })
+  for (const createdImage of createdSchematicImages) {
+    addSchematicRecord(createdImage.recordFields, schematicRecordContext)
+  }
 
   let automaticallyPlacedPlanIndex = 0
   for (const plan of sheetSymbolPlans) {
@@ -914,5 +937,10 @@ export function createSchematicDocument({
     addSchematicRecord(annotationRecordFields, schematicRecordContext)
   }
 
-  return `${schematicRecordContext.lines.join("\r\n")}\r\n`
+  return {
+    asciiContent: `${schematicRecordContext.lines.join("\r\n")}\r\n`,
+    embeddedPngImages: createdSchematicImages.map(
+      (createdImage) => createdImage.embeddedPngImage,
+    ),
+  }
 }
