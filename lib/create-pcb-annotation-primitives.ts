@@ -105,17 +105,22 @@ export function createAltiumRegionRecord({
   altiumComponentIndex,
   circuitPoints,
   circuitToAltiumPcbPoint,
+  innerRings = [],
   isKeepout = false,
   layer,
 }: {
   altiumComponentIndex?: number
   circuitPoints: readonly Point[]
   circuitToAltiumPcbPoint: PointTransform
+  innerRings?: readonly (readonly Point[])[]
   isKeepout?: boolean
   layer: string
 }): string {
   const altiumPoints = closePointLoop(circuitPoints).map(
     circuitToAltiumPcbPoint,
+  )
+  const altiumInnerRings = innerRings.map((ring) =>
+    closePointLoop(ring).map(circuitToAltiumPcbPoint),
   )
   if (altiumPoints.length < 4) {
     throw new Error("An Altium PCB region requires at least three vertices")
@@ -130,13 +135,31 @@ export function createAltiumRegionRecord({
     `KEEPOUT=${isKeepout ? "TRUE" : "FALSE"}`,
     "TEARDROP=FALSE",
     "REGIONKIND=COPPER",
-    "HOLECOUNT=0",
-    ...altiumPoints.flatMap((point, vertexIndex) => [
-      `KIND${vertexIndex}=0`,
-      `VX${vertexIndex}=${formatMil(point.x)}`,
-      `VY${vertexIndex}=${formatMil(point.y)}`,
-    ]),
+    `HOLECOUNT=${altiumInnerRings.length}`,
+    ...createContourFields(altiumPoints),
+    ...altiumInnerRings.flatMap(createHoleFields),
   ].join("|")
+}
+
+function createContourFields(points: readonly Point[]): string[] {
+  return points.flatMap((point, vertexIndex) => [
+    `KIND${vertexIndex}=0`,
+    `VX${vertexIndex}=${formatMil(point.x)}`,
+    `VY${vertexIndex}=${formatMil(point.y)}`,
+  ])
+}
+
+function createHoleFields(
+  points: readonly Point[],
+  holeIndex: number,
+): string[] {
+  return [
+    `HOLE${holeIndex}COUNT=${points.length}`,
+    ...points.flatMap((point, vertexIndex) => [
+      `HOLE${holeIndex}VX${vertexIndex}=${formatMil(point.x)}`,
+      `HOLE${holeIndex}VY${vertexIndex}=${formatMil(point.y)}`,
+    ]),
+  ]
 }
 
 export function createCirclePoints({
