@@ -93,6 +93,17 @@ export function getSchematicTransform(
     const anchor = asPoint(element.anchor_position)
     if (anchor) circuitPoints.push(anchor)
     const isSheetAnnotation = isSchematicSheetAnnotation(element)
+    if (isSheetAnnotation && element.type === "schematic_box") {
+      const boxCenter = asPoint({ x: element.x, y: element.y })
+      const width = asNumber(element.width)
+      const height = asNumber(element.height)
+      if (boxCenter && width > 0 && height > 0) {
+        circuitPoints.push(
+          { x: boxCenter.x - width / 2, y: boxCenter.y - height / 2 },
+          { x: boxCenter.x + width / 2, y: boxCenter.y + height / 2 },
+        )
+      }
+    }
     const position = isSheetAnnotation ? asPoint(element.position) : undefined
     if (position) circuitPoints.push(position)
     if (isSheetAnnotation && element.type === "schematic_rect") {

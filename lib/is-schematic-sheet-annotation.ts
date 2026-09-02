@@ -2,6 +2,7 @@ import { asString } from "./format"
 import type { CircuitElement } from "./types"
 
 const SCHEMATIC_SHEET_ANNOTATION_TYPES = new Set([
+  "schematic_box",
   "schematic_line",
   "schematic_path",
   "schematic_rect",

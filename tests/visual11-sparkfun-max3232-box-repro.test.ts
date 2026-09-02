@@ -24,7 +24,7 @@ function addCanvasBackground(svg: string): string {
   )
 }
 
-test("reproduces missing boxes on the full SparkFun MAX3232 board", async () => {
+test("preserves boxes on the full SparkFun MAX3232 board", async () => {
   const circuitJson = JSON.parse(
     await readFile(fixtureUrl, "utf8"),
   ) as CircuitJson
@@ -70,7 +70,16 @@ test("reproduces missing boxes on the full SparkFun MAX3232 board", async () => 
   const rootLabels = schematic
     .getRecordsByKind("4")
     .filter((record) => schematic.getParent(record) === undefined)
-  expect(rootPolylines).toHaveLength(0)
+  expect(rootPolylines).toHaveLength(2)
+  expect(
+    rootPolylines.map((record) => ({
+      lineStyle: record.getNumber("LINESTYLE"),
+      pointCount: record.getNumber("LOCATIONCOUNT"),
+    })),
+  ).toEqual([
+    { lineStyle: 1, pointCount: 5 },
+    { lineStyle: 1, pointCount: 5 },
+  ])
   expect(rootLabels.map((record) => record.getDecoded("TEXT"))).toEqual([
     "RS-232",
     "TTL/CMOS",
