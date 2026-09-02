@@ -30,6 +30,7 @@ import { appendAltiumSchematicSymbolPrimitives } from "./append-altium-schematic
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import { isAltiumSchematicComponentRecordVisible } from "./is-altium-schematic-component-record-visible"
 import { preserveAltiumNoConnectRecords } from "./preserve-altium-no-connect-records"
+import { resolveAltiumComponentParameterText } from "./resolve-altium-component-parameter-text"
 
 type AltiumBounds = {
   maxX: number
@@ -245,6 +246,7 @@ function getOwnedParameterRecord({
 
 function appendComponentParameterText({
   componentIndex,
+  component,
   document,
   elements,
   parameter,
@@ -252,19 +254,26 @@ function appendComponentParameterText({
   schematicComponentId,
 }: {
   componentIndex: number
+  component: AltiumSchComponentRecord
   document: AltiumSchDoc
   elements: CircuitElement[]
   parameter: AltiumRecord | undefined
   parameterName: "comment" | "designator"
   schematicComponentId: SchematicComponentId
 }): void {
-  const text = parameter?.getDecoded("TEXT") ?? ""
-  if (!parameter || !text || parameter.getBoolean("ISHIDDEN") === true) return
+  const sourceText = parameter?.getDecoded("TEXT") ?? ""
+  if (!parameter || !sourceText || parameter.getBoolean("ISHIDDEN") === true) {
+    return
+  }
   elements.push({
     type: "schematic_text",
     schematic_text_id: `schematic_text_component_${componentIndex}_${parameterName}`,
     schematic_component_id: schematicComponentId,
-    text,
+    text: resolveAltiumComponentParameterText({
+      component,
+      document,
+      parameterReference: sourceText,
+    }),
     ...getAltiumSchematicTextPresentation({
       document,
       fallbackFontSizePoints: 9,
@@ -392,7 +401,14 @@ function appendComponentElements({
   })
   const designator =
     designatorParameter?.getDecoded("TEXT") ?? `U${componentIndex + 1}`
-  const comment = commentParameter?.getDecoded("TEXT")
+  const sourceComment = commentParameter?.getDecoded("TEXT")
+  const comment = sourceComment
+    ? resolveAltiumComponentParameterText({
+        component,
+        document,
+        parameterReference: sourceComment,
+      })
+    : undefined
 
   elements.push(
     {
@@ -429,6 +445,7 @@ function appendComponentElements({
 
   appendComponentParameterText({
     componentIndex,
+    component,
     document,
     elements,
     parameter: designatorParameter,
@@ -437,6 +454,7 @@ function appendComponentElements({
   })
   appendComponentParameterText({
     componentIndex,
+    component,
     document,
     elements,
     parameter: commentParameter,
