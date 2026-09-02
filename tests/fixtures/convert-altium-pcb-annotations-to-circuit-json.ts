@@ -350,6 +350,14 @@ function isKeepoutStrokeRecord(record: AltiumRecord): boolean {
 }
 
 function isKeepoutRecord(record: AltiumRecord): boolean {
+  const regionKind = normalizeLayer(record.getDecoded("REGIONKIND") ?? "")
+  if (
+    record.getBoolean("ISBOARDCUTOUT") === true ||
+    regionKind === "BOARDCUTOUT" ||
+    regionKind === "POLYGONCUTOUT"
+  ) {
+    return false
+  }
   return (
     record.getBoolean("KEEPOUT") === true ||
     normalizeLayer(record.getDecoded("LAYER") ?? "") === "KEEPOUT"

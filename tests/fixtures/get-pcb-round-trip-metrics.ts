@@ -14,6 +14,7 @@ const preservedPrimitiveTypes = [
   "pcb_via",
   "pcb_copper_pour",
   "pcb_silkscreen_text",
+  "pcb_cutout",
   "pcb_courtyard_outline",
   "pcb_keepout",
   "pcb_fabrication_note_path",
@@ -52,6 +53,7 @@ export type PreservedPrimitiveCounts = Record<PreservedPrimitiveType, number>
 export type PcbRoundTripMetrics = {
   cadComponentMismatchCount: number
   geometryMaxDeltaMm: number
+  platedHoleDimensionMismatchCount: number
   rotationMismatchCount: number
   roundTripCounts: PreservedPrimitiveCounts
   roundTripSourceNetNames: string[]
@@ -59,6 +61,42 @@ export type PcbRoundTripMetrics = {
   sourceNetNames: string[]
   sourcePrimitiveTotal: number
   silkscreenTextMismatchCount: number
+}
+
+const platedHoleDimensionFields = [
+  "hole_width",
+  "hole_height",
+  "outer_width",
+  "outer_height",
+] as const
+
+function getPlatedHoleDimensionMismatchCount(
+  sourceCircuitJson: CircuitElement[],
+  roundTripCircuitJson: CircuitElement[],
+): number {
+  const sourceHoles = sourceCircuitJson.filter(
+    (element) => element.type === "pcb_plated_hole",
+  )
+  const roundTripHoles = roundTripCircuitJson.filter(
+    (element) => element.type === "pcb_plated_hole",
+  )
+  if (sourceHoles.length !== roundTripHoles.length) {
+    return Number.POSITIVE_INFINITY
+  }
+  return sourceHoles.reduce((mismatchCount, sourceHole, holeIndex) => {
+    const roundTripHole = roundTripHoles[holeIndex]
+    if (!roundTripHole) return mismatchCount + 1
+    const dimensionsMatch = platedHoleDimensionFields.every((fieldName) => {
+      const sourceDimension = sourceHole[fieldName]
+      const roundTripDimension = roundTripHole[fieldName]
+      return (
+        typeof sourceDimension === "number" &&
+        typeof roundTripDimension === "number" &&
+        Math.abs(sourceDimension - roundTripDimension) <= 0.0001
+      )
+    })
+    return mismatchCount + (dimensionsMatch ? 0 : 1)
+  }, 0)
 }
 
 function getPoint3(
@@ -398,6 +436,10 @@ export function getPcbRoundTripMetrics({
       roundTripCircuitJson,
     ),
     geometryMaxDeltaMm: getGeometryMaxDeltaMm(
+      sourceCircuitJson,
+      roundTripCircuitJson,
+    ),
+    platedHoleDimensionMismatchCount: getPlatedHoleDimensionMismatchCount(
       sourceCircuitJson,
       roundTripCircuitJson,
     ),

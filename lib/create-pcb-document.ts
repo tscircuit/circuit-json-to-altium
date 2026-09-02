@@ -270,7 +270,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
         "LOCKED=FALSE",
         `X=${formatMil(altiumCenter.x)}`,
         `Y=${formatMil(altiumCenter.y)}`,
-        `SHAPE=${hole.shape === "circle" ? "ROUND" : "RECTANGLE"}`,
+        `SHAPE=${hole.shape === "circle" || hole.shape === "oval" || hole.shape === "pill" ? "ROUND" : "RECTANGLE"}`,
         `XSIZE=${formatMil(outerWidth * MILLIMETERS_TO_MILS)}`,
         `YSIZE=${formatMil(outerHeight * MILLIMETERS_TO_MILS)}`,
       ].join("|"),
