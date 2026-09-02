@@ -55,10 +55,47 @@ export type PcbRoundTripMetrics = {
   rotationMismatchCount: number
   roundTripCounts: PreservedPrimitiveCounts
   roundTripSourceNetNames: string[]
+  roundTripTraceLayerCounts: Record<string, number>
   sourceCounts: PreservedPrimitiveCounts
   sourceNetNames: string[]
+  sourceTraceLayerCounts: Record<string, number>
   sourcePrimitiveTotal: number
   silkscreenTextMismatchCount: number
+}
+
+function getTraceLayerCounts(
+  circuitJson: CircuitElement[],
+): Record<string, number> {
+  const counts = new Map<string, number>()
+  for (const trace of circuitJson) {
+    if (trace.type !== "pcb_trace" || !Array.isArray(trace.route)) continue
+    const firstRoutePoint = trace.route.find(
+      (routePoint) =>
+        typeof routePoint === "object" &&
+        routePoint !== null &&
+        "route_type" in routePoint &&
+        routePoint.route_type === "wire" &&
+        "layer" in routePoint &&
+        typeof routePoint.layer === "string",
+    )
+    if (
+      typeof firstRoutePoint !== "object" ||
+      firstRoutePoint === null ||
+      !("layer" in firstRoutePoint) ||
+      typeof firstRoutePoint.layer !== "string"
+    ) {
+      continue
+    }
+    counts.set(
+      firstRoutePoint.layer,
+      (counts.get(firstRoutePoint.layer) ?? 0) + 1,
+    )
+  }
+  return Object.fromEntries(
+    [...counts.entries()].sort(([firstLayer], [secondLayer]) =>
+      firstLayer.localeCompare(secondLayer),
+    ),
+  )
 }
 
 function getPoint3(
@@ -407,8 +444,10 @@ export function getPcbRoundTripMetrics({
     ),
     roundTripCounts,
     roundTripSourceNetNames: getSourceNetNames(roundTripCircuitJson),
+    roundTripTraceLayerCounts: getTraceLayerCounts(roundTripCircuitJson),
     sourceCounts,
     sourceNetNames: getSourceNetNames(sourceCircuitJson),
+    sourceTraceLayerCounts: getTraceLayerCounts(sourceCircuitJson),
     sourcePrimitiveTotal: Object.values(sourceCounts).reduce(
       (sum, count) => sum + count,
       0,

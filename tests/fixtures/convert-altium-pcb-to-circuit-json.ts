@@ -246,7 +246,7 @@ function appendCopperTrace(
   elements: CircuitElement[],
   sourceTraceId: string,
   sourceNetId: string | undefined,
-  layer: "bottom" | "top",
+  layer: CircuitCopperLayer,
   widthMils: number,
   start: AltiumPoint,
   end: AltiumPoint,
@@ -550,11 +550,13 @@ export function convertAltiumPcbToCircuitJson(
     if (!start || !end || (start.x === end.x && start.y === end.y)) continue
     const widthMils = getMeasurementMils(track, "WIDTH") ?? 4
     if (isCopperLayer(layer)) {
+      const circuitLayer = toCircuitCopperLayer(layer)
+      if (!circuitLayer) continue
       appendCopperTrace(
         elements,
         `source_trace_track_${trackIndex}`,
         getSourceNetId(track, sourceNetLookupContext),
-        toCircuitLayer(layer),
+        circuitLayer,
         widthMils,
         start,
         end,
@@ -577,6 +579,8 @@ export function convertAltiumPcbToCircuitJson(
     const layer = arc.getDecoded("LAYER")
     const widthMils = getMeasurementMils(arc, "WIDTH") ?? 4
     if (isCopperLayer(layer)) {
+      const circuitLayer = toCircuitCopperLayer(layer)
+      if (!circuitLayer) continue
       for (let segmentIndex = 1; segmentIndex < points.length; segmentIndex++) {
         const start = points[segmentIndex - 1]
         const end = points[segmentIndex]
@@ -585,7 +589,7 @@ export function convertAltiumPcbToCircuitJson(
           elements,
           `source_trace_arc_${arcIndex}_${segmentIndex - 1}`,
           getSourceNetId(arc, sourceNetLookupContext),
-          toCircuitLayer(layer),
+          circuitLayer,
           widthMils,
           start,
           end,
