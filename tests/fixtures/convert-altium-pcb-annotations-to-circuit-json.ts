@@ -122,7 +122,7 @@ function convertDocumentationTexts({
   const elements: CircuitElement[] = []
   for (const [textIndex, text] of document.getRecordsByKind("Text").entries()) {
     const layer = text.getDecoded("LAYER") ?? ""
-    if (!isDocumentationLayer(layer) && !isCourtyardLayer(layer)) continue
+    if (!isDocumentationTextLayer(layer)) continue
     const position = getAltiumPcbPoint({
       record: text,
       xFieldName: "X",
@@ -366,6 +366,15 @@ function isCourtyardLayer(layer: string): boolean {
 function isDocumentationLayer(layer: string): boolean {
   const normalizedLayer = normalizeLayer(layer)
   return normalizedLayer === "MECHANICAL1" || normalizedLayer === "MECHANICAL2"
+}
+
+function isDocumentationTextLayer(layer: string): boolean {
+  const normalizedLayer = normalizeLayer(layer)
+  return (
+    /^MECHANICAL(?:[1-9]|[12]\d|3[0-2])$/u.test(normalizedLayer) ||
+    normalizedLayer === "DRILLDRAWING" ||
+    normalizedLayer === "DRILLGUIDE"
+  )
 }
 
 function toCircuitKeepoutLayers(layer: string | undefined): string[] {
