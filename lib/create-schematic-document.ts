@@ -3,6 +3,7 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
+import { createAltiumSchematicComponentParameterRecordFields } from "./create-altium-schematic-component-parameter-record-fields"
 import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-table"
 import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
@@ -667,6 +668,15 @@ export function createSchematicDocument({
       ],
       schematicRecordContext,
     )
+    for (const parameterRecordFields of createAltiumSchematicComponentParameterRecordFields(
+      {
+        altiumComponentRecordIndex,
+        altiumPosition: altiumComponentCenter,
+        sourceComponent,
+      },
+    )) {
+      addSchematicRecord(parameterRecordFields, schematicRecordContext)
+    }
 
     const schematicPorts =
       schematicPortsByComponentId.get(schematicComponentId) ?? []

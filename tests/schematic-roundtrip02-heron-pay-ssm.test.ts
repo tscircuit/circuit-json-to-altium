@@ -15,11 +15,11 @@ test("round-trips the open-source HERON PAY-SSM Altium schematic", async () => {
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
-  expect(result.roundTripComponentPartSignatures).not.toEqual(
+  expect(result.roundTripComponentPartSignatures).toEqual(
     result.sourceComponentPartSignatures,
   )
   expect(result.sourceComponentPartSignatures).toHaveLength(12)
-  expect(result.roundTripComponentPartSignatures).toHaveLength(0)
+  expect(result.roundTripComponentPartSignatures).toHaveLength(12)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,
   )
