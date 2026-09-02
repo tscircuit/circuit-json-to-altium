@@ -49,7 +49,7 @@ test("round-trips the open-source HERON systems PCB Altium schematic", async () 
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
-  expect(result.roundTripPinElectricalSignatures).not.toEqual(
+  expect(result.roundTripPinElectricalSignatures).toEqual(
     result.sourcePinElectricalSignatures,
   )
   expect(
@@ -62,16 +62,6 @@ test("round-trips the open-source HERON systems PCB Altium schematic", async () 
       (signature) => signature.type === "power",
     ),
   ).toHaveLength(2)
-  expect(
-    result.roundTripPinElectricalSignatures.filter(
-      (signature) => signature.type === "output",
-    ),
-  ).toHaveLength(0)
-  expect(
-    result.roundTripPinElectricalSignatures.filter(
-      (signature) => signature.type === "power",
-    ),
-  ).toHaveLength(0)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,
   )

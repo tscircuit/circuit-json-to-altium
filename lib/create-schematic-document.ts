@@ -29,6 +29,7 @@ import {
   isCircuitElement,
   sanitizeField,
 } from "./format"
+import { getAltiumSchematicPinElectricalType } from "./get-altium-schematic-pin-electrical-type"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import { getSchematicTransform } from "./get-schematic-transform"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
@@ -772,6 +773,7 @@ export function createSchematicDocument({
           "OWNERPARTID=1",
           `DESIGNATOR=${pinDesignator}`,
           `NAME=${pinName}`,
+          `ELECTRICAL=${getAltiumSchematicPinElectricalType({ schematicPort, sourcePort })}`,
           `PINCONGLOMERATE=${altiumPinConglomerate}`,
           `LOCATION.X=${altiumPinLocation.x}`,
           `LOCATION.Y=${altiumPinLocation.y}`,
