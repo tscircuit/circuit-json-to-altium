@@ -13,6 +13,7 @@ export type OpenSourceSchematicRoundTrip = ReturnType<
   typeof getSchematicRoundTripMetrics
 > & {
   roundTripOffSheetPortFontSizePoints: number[]
+  roundTripSchematicFilenames: string[]
   roundTripSvg: string
   sourceOffSheetPortFontSizePoints: number[]
   sourceSvg: string
@@ -94,7 +95,8 @@ export async function createOpenSourceSchematicRoundTrip({
     projectName,
   })
   converter.runUntilFinished()
-  const generatedSchematic = converter.getOutput().schematics[0]
+  const generatedOutput = converter.getOutput()
+  const generatedSchematic = generatedOutput.schematics[0]
   if (!generatedSchematic) {
     throw new Error("Converter did not create a schematic document")
   }
@@ -109,6 +111,9 @@ export async function createOpenSourceSchematicRoundTrip({
     }),
     roundTripOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(roundTripDocument),
+    roundTripSchematicFilenames: generatedOutput.schematics.map(
+      (schematic) => schematic.filename,
+    ),
     roundTripSvg: serializeAltiumSheetToSvg(roundTripDocument),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
