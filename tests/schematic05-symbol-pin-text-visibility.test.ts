@@ -95,8 +95,8 @@ test("uses native pin text visibility for built-in and boxed symbols", async () 
     .getOwnedRecords(chip)
     .find((record) => record.recordKind === "2")
 
-  expect(sheetRecord?.getNumber("SIZE1")).toBe(3)
-  expect(sheetRecord?.getNumber("SIZE2")).toBe(2)
+  expect(sheetRecord?.getNumber("SIZE1")).toBe(4)
+  expect(sheetRecord?.getNumber("SIZE2")).toBe(3)
   expect(resistorPins.map((pin) => pin.getNumber("PINCONGLOMERATE"))).toEqual([
     34, 32,
   ])

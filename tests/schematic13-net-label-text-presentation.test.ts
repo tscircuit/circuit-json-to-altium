@@ -118,22 +118,22 @@ test("uses matching schematic text to present native net labels", async () => {
     })),
   }).toEqual({
     defaultNetLabel: {
-      fontSizePoints: 3,
+      fontSizePoints: 4,
       text: "DEFAULT_NET",
     },
     netLabel: {
       color: 0x56_34_12,
-      fontSizePoints: 3,
+      fontSizePoints: 4,
       justification: 8,
       orientation: 1,
     },
     powerPort: {
       color: 0x21_43_65,
-      fontSizePoints: 3,
+      fontSizePoints: 4,
     },
     sheetLabels: [
-      { fontSizePoints: 2, text: "TRACE_INLINE" },
-      { fontSizePoints: 3, text: "SIGNAL" },
+      { fontSizePoints: 3, text: "TRACE_INLINE" },
+      { fontSizePoints: 4, text: "SIGNAL" },
     ],
   })
   expectValidSchematic(schematic)

@@ -3,7 +3,7 @@ import {
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_NAME,
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS,
 } from "./create-altium-schematic-off-sheet-port-record-fields"
-import { asNumber, formatNumber } from "./format"
+import { asNumber, asString, formatNumber } from "./format"
 import type { CircuitElement } from "./types"
 
 type AltiumSchematicFontId = number
@@ -21,26 +21,18 @@ type CreateAltiumSchematicFontTableInput = {
   schematicElements: CircuitElement[]
 }
 
-const ALTIUM_SCHEMATIC_COORDINATE_UNITS_PER_CIRCUIT_UNIT = 20
-const ALTIUM_MILS_PER_SCHEMATIC_COORDINATE_UNIT = 10
-const POINTS_PER_INCH = 72
-const MILS_PER_INCH = 1000
-export const ALTIUM_FONT_POINTS_PER_CIRCUIT_UNIT =
-  (ALTIUM_SCHEMATIC_COORDINATE_UNITS_PER_CIRCUIT_UNIT *
-    ALTIUM_MILS_PER_SCHEMATIC_COORDINATE_UNIT *
-    POINTS_PER_INCH) /
-  MILS_PER_INCH
+export const ALTIUM_FONT_POINTS_PER_CIRCUIT_UNIT = 20
 
 export const ALTIUM_SCHEMATIC_COMPONENT_FONT_ID = 1
 export const ALTIUM_SCHEMATIC_PIN_FONT_ID = 2
-export const ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS = 3
-export const ALTIUM_SCHEMATIC_PIN_FONT_SIZE_POINTS = 2
+export const ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS = 4
+export const ALTIUM_SCHEMATIC_PIN_FONT_SIZE_POINTS = 3
 const ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME = "Arial"
 
 function getAltiumFontSizePoints(fontSizeCircuitUnits: number): number {
-  // SchDoc coordinates use 10 mil units, while font-table sizes are points.
-  // Altium viewers also handle whole point sizes consistently, unlike values
-  // such as SIZE4=3.6, which can be interpreted as a much larger font.
+  // Preserve the established Circuit JSON schematic text scale, but normalize
+  // it at the SchDoc boundary. Real Altium viewers interpret fractional values
+  // such as SIZE4=3.6 inconsistently and can render them much larger.
   return Math.max(
     1,
     Math.round(fontSizeCircuitUnits * ALTIUM_FONT_POINTS_PER_CIRCUIT_UNIT),
@@ -66,7 +58,10 @@ export function createAltiumSchematicFontTable({
     ...new Set(
       schematicElements.flatMap((element) => {
         const fontSizeCircuitUnits =
-          element.type === "schematic_text" ? asNumber(element.font_size) : 0
+          element.type === "schematic_text" &&
+          !asString(element.source_trace_id)
+            ? asNumber(element.font_size)
+            : 0
         return fontSizeCircuitUnits > 0 ? [fontSizeCircuitUnits] : []
       }),
     ),
