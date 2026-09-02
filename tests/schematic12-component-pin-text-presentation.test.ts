@@ -126,6 +126,13 @@ test("preserves component and pin text presentation", async () => {
   if (!sheetRecord || !component) {
     throw new Error("Expected a sheet record and one component")
   }
+  const fontSizeFields = sheetRecord.fields.filter(({ key }) =>
+    /^SIZE\d+$/u.test(key),
+  )
+  expect(fontSizeFields).toHaveLength(sheetRecord.getNumber("FONTIDCOUNT") ?? 0)
+  expect(
+    fontSizeFields.every(({ value }) => Number.isInteger(Number(value))),
+  ).toBe(true)
   const ownedRecords = schematic.getOwnedRecords(component)
   const designator = ownedRecords.find((record) => record.recordKind === "34")
   const value = ownedRecords.find((record) => record.recordKind === "41")
