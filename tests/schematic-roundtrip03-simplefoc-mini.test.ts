@@ -10,6 +10,11 @@ test("round-trips the open-source SimpleFOC Mini Altium schematic", async () => 
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
+  expect(result.roundTripComponentPartSignatures).not.toEqual(
+    result.sourceComponentPartSignatures,
+  )
+  expect(result.sourceComponentPartSignatures).toHaveLength(14)
+  expect(result.roundTripComponentPartSignatures).toHaveLength(0)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,
   )

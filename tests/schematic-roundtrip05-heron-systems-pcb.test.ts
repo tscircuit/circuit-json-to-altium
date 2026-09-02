@@ -2,6 +2,24 @@ import { expect, test } from "bun:test"
 import { createOpenSourceSchematicRoundTrip } from "./fixtures/create-open-source-schematic-round-trip"
 import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
 
+function createComponentMetadataSummarySvg({
+  roundTripCount,
+  sourceCount,
+}: {
+  roundTripCount: number
+  sourceCount: number
+}): string {
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="500" height="150" viewBox="0 0 500 150">
+  <rect width="500" height="150" fill="rgb(245, 241, 237)"/>
+  <text x="20" y="30" font-family="Arial" font-size="18" font-weight="bold">Full HERON systems schematic</text>
+  <text x="20" y="55" font-family="Arial" font-size="15">Components with real part metadata</text>
+  <text x="20" y="83" font-family="Arial" font-size="14">source</text>
+  <rect x="120" y="70" width="${sourceCount * 20}" height="16" fill="#356cb6"/>
+  <text x="20" y="115" font-family="Arial" font-size="14">round trip</text>
+  <rect x="120" y="102" width="${roundTripCount * 20}" height="16" fill="#b65835"/>
+</svg>`
+}
+
 test("round-trips the open-source HERON systems PCB Altium schematic", async () => {
   const result = await createOpenSourceSchematicRoundTrip({
     filename: "heron-systems-pcb.SchDoc",
@@ -15,6 +33,11 @@ test("round-trips the open-source HERON systems PCB Altium schematic", async () 
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
+  expect(result.roundTripComponentPartSignatures).not.toEqual(
+    result.sourceComponentPartSignatures,
+  )
+  expect(result.sourceComponentPartSignatures).toHaveLength(8)
+  expect(result.roundTripComponentPartSignatures).toHaveLength(0)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,
   )
@@ -64,6 +87,12 @@ test("round-trips the open-source HERON systems PCB Altium schematic", async () 
   }).toEqual({ path: 0, rect: 9, text: 420 })
   expect(result.sourceSupportedPrimitiveTotal).toBeGreaterThan(300)
   await expect(
-    createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
+    createSideBySideSvg(
+      createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
+      createComponentMetadataSummarySvg({
+        roundTripCount: result.roundTripComponentPartSignatures.length,
+        sourceCount: result.sourceComponentPartSignatures.length,
+      }),
+    ),
   ).toMatchSvgSnapshot(import.meta.path)
 })

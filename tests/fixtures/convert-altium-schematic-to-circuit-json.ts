@@ -41,6 +41,13 @@ type AltiumBounds = {
 type AltiumPowerPortDirection = "down" | "left" | "right" | "up"
 type SchematicNetLabelAnchorSide = "bottom" | "left" | "right" | "top"
 type SourceNetName = string
+type SupplierName =
+  | "digikey"
+  | "jlcpcb"
+  | "lcsc"
+  | "macrofab"
+  | "mouser"
+  | "pcbway"
 
 type SchematicNetContext = {
   elements: CircuitElement[]
@@ -81,6 +88,104 @@ const PIN_FACING_DIRECTION_BY_ORIENTATION = [
 
 const ALTIUM_PIN_NAME_VISIBLE_FLAG = 0x08
 const ALTIUM_PIN_NUMBER_VISIBLE_FLAG = 0x10
+
+const SUPPLIER_NAME_BY_PARAMETER_NAME: Record<string, SupplierName> = {
+  "digikey part number": "digikey",
+  "jlcpcb part number": "jlcpcb",
+  "lcsc part number": "lcsc",
+  "macrofab part number": "macrofab",
+  "mouser part number": "mouser",
+  "pcbway part number": "pcbway",
+}
+
+function normalizeSupplierName(value: string): SupplierName | undefined {
+  const normalized = value.replaceAll(/[^a-z0-9]/giu, "").toLowerCase()
+  if (normalized === "digikey") return "digikey"
+  if (normalized === "jlcpcb") return "jlcpcb"
+  if (normalized === "lcsc") return "lcsc"
+  if (normalized === "macrofab") return "macrofab"
+  if (normalized === "mouser") return "mouser"
+  if (normalized === "pcbway") return "pcbway"
+  return undefined
+}
+
+function getSourceComponentPartFields({
+  component,
+  document,
+}: {
+  component: AltiumSchComponentRecord
+  document: AltiumSchDoc
+}): Partial<
+  Pick<CircuitElement, "manufacturer_part_number" | "supplier_part_numbers">
+> {
+  const parameters = document
+    .getOwnedRecords(component)
+    .filter(
+      (record) => record.recordKind === "34" || record.recordKind === "41",
+    )
+  const getParameterText = (...names: string[]): string | undefined => {
+    const normalizedNames = new Set(names.map((name) => name.toLowerCase()))
+    return parameters
+      .find((record) =>
+        normalizedNames.has(record.getDecoded("NAME")?.toLowerCase() ?? ""),
+      )
+      ?.getDecoded("TEXT")
+  }
+
+  const supplierPartNumbers: Partial<Record<SupplierName, string[]>> = {}
+  const appendSupplierPartNumber = (
+    supplierName: SupplierName | undefined,
+    partNumber: string | undefined,
+  ): void => {
+    if (!supplierName || !partNumber) return
+    const existingPartNumbers = supplierPartNumbers[supplierName] ?? []
+    for (const normalizedPartNumber of partNumber
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean)) {
+      if (!existingPartNumbers.includes(normalizedPartNumber)) {
+        existingPartNumbers.push(normalizedPartNumber)
+      }
+    }
+    supplierPartNumbers[supplierName] = existingPartNumbers
+  }
+
+  for (const parameter of parameters) {
+    const parameterName = parameter.getDecoded("NAME")?.toLowerCase() ?? ""
+    appendSupplierPartNumber(
+      SUPPLIER_NAME_BY_PARAMETER_NAME[parameterName],
+      parameter.getDecoded("TEXT"),
+    )
+  }
+
+  for (const supplierParameter of parameters) {
+    const supplierParameterName =
+      supplierParameter.getDecoded("NAME")?.toLowerCase() ?? ""
+    const supplierMatch = /^supplier(?: (\d+))?$/u.exec(supplierParameterName)
+    if (!supplierMatch) continue
+    const suffix = supplierMatch[1]
+    const partNumber = suffix
+      ? getParameterText(`Supplier Part Number ${suffix}`)
+      : getParameterText("Supplier Part")
+    appendSupplierPartNumber(
+      normalizeSupplierName(supplierParameter.getDecoded("TEXT") ?? ""),
+      partNumber,
+    )
+  }
+
+  const manufacturerPartNumber = getParameterText(
+    "Manufacturer Part Number",
+    "Manufacturer Part",
+  )
+  return {
+    ...(manufacturerPartNumber
+      ? { manufacturer_part_number: manufacturerPartNumber }
+      : {}),
+    ...(Object.keys(supplierPartNumbers).length > 0
+      ? { supplier_part_numbers: supplierPartNumbers }
+      : {}),
+  }
+}
 
 function appendNativeTextPresentation({
   document,
@@ -399,6 +504,7 @@ function appendComponentElements({
       type: "source_component",
       source_component_id: sourceComponentId,
       name: designator,
+      ...getSourceComponentPartFields({ component, document }),
     },
     {
       type: "schematic_symbol",

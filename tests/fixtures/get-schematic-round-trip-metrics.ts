@@ -98,6 +98,12 @@ export type SchematicSheetSignature = {
   size: CircuitSize
 }
 
+export type SchematicComponentPartSignature = {
+  manufacturerPartNumber: string
+  name: string
+  supplierPartNumbers: Array<[string, string[]]>
+}
+
 export type SchematicRoundTripMetrics = {
   componentSizeMaxDeltaCircuitUnits: number
   geometryMaxDeltaCircuitUnits: number
@@ -105,6 +111,7 @@ export type SchematicRoundTripMetrics = {
   roundTripComponentTextSignatures: SchematicComponentTextSignature[]
   roundTripSymbolPrimitiveCounts: SchematicSymbolPrimitiveCounts
   roundTripComponentNames: string[]
+  roundTripComponentPartSignatures: SchematicComponentPartSignature[]
   roundTripCounts: SchematicPrimitiveCounts
   roundTripNetLabelTexts: string[]
   roundTripOffSheetPortSignatures: SchematicOffSheetPortSignature[]
@@ -112,6 +119,7 @@ export type SchematicRoundTripMetrics = {
   roundTripSheetSignatures: SchematicSheetSignature[]
   roundTripPortNames: string[]
   sourceComponentNames: string[]
+  sourceComponentPartSignatures: SchematicComponentPartSignature[]
   sourceSymbolPrimitiveCounts: SchematicSymbolPrimitiveCounts
   sourceAnnotationSignatures: SchematicAnnotationSignature[]
   sourceComponentTextSignatures: SchematicComponentTextSignature[]
@@ -122,6 +130,40 @@ export type SchematicRoundTripMetrics = {
   sourceSheetSignatures: SchematicSheetSignature[]
   sourcePortNames: string[]
   sourceSupportedPrimitiveTotal: number
+}
+
+function getComponentPartSignatures(
+  circuitJson: CircuitElement[],
+): SchematicComponentPartSignature[] {
+  return circuitJson
+    .filter(
+      (element) =>
+        element.type === "source_component" &&
+        (asString(element.manufacturer_part_number) !== "" ||
+          isCircuitElement(element.supplier_part_numbers)),
+    )
+    .map((component) => ({
+      manufacturerPartNumber: asString(component.manufacturer_part_number),
+      name: asString(component.name),
+      supplierPartNumbers: isCircuitElement(component.supplier_part_numbers)
+        ? Object.entries(component.supplier_part_numbers)
+            .flatMap(([supplierName, partNumbers]) =>
+              Array.isArray(partNumbers)
+                ? [
+                    [
+                      supplierName,
+                      partNumbers
+                        .map((partNumber) => asString(partNumber))
+                        .sort(),
+                    ] as [string, string[]],
+                  ]
+                : [],
+            )
+            .sort(([firstName], [secondName]) =>
+              firstName.localeCompare(secondName),
+            )
+        : [],
+    }))
 }
 
 function getSchematicSheetSignatures(
@@ -597,6 +639,8 @@ export function getSchematicRoundTripMetrics({
       elementType: "source_component",
       fieldName: "name",
     }),
+    roundTripComponentPartSignatures:
+      getComponentPartSignatures(roundTripCircuitJson),
     roundTripCounts,
     roundTripNetLabelTexts: getStringFields({
       circuitJson: roundTripCircuitJson,
@@ -618,6 +662,8 @@ export function getSchematicRoundTripMetrics({
       elementType: "source_component",
       fieldName: "name",
     }),
+    sourceComponentPartSignatures:
+      getComponentPartSignatures(sourceCircuitJson),
     sourceSymbolPrimitiveCounts:
       getSchematicSymbolPrimitiveCounts(sourceCircuitJson),
     sourceAnnotationSignatures:
