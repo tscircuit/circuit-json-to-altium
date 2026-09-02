@@ -10,6 +10,9 @@ test("round-trips the open-source NodeMCU ESP-12 Altium schematic", async () => 
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
+  expect(result.roundTripPinElectricalSignatures).toEqual(
+    result.sourcePinElectricalSignatures,
+  )
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,
   )

@@ -98,6 +98,17 @@ export type SchematicSheetSignature = {
   size: CircuitSize
 }
 
+export type SchematicPinElectricalSignature = {
+  name: string
+  type:
+    | "bidirectional"
+    | "input"
+    | "open_collector"
+    | "output"
+    | "passive"
+    | "power"
+}
+
 export type SchematicRoundTripMetrics = {
   componentSizeMaxDeltaCircuitUnits: number
   geometryMaxDeltaCircuitUnits: number
@@ -108,6 +119,7 @@ export type SchematicRoundTripMetrics = {
   roundTripCounts: SchematicPrimitiveCounts
   roundTripNetLabelTexts: string[]
   roundTripOffSheetPortSignatures: SchematicOffSheetPortSignature[]
+  roundTripPinElectricalSignatures: SchematicPinElectricalSignature[]
   roundTripPowerPortSymbolNames: string[]
   roundTripSheetSignatures: SchematicSheetSignature[]
   roundTripPortNames: string[]
@@ -118,10 +130,59 @@ export type SchematicRoundTripMetrics = {
   sourceCounts: SchematicPrimitiveCounts
   sourceNetLabelTexts: string[]
   sourceOffSheetPortSignatures: SchematicOffSheetPortSignature[]
+  sourcePinElectricalSignatures: SchematicPinElectricalSignature[]
   sourcePowerPortSymbolNames: string[]
   sourceSheetSignatures: SchematicSheetSignature[]
   sourcePortNames: string[]
   sourceSupportedPrimitiveTotal: number
+}
+
+function getPinElectricalSignatures(
+  circuitJson: CircuitElement[],
+): SchematicPinElectricalSignature[] {
+  const sourcePortsById = new Map(
+    circuitJson
+      .filter((element) => element.type === "source_port")
+      .map((sourcePort) => [asString(sourcePort.source_port_id), sourcePort]),
+  )
+  return circuitJson.flatMap((schematicPort) => {
+    if (
+      schematicPort.type !== "schematic_port" ||
+      !asString(schematicPort.schematic_component_id)
+    ) {
+      return []
+    }
+    const sourcePort = sourcePortsById.get(
+      asString(schematicPort.source_port_id),
+    )
+    const type =
+      sourcePort?.provides_power === true ||
+      sourcePort?.requires_power === true ||
+      sourcePort?.provides_ground === true ||
+      sourcePort?.requires_ground === true ||
+      sourcePort?.provides_voltage !== undefined ||
+      sourcePort?.requires_voltage !== undefined
+        ? "power"
+        : schematicPort.has_input_arrow === true &&
+            schematicPort.has_output_arrow === true
+          ? "bidirectional"
+          : sourcePort?.is_using_open_drain === true
+            ? "open_collector"
+            : schematicPort.has_output_arrow === true ||
+                sourcePort?.is_using_push_pull === true
+              ? "output"
+              : schematicPort.has_input_arrow === true
+                ? "input"
+                : "passive"
+    return [
+      {
+        name:
+          asString(schematicPort.display_pin_label) ||
+          asString(sourcePort?.name),
+        type,
+      },
+    ]
+  })
 }
 
 function getSchematicSheetSignatures(
@@ -605,6 +666,8 @@ export function getSchematicRoundTripMetrics({
     }),
     roundTripOffSheetPortSignatures:
       getOffSheetPortSignatures(roundTripCircuitJson),
+    roundTripPinElectricalSignatures:
+      getPinElectricalSignatures(roundTripCircuitJson),
     roundTripPowerPortSymbolNames:
       getPowerPortSymbolNames(roundTripCircuitJson),
     roundTripSheetSignatures: getSchematicSheetSignatures(roundTripCircuitJson),
@@ -631,6 +694,8 @@ export function getSchematicRoundTripMetrics({
       fieldName: "text",
     }),
     sourceOffSheetPortSignatures: getOffSheetPortSignatures(sourceCircuitJson),
+    sourcePinElectricalSignatures:
+      getPinElectricalSignatures(sourceCircuitJson),
     sourcePowerPortSymbolNames: getPowerPortSymbolNames(sourceCircuitJson),
     sourceSheetSignatures: getSchematicSheetSignatures(sourceCircuitJson),
     sourcePortNames: getStringFields({

@@ -320,6 +320,48 @@ function getNumericPinNumber(
   return Number.isSafeInteger(pinNumber) ? pinNumber : undefined
 }
 
+function getCircuitPinElectricalFields(pin: AltiumSchPinRecord): {
+  schematicPortFields: Partial<
+    Pick<CircuitElement, "has_input_arrow" | "has_output_arrow">
+  >
+  sourcePortFields: Partial<
+    Pick<CircuitElement, "is_using_open_drain" | "requires_power">
+  >
+} {
+  switch (pin.electricalType) {
+    case 0:
+      return {
+        schematicPortFields: { has_input_arrow: true },
+        sourcePortFields: {},
+      }
+    case 1:
+      return {
+        schematicPortFields: {
+          has_input_arrow: true,
+          has_output_arrow: true,
+        },
+        sourcePortFields: {},
+      }
+    case 2:
+      return {
+        schematicPortFields: { has_output_arrow: true },
+        sourcePortFields: {},
+      }
+    case 3:
+      return {
+        schematicPortFields: {},
+        sourcePortFields: { is_using_open_drain: true },
+      }
+    case 7:
+      return {
+        schematicPortFields: {},
+        sourcePortFields: { requires_power: true },
+      }
+    default:
+      return { schematicPortFields: {}, sourcePortFields: {} }
+  }
+}
+
 function getPowerPortDirection(
   powerPort: AltiumSchPowerPortRecord,
 ): AltiumPowerPortDirection {
@@ -468,6 +510,8 @@ function appendComponentElements({
     const isPinNumberVisible =
       pinConglomerate === undefined ||
       (pinConglomerate & ALTIUM_PIN_NUMBER_VISIBLE_FLAG) !== 0
+    const { schematicPortFields, sourcePortFields } =
+      getCircuitPinElectricalFields(pin)
     elements.push(
       {
         type: "source_port",
@@ -475,6 +519,7 @@ function appendComponentElements({
         source_component_id: sourceComponentId,
         name: pin.name || pin.designator || `Pin ${pinIndex + 1}`,
         ...(pinNumber === undefined ? {} : { pin_number: pinNumber }),
+        ...sourcePortFields,
       },
       {
         type: "schematic_port",
@@ -500,6 +545,7 @@ function appendComponentElements({
         ...(isPinNameVisible && pin.name
           ? { display_pin_label: pin.name }
           : {}),
+        ...schematicPortFields,
       },
     )
     appendAltiumSchematicPinTextElements({
