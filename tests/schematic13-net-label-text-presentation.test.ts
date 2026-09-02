@@ -22,7 +22,7 @@ const elements: CircuitElement[] = [
     type: "schematic_text",
     schematic_text_id: "signal_label_presentation",
     text: "SIGNAL",
-    font_size: 0.55,
+    font_size: 0.18,
     position: { x: 1, y: 1 },
     rotation: -90,
     anchor: "top_right",
@@ -50,9 +50,10 @@ const elements: CircuitElement[] = [
   },
   {
     type: "schematic_text",
-    schematic_text_id: "sheet_note",
-    text: "NOTE",
-    font_size: 0.45,
+    schematic_text_id: "trace_inline_label",
+    source_trace_id: "source_trace_inline",
+    text: "TRACE_INLINE",
+    font_size: 0.12,
     position: { x: 7, y: 1 },
     rotation: 0,
     anchor: "bottom_left",
@@ -93,11 +94,16 @@ test("uses matching schematic text to present native net labels", async () => {
         `SIZE${powerPort?.getNumber("FONTID") ?? 1}`,
       ),
     },
-    sheetLabels: sheetLabels.map((label) => label.getDecoded("TEXT")),
+    sheetLabels: sheetLabels.map((label) => ({
+      fontSizePoints: sheetRecord?.getNumber(
+        `SIZE${label.getNumber("FONTID") ?? 1}`,
+      ),
+      text: label.getDecoded("TEXT"),
+    })),
   }).toEqual({
     netLabel: {
       color: 0x56_34_12,
-      fontSizePoints: 11,
+      fontSizePoints: 4,
       justification: 8,
       orientation: 1,
     },
@@ -105,7 +111,10 @@ test("uses matching schematic text to present native net labels", async () => {
       color: 0x21_43_65,
       fontSizePoints: 13,
     },
-    sheetLabels: ["NOTE", "SIGNAL"],
+    sheetLabels: [
+      { fontSizePoints: 2, text: "TRACE_INLINE" },
+      { fontSizePoints: 9, text: "SIGNAL" },
+    ],
   })
   expectValidSchematic(schematic)
 })

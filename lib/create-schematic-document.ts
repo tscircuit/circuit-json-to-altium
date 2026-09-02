@@ -772,6 +772,11 @@ export function createSchematicDocument({
           "OWNERPARTID=1",
           `DESIGNATOR=${pinDesignator}`,
           `NAME=${pinName}`,
+          // Altium pins use dedicated custom-font fields for their name and
+          // designator. FONTID alone is ignored by Altium Designer, which then
+          // falls back to the document's larger system font.
+          "NAME_CUSTOMFONTID=2",
+          "DESIGNATOR_CUSTOMFONTID=2",
           `PINCONGLOMERATE=${altiumPinConglomerate}`,
           `LOCATION.X=${altiumPinLocation.x}`,
           `LOCATION.Y=${altiumPinLocation.y}`,

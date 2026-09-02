@@ -25,6 +25,17 @@ const ALTIUM_UNITS_PER_CIRCUIT_UNIT = 20
 const ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS = 4
 const ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME = "Arial"
 
+function getAltiumFontSizePoints(fontSizeCircuitUnits: number): number {
+  // Altium's schematic font table expects whole point sizes. Fractional values
+  // such as SIZE4=3.6 are interpreted inconsistently by Altium viewers and can
+  // render as 36 pt. Round at the format boundary while preserving the source
+  // size as the font-table lookup key.
+  return Math.max(
+    1,
+    Math.round(fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT),
+  )
+}
+
 export function createAltiumSchematicFontTable({
   schematicElements,
 }: CreateAltiumSchematicFontTableInput): AltiumSchematicFontTable {
@@ -57,7 +68,7 @@ export function createAltiumSchematicFontTable({
     const fontId = nextFontId++
     fontIdBySizeCircuitUnits.set(fontSizeCircuitUnits, fontId)
     schematicFontRecordFields.push(
-      `SIZE${fontId}=${formatNumber(fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT)}`,
+      `SIZE${fontId}=${formatNumber(getAltiumFontSizePoints(fontSizeCircuitUnits))}`,
       `FONTNAME${fontId}=${ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME}`,
     )
   }
