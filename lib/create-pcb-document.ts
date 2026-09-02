@@ -21,6 +21,7 @@ import {
   pointsEqual,
   sanitizeField,
 } from "./format"
+import { getAltiumPcbCopperLayerName } from "./get-altium-pcb-copper-layer-name"
 import { getBoardOutline } from "./get-board-outline"
 import type {
   CircuitElement,
@@ -342,12 +343,9 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       })
       if (pointsEqual(altiumStartPoint, altiumEndPoint)) continue
       const routeLayer =
-        asString(
-          circuitRouteEnd.layer,
-          asString(circuitRouteStart.layer),
-        ).toLowerCase() === "bottom"
-          ? "BOTTOM"
-          : "TOP"
+        getAltiumPcbCopperLayerName(
+          asString(circuitRouteEnd.layer, asString(circuitRouteStart.layer)),
+        ) ?? "TOP"
       lines.push(
         [
           "|RECORD=Track",
