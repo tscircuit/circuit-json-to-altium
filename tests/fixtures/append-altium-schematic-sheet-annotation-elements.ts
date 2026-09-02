@@ -208,9 +208,10 @@ export function appendAltiumSchematicSheetAnnotationElements({
   projectContext?: AltiumSchematicProjectContext
 }): void {
   for (const [annotationIndex, record] of document.records.entries()) {
+    const parent = document.getParent(record)
     if (
       !ANNOTATION_RECORD_KINDS.has(record.recordKind ?? "") ||
-      document.getParent(record) !== undefined
+      (parent !== undefined && parent.recordKind !== "39")
     ) {
       continue
     }

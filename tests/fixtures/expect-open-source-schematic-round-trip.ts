@@ -8,6 +8,9 @@ export function expectOpenSourceSchematicRoundTrip(
   }: { offSheetPortFontSizeTolerancePoints?: number } = {},
 ): void {
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  expect(result.roundTripEmbeddedImagePngSha256).toEqual(
+    result.sourceEmbeddedImagePngSha256,
+  )
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,

@@ -23,6 +23,7 @@ import {
 } from "./altium-schematic-coordinate-utils"
 import type { AltiumSchematicProjectContext } from "./altium-schematic-project-context"
 import { appendAltiumSchematicComponentTextElements } from "./append-altium-schematic-component-text-elements"
+import { appendAltiumSchematicImageElements } from "./append-altium-schematic-image-elements"
 import { appendAltiumSchematicPinTextElements } from "./append-altium-schematic-pin-text-elements"
 import { appendAltiumSchematicSheetAnnotationElements } from "./append-altium-schematic-sheet-annotation-elements"
 import { appendAltiumSchematicSheetElements } from "./append-altium-schematic-sheet-elements"
@@ -690,6 +691,7 @@ export function convertAltiumSchematicToCircuitJson(
   appendOffSheetPortElements(document, elements)
   appendWireElements(document, elements)
   appendNetLabelElements(document, elements)
+  appendAltiumSchematicImageElements({ document, elements })
   appendUnownedVisibleParameterTextElements({
     document,
     elements,

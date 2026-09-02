@@ -6,6 +6,7 @@ const preservedElementTypes = [
   "source_port",
   "source_net",
   "schematic_component",
+  "schematic_graphic",
   "schematic_port",
   "schematic_net_label",
   "schematic_path",
@@ -298,6 +299,7 @@ function countSchematicPrimitives(
     off_sheet_port: getOffSheetPortSignatures(circuitJson).length,
     power_port: getPowerPortSymbolNames(circuitJson).length,
     schematic_component: getElementCount("schematic_component"),
+    schematic_graphic: getElementCount("schematic_graphic"),
     schematic_net_label: getElementCount("schematic_net_label"),
     schematic_path: getElementCount("schematic_path"),
     schematic_port: getElementCount("schematic_port"),
@@ -377,7 +379,16 @@ function getSchematicAnnotationSignatures(
       })
     }
   }
-  return signatures
+  const isFilledBackground = (
+    signature: SchematicAnnotationSignature,
+  ): boolean =>
+    (signature.type === "schematic_path" ||
+      signature.type === "schematic_rect") &&
+    signature.isFilled
+  return signatures.toSorted(
+    (left, right) =>
+      Number(isFilledBackground(right)) - Number(isFilledBackground(left)),
+  )
 }
 
 function getStringFields({
@@ -404,6 +415,15 @@ function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
     ),
   )
   for (const element of circuitJson) {
+    if (
+      (element.type === "schematic_path" ||
+        element.type === "schematic_rect") &&
+      element.is_filled === true &&
+      !asString(element.schematic_component_id) &&
+      !asString(element.schematic_symbol_id)
+    ) {
+      continue
+    }
     if (
       element.type === "schematic_component" ||
       element.type === "schematic_port"
@@ -445,6 +465,18 @@ function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
       continue
     }
     if (element.type === "schematic_rect") {
+      const center = asPoint(element.center)
+      const width = asNumber(element.width)
+      const height = asNumber(element.height)
+      if (center) {
+        points.push(
+          { x: center.x - width / 2, y: center.y - height / 2 },
+          { x: center.x + width / 2, y: center.y + height / 2 },
+        )
+      }
+      continue
+    }
+    if (element.type === "schematic_graphic") {
       const center = asPoint(element.center)
       const width = asNumber(element.width)
       const height = asNumber(element.height)

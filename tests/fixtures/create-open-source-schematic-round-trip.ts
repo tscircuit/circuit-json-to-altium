@@ -12,9 +12,14 @@ import { getSchematicRoundTripMetrics } from "./get-schematic-round-trip-metrics
 export type OpenSourceSchematicRoundTrip = ReturnType<
   typeof getSchematicRoundTripMetrics
 > & {
+  roundTripEmbeddedImagePngSha256: string[]
+  roundTripFirstComponentRecordIndex: number
+  roundTripFilledSheetBackgroundIndices: number[]
   roundTripOffSheetPortFontSizePoints: number[]
   roundTripSvg: string
+  sourceEmbeddedImagePngSha256: string[]
   sourceOffSheetPortFontSizePoints: number[]
+  sourceTemplateAnnotationCount: number
   sourceSvg: string
 }
 
@@ -39,6 +44,32 @@ function getOffSheetPortFontSizePoints(document: AltiumSchDoc): number[] {
       ALTIUM_SCHEMATIC_PORT_FALLBACK_FONT_SIZE_POINTS
     )
   })
+}
+
+function getEmbeddedImagePngSha256(document: AltiumSchDoc): string[] {
+  return document.embeddedImages.map((embeddedImage) =>
+    new Bun.CryptoHasher("sha256")
+      .update(embeddedImage.getPngBytes())
+      .digest("hex"),
+  )
+}
+
+function getFilledSheetBackgroundIndices(document: AltiumSchDoc): number[] {
+  return document.records.flatMap((record, recordIndex) => {
+    const isFilledPath = record.recordKind === "7"
+    const isFilledRectangle =
+      record.recordKind === "14" && record.getBoolean("ISSOLID") === true
+    return (isFilledPath || isFilledRectangle) &&
+      document.getParent(record) === undefined
+      ? [recordIndex]
+      : []
+  })
+}
+
+function getTemplateAnnotationCount(document: AltiumSchDoc): number {
+  return document.records.filter(
+    (record) => document.getParent(record)?.recordKind === "39",
+  ).length
 }
 
 function parseSchematicDocument(schematicBytes: Uint8Array): AltiumSchDoc {
@@ -107,11 +138,20 @@ export async function createOpenSourceSchematicRoundTrip({
       roundTripCircuitJson,
       sourceCircuitJson,
     }),
+    roundTripEmbeddedImagePngSha256:
+      getEmbeddedImagePngSha256(roundTripDocument),
+    roundTripFirstComponentRecordIndex: roundTripDocument.records.findIndex(
+      (record) => record.recordKind === "1",
+    ),
+    roundTripFilledSheetBackgroundIndices:
+      getFilledSheetBackgroundIndices(roundTripDocument),
     roundTripOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(roundTripDocument),
     roundTripSvg: serializeAltiumSheetToSvg(roundTripDocument),
+    sourceEmbeddedImagePngSha256: getEmbeddedImagePngSha256(sourceDocument),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
+    sourceTemplateAnnotationCount: getTemplateAnnotationCount(sourceDocument),
     sourceSvg: serializeAltiumSheetToSvg(sourceDocument, sourceProjectContext),
   }
 }

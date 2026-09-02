@@ -50,15 +50,17 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
             })),
           ]
     this.context.schematics = documentDefinitions.map((definition) => {
-      const asciiContent = createSchematicDocument({
+      const createdDocument = createSchematicDocument({
         childSheets: definition.childSheets,
         circuitJson: this.input,
         schematicSheetId: definition.schematicSheetId,
         includeAllSchematicElements: definition.includeAllSchematicElements,
       })
       return {
-        asciiContent,
-        content: serializeAltiumSchDocToBinary(asciiContent),
+        asciiContent: createdDocument.asciiContent,
+        content: serializeAltiumSchDocToBinary(createdDocument.asciiContent, {
+          embeddedPngImages: createdDocument.embeddedPngImages,
+        }),
         filename: definition.filename,
       }
     })
