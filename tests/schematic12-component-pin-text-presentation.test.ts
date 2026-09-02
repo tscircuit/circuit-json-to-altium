@@ -49,7 +49,7 @@ test("preserves component and pin text presentation", async () => {
       schematic_component_id: "schematic_capacitor",
       text: "C1",
       position: { x: -0.8, y: 0.8 },
-      font_size: 0.5,
+      font_size: 0.18,
       rotation: -90,
       anchor: "top_right",
       color: "#123456",
@@ -60,7 +60,7 @@ test("preserves component and pin text presentation", async () => {
       schematic_component_id: "schematic_capacitor",
       text: "10uF",
       position: { x: 0.8, y: -0.8 },
-      font_size: 0.45,
+      font_size: 0.18,
       rotation: 0,
       anchor: "center",
       color: "#654321",
@@ -71,7 +71,7 @@ test("preserves component and pin text presentation", async () => {
       schematic_component_id: "schematic_capacitor",
       text: "positive",
       position: { x: -0.9, y: 0 },
-      font_size: 0.35,
+      font_size: 0.15,
       rotation: 0,
       anchor: "bottom_left",
       color: "#0a0b0c",
@@ -82,7 +82,7 @@ test("preserves component and pin text presentation", async () => {
       schematic_component_id: "schematic_capacitor",
       text: "2",
       position: { x: 0.9, y: 0 },
-      font_size: 0.4,
+      font_size: 0.15,
       rotation: 0,
       anchor: "bottom_right",
       color: "#0d0e0f",
@@ -126,6 +126,13 @@ test("preserves component and pin text presentation", async () => {
   if (!sheetRecord || !component) {
     throw new Error("Expected a sheet record and one component")
   }
+  const fontSizeFields = sheetRecord.fields.filter(({ key }) =>
+    /^SIZE\d+$/u.test(key),
+  )
+  expect(fontSizeFields).toHaveLength(sheetRecord.getNumber("FONTIDCOUNT") ?? 0)
+  expect(
+    fontSizeFields.every(({ value }) => Number.isInteger(Number(value))),
+  ).toBe(true)
   const ownedRecords = schematic.getOwnedRecords(component)
   const designator = ownedRecords.find((record) => record.recordKind === "34")
   const value = ownedRecords.find((record) => record.recordKind === "41")
@@ -144,6 +151,8 @@ test("preserves component and pin text presentation", async () => {
     },
     pins: pins.map((pin) => ({
       color: pin.getNumber("COLOR"),
+      designatorCustomFontId: pin.getNumber("DESIGNATOR_CUSTOMFONTID"),
+      nameCustomFontId: pin.getNumber("NAME_CUSTOMFONTID"),
       pinConglomerate: pin.getNumber("PINCONGLOMERATE"),
     })),
     pinTexts: pinTexts.map((pinText) => ({
@@ -169,26 +178,36 @@ test("preserves component and pin text presentation", async () => {
   }).toEqual({
     designator: {
       color: 0x56_34_12,
-      fontSizePoints: 10,
+      fontSizePoints: 3,
       justification: 8,
       orientation: 1,
       position: expectedDesignatorPosition,
     },
     pins: [
-      { color: 0x0c_0b_0a, pinConglomerate: 34 },
-      { color: 0x0f_0e_0d, pinConglomerate: 32 },
+      {
+        color: 0x0c_0b_0a,
+        designatorCustomFontId: 2,
+        nameCustomFontId: 2,
+        pinConglomerate: 34,
+      },
+      {
+        color: 0x0f_0e_0d,
+        designatorCustomFontId: 2,
+        nameCustomFontId: 2,
+        pinConglomerate: 32,
+      },
     ],
     pinTexts: [
       {
         color: 0x0c_0b_0a,
-        fontSizePoints: 7,
+        fontSizePoints: 2,
         justification: 0,
         position: expectedPinNamePosition,
         text: "positive",
       },
       {
         color: 0x0f_0e_0d,
-        fontSizePoints: 8,
+        fontSizePoints: 2,
         justification: 2,
         position: expectedPinNumberPosition,
         text: "2",
@@ -196,7 +215,7 @@ test("preserves component and pin text presentation", async () => {
     ],
     value: {
       color: 0x21_43_65,
-      fontSizePoints: 9,
+      fontSizePoints: 3,
       justification: 4,
       orientation: 0,
       position: expectedValuePosition,

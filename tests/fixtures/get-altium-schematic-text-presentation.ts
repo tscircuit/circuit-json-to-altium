@@ -2,7 +2,7 @@ import type { AltiumRecord, AltiumSchDoc } from "altiumts"
 import {
   type CircuitPoint,
   getRecordLocation,
-  toCircuitLength,
+  toCircuitFontSize,
   toCircuitPoint,
 } from "./altium-schematic-coordinate-utils"
 import { getAltiumSchematicFont } from "./get-altium-schematic-text-frame-lines"
@@ -78,7 +78,7 @@ export function getAltiumSchematicTextPresentation({
       fieldNames: ["COLOR"],
       record,
     }),
-    font_size: toCircuitLength(font.sizePoints),
+    font_size: toCircuitFontSize(font.sizePoints),
     position: toCircuitPoint(getRecordLocation(record)),
     rotation: getSchematicTextRotationDegrees(record),
   }

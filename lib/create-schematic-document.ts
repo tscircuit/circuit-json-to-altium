@@ -3,7 +3,11 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
-import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-table"
+import {
+  ALTIUM_SCHEMATIC_COMPONENT_FONT_ID,
+  ALTIUM_SCHEMATIC_PIN_FONT_ID,
+  createAltiumSchematicFontTable,
+} from "./create-altium-schematic-font-table"
 import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
 import { createAltiumSchematicOffSheetPortRecordFields } from "./create-altium-schematic-off-sheet-port-record-fields"
@@ -614,7 +618,7 @@ export function createSchematicDocument({
         x: fallbackSchematicBoxBounds.left,
         y: fallbackSchematicBoxBounds.top + 12,
       },
-      fallbackFontId: 1,
+      fallbackFontId: ALTIUM_SCHEMATIC_COMPONENT_FONT_ID,
       fallbackJustification: designatorPlacement?.justification ?? 0,
       fontTable: altiumSchematicFontTable,
       schematicText: designatorText,
@@ -626,7 +630,7 @@ export function createSchematicDocument({
         x: fallbackSchematicBoxBounds.left,
         y: fallbackSchematicBoxBounds.bottom - 12,
       },
-      fallbackFontId: 2,
+      fallbackFontId: ALTIUM_SCHEMATIC_COMPONENT_FONT_ID,
       fallbackJustification: commentPlacement?.justification ?? 0,
       fontTable: altiumSchematicFontTable,
       schematicText: commentText,
@@ -772,6 +776,8 @@ export function createSchematicDocument({
           "OWNERPARTID=1",
           `DESIGNATOR=${pinDesignator}`,
           `NAME=${pinName}`,
+          `NAME_CUSTOMFONTID=${ALTIUM_SCHEMATIC_PIN_FONT_ID}`,
+          `DESIGNATOR_CUSTOMFONTID=${ALTIUM_SCHEMATIC_PIN_FONT_ID}`,
           `PINCONGLOMERATE=${altiumPinConglomerate}`,
           `LOCATION.X=${altiumPinLocation.x}`,
           `LOCATION.Y=${altiumPinLocation.y}`,
@@ -783,7 +789,7 @@ export function createSchematicDocument({
             ? [`SYMBOL_OUTEREDGE=${ALTIUM_PIN_INVERSION_SYMBOL}`]
             : []),
           `COLOR=${pinColor}`,
-          "FONTID=2",
+          `FONTID=${ALTIUM_SCHEMATIC_PIN_FONT_ID}`,
         ],
         schematicRecordContext,
       )

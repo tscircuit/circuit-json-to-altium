@@ -8,6 +8,7 @@ import type { CircuitElement } from "../../lib/types"
 import {
   getRecordCorner,
   getRecordLocation,
+  toCircuitFontSize,
   toCircuitLength,
   toCircuitPoint,
 } from "./altium-schematic-coordinate-utils"
@@ -189,7 +190,7 @@ function appendTextFrameAnnotations({
       type: "schematic_text",
       schematic_text_id: `schematic_text_frame_${annotationIndex}_${lineIndex}`,
       text: line.text,
-      font_size: toCircuitLength(line.fontSizePoints),
+      font_size: toCircuitFontSize(line.fontSizePoints),
       position: toCircuitPoint(line.position),
       rotation: 0,
       anchor: line.anchor,

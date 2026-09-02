@@ -1,4 +1,5 @@
 import type { AltiumPoint, AltiumRecord } from "altiumts"
+import { ALTIUM_FONT_POINTS_PER_CIRCUIT_UNIT } from "../../lib/create-altium-schematic-font-table"
 
 export const ALTIUM_UNITS_PER_CIRCUIT_UNIT = 20
 
@@ -35,6 +36,10 @@ export function toCircuitPoint(point: AltiumPoint): CircuitPoint {
 
 export function toCircuitLength(altiumLength: number): number {
   return altiumLength / ALTIUM_UNITS_PER_CIRCUIT_UNIT
+}
+
+export function toCircuitFontSize(fontSizePoints: number): number {
+  return fontSizePoints / ALTIUM_FONT_POINTS_PER_CIRCUIT_UNIT
 }
 
 export function getRecordLocation(record: AltiumRecord): AltiumPoint {
