@@ -25,6 +25,15 @@ test("round-trips every sheet of the open-source Cobra Altium schematic", async 
       offSheetPortFontSizeTolerancePoints: 1,
     })
   }
+  const componentTexts = results.flatMap((result) =>
+    result.sourceComponentTextSignatures.map(({ text }) => text),
+  )
+  expect(componentTexts.filter((text) => /^=(?:GPN|MPN)$/u.test(text))).toEqual(
+    [],
+  )
+  expect(componentTexts).toEqual(
+    expect.arrayContaining(["CH341C", "M3406", "MLX90640", "USB-TYPE-C-018"]),
+  )
   await expect(
     results.map((result) =>
       createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
