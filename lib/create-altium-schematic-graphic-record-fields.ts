@@ -93,7 +93,7 @@ function createAltiumPathRecordFields({
   ]
 }
 
-const ALTIUM_SCHEMATIC_FRACTION_DIGITS = 8
+const ALTIUM_SCHEMATIC_FRACTION_DIGITS = 5
 const ALTIUM_SCHEMATIC_FRACTION_SCALE = 10 ** ALTIUM_SCHEMATIC_FRACTION_DIGITS
 
 function createAltiumSchematicCoordinateRecordFields(
@@ -101,8 +101,9 @@ function createAltiumSchematicCoordinateRecordFields(
   coordinate: number,
 ): string[] {
   // Altium represents sub-grid schematic coordinates as an integer field plus
-  // an eight-digit *_FRAC field. Rounding these points deforms tiny details
-  // such as the short lead-in segments on LED emission arrows.
+  // a five-digit *_FRAC field in 1/100000 schematic-unit increments. Emitting
+  // more digits makes native Altium interpret the fraction as a much larger
+  // fixed-point offset, even though decimal-string renderers may look correct.
   const roundedCoordinate =
     Math.round(coordinate * ALTIUM_SCHEMATIC_FRACTION_SCALE) /
     ALTIUM_SCHEMATIC_FRACTION_SCALE

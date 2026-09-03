@@ -1,5 +1,8 @@
 import { getAltiumColorFromCss } from "./altium-color"
-import { ALTIUM_SCHEMATIC_GRAPHIC_COLOR } from "./altium-schematic-colors"
+import {
+  ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
+  ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
+} from "./altium-schematic-colors"
 import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-table"
 import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
@@ -357,6 +360,7 @@ export function createSchematicDocument({
     [
       "RECORD=31",
       ...altiumSchematicFontTable.sheetRecordFields,
+      `AREACOLOR=${ALTIUM_SCHEMATIC_SHEET_AREA_COLOR}`,
       `CUSTOMX=${altiumSheetWidth}`,
       `CUSTOMY=${altiumSheetHeight}`,
       "USECUSTOMSHEET=T",
