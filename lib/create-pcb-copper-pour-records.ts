@@ -5,9 +5,10 @@ import {
 } from "circuit-json"
 import { applyToPoint, compose, rotate, translate } from "transformation-matrix"
 import type { PcbNetEntry } from "./create-pcb-net-entries"
-import { formatMil, pointsEqual } from "./format"
+import { asNumber, asString, formatMil, pointsEqual } from "./format"
 import type {
   CircuitElement,
+  PcbComponentId,
   Point,
   PointTransform,
   SourceNetId,
@@ -21,6 +22,7 @@ type CopperPourRings = {
 type CreatePcbCopperPourRecordsOptions = {
   circuitJson: CircuitElement[]
   circuitToAltiumPcbPoint: PointTransform
+  componentIndex: ReadonlyMap<PcbComponentId, number>
   netEntries: PcbNetEntry[]
 }
 
@@ -29,6 +31,7 @@ const MAXIMUM_ARC_STEP_RADIANS = Math.PI / 24
 export function createPcbCopperPourRecords({
   circuitJson,
   circuitToAltiumPcbPoint,
+  componentIndex,
   netEntries,
 }: CreatePcbCopperPourRecordsOptions): string[] {
   const netBySourceNetId = new Map<SourceNetId, PcbNetEntry>(
@@ -40,11 +43,21 @@ export function createPcbCopperPourRecords({
   )
   const copperPours = circuitJson.flatMap((element) => {
     if (element.type !== "pcb_copper_pour") return []
-    return [pcb_copper_pour.parse(element)]
+    return [
+      {
+        copperPour: pcb_copper_pour.parse(element),
+        polygonCutoutCount: Math.max(
+          0,
+          Math.trunc(asNumber(element.altium_polygon_cutout_count)),
+        ),
+        pcbComponentId: asString(element.pcb_component_id),
+      },
+    ]
   })
   const records: string[] = []
 
-  for (const [polygonIndex, copperPour] of copperPours.entries()) {
+  for (const [polygonIndex, entry] of copperPours.entries()) {
+    const { copperPour, pcbComponentId, polygonCutoutCount } = entry
     const circuitRings = getCopperPourRings(copperPour)
     const altiumRings = {
       outerRing: circuitRings.outerRing.map(circuitToAltiumPcbPoint),
@@ -53,9 +66,44 @@ export function createPcbCopperPourRecords({
       ),
     }
     const layer = getAltiumCopperLayer(copperPour.layer)
+    const boundedPolygonCutoutCount = Math.min(
+      polygonCutoutCount,
+      altiumRings.innerRings.length,
+    )
+    const inlineInnerRingCount =
+      altiumRings.innerRings.length - boundedPolygonCutoutCount
+    const inlineInnerRings = altiumRings.innerRings.slice(
+      0,
+      inlineInnerRingCount,
+    )
+    const polygonCutoutRings =
+      altiumRings.innerRings.slice(inlineInnerRingCount)
     const net = copperPour.source_net_id
       ? netBySourceNetId.get(copperPour.source_net_id)
       : undefined
+    const altiumComponentIndex = componentIndex.get(pcbComponentId)
+
+    if (altiumComponentIndex !== undefined) {
+      records.push(
+        createRegionRecord({
+          altiumComponentIndex,
+          innerRings: altiumRings.innerRings,
+          layer,
+          outerRing: altiumRings.outerRing,
+        }),
+      )
+      if (!copperPour.covered_with_solder_mask && isOuterCopperLayer(layer)) {
+        records.push(
+          createRegionRecord({
+            altiumComponentIndex,
+            innerRings: altiumRings.innerRings,
+            layer: layer === "TOP" ? "TOPSOLDER" : "BOTTOMSOLDER",
+            outerRing: altiumRings.outerRing,
+          }),
+        )
+      }
+      continue
+    }
 
     records.push(
       createPolygonRecord({
@@ -65,12 +113,22 @@ export function createPcbCopperPourRecords({
         polygonIndex,
       }),
       createRegionRecord({
-        innerRings: altiumRings.innerRings,
+        innerRings: inlineInnerRings,
         layer,
         net,
         outerRing: altiumRings.outerRing,
         polygonIndex,
       }),
+      ...polygonCutoutRings.map((innerRing) =>
+        createRegionRecord({
+          innerRings: [],
+          layer,
+          net,
+          outerRing: closeRing(innerRing),
+          polygonIndex,
+          regionKind: "POLYGON_CUTOUT",
+        }),
+      ),
     )
 
     if (!copperPour.covered_with_solder_mask && isOuterCopperLayer(layer)) {
@@ -245,27 +303,34 @@ function createPolygonRecord({
 }
 
 function createRegionRecord({
+  altiumComponentIndex,
   innerRings,
   layer,
   net,
   outerRing,
   polygonIndex,
+  regionKind = "COPPER",
 }: {
+  altiumComponentIndex?: number
   innerRings: Point[][]
   layer: string
   net?: PcbNetEntry
   outerRing: Point[]
   polygonIndex?: number
+  regionKind?: "COPPER" | "POLYGON_CUTOUT"
 }): string {
   return [
     "|RECORD=Region",
+    ...(altiumComponentIndex === undefined
+      ? []
+      : [`COMPONENT=${altiumComponentIndex}`]),
     ...(net ? [`NET=${net.index}`] : []),
     ...(polygonIndex === undefined ? [] : [`POLYGON=${polygonIndex}`]),
     `LAYER=${layer}`,
     "LOCKED=FALSE",
     "KEEPOUT=FALSE",
     "TEARDROP=FALSE",
-    "REGIONKIND=COPPER",
+    `REGIONKIND=${regionKind}`,
     `HOLECOUNT=${innerRings.length}`,
     ...createContourFields(outerRing),
     ...innerRings.flatMap(createHoleFields),

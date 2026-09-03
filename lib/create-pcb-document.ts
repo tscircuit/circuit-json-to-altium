@@ -108,6 +108,13 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       net.sourcePortIds.map((sourcePortId) => [sourcePortId, net] as const),
     ),
   )
+  const pcbComponents = byType(circuitJson, "pcb_component")
+  const componentIndex = new Map<PcbComponentId, number>(
+    pcbComponents.map((component, index) => [
+      asString(component.pcb_component_id) || `pcb_component_${index}`,
+      index,
+    ]),
+  )
 
   for (const net of netEntries) {
     lines.push(
@@ -126,16 +133,14 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     ...createPcbCopperPourRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
+      componentIndex,
       netEntries,
     }),
   )
 
-  const pcbComponents = byType(circuitJson, "pcb_component")
-  const componentIndex = new Map<PcbComponentId, number>()
   for (const [index, component] of pcbComponents.entries()) {
     const componentId =
       asString(component.pcb_component_id) || `pcb_component_${index}`
-    componentIndex.set(componentId, index)
     const sourceComponent = sourceComponents.get(
       asString(component.source_component_id),
     )
