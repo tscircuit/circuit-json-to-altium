@@ -77,6 +77,9 @@ test("uses matching schematic text to present native net labels", async () => {
   const netLabel = schematic.netLabels[0]
   const powerPort = schematic.powerPorts[0]
   const sheetLabels = schematic.getRecordsByKind("4")
+  const generatedNetLabelDisplay = sheetLabels.find((label) =>
+    label.getDecoded("UNIQUEID")?.startsWith("CJNT"),
+  )
 
   expect({
     netLabel: {
@@ -93,8 +96,22 @@ test("uses matching schematic text to present native net labels", async () => {
         `SIZE${powerPort?.getNumber("FONTID") ?? 1}`,
       ),
     },
-    sheetLabels: sheetLabels.map((label) => label.getDecoded("TEXT")),
+    generatedNetLabelDisplay: {
+      color: generatedNetLabelDisplay?.getNumber("COLOR"),
+      fontSizePoints: sheetRecord?.getNumber(
+        `SIZE${generatedNetLabelDisplay?.getNumber("FONTID") ?? 1}`,
+      ),
+      text: generatedNetLabelDisplay?.getDecoded("TEXT"),
+    },
+    sheetLabels: sheetLabels
+      .filter((label) => !label.getDecoded("UNIQUEID")?.startsWith("CJNT"))
+      .map((label) => label.getDecoded("TEXT")),
   }).toEqual({
+    generatedNetLabelDisplay: {
+      color: 0x56_34_12,
+      fontSizePoints: 11,
+      text: "SIGNAL",
+    },
     netLabel: {
       color: 0x56_34_12,
       fontSizePoints: 11,

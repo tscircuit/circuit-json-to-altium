@@ -17,6 +17,14 @@ import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-
 import { getCssColorFromAltiumRecord } from "./get-css-color-from-altium-record"
 
 const ANNOTATION_RECORD_KINDS = new Set(["4", "6", "7", "10", "14", "28"])
+const GENERATED_NET_LABEL_DECORATION_PREFIXES = ["CJNP", "CJNT"]
+
+function isGeneratedNetLabelDecoration(record: AltiumRecord): boolean {
+  const uniqueId = record.getDecoded("UNIQUEID") ?? ""
+  return GENERATED_NET_LABEL_DECORATION_PREFIXES.some((prefix) =>
+    uniqueId.startsWith(prefix),
+  )
+}
 
 function appendLabelAnnotation({
   annotationIndex,
@@ -210,6 +218,7 @@ export function appendAltiumSchematicSheetAnnotationElements({
   for (const [annotationIndex, record] of document.records.entries()) {
     if (
       !ANNOTATION_RECORD_KINDS.has(record.recordKind ?? "") ||
+      isGeneratedNetLabelDecoration(record) ||
       document.getParent(record) !== undefined
     ) {
       continue
