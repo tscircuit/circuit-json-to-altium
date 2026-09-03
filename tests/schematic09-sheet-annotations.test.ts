@@ -64,6 +64,18 @@ const elements: CircuitElement[] = [
     is_dashed: true,
   },
   {
+    type: "schematic_rect",
+    schematic_rect_id: "inherited_fill_box",
+    center: { x: 8, y: 0 },
+    width: 2,
+    height: 1,
+    rotation: 0,
+    stroke_width: 0.1,
+    color: "#123456",
+    is_filled: true,
+    is_dashed: false,
+  },
+  {
     type: "schematic_path",
     schematic_path_id: "leader",
     points: [
@@ -98,6 +110,9 @@ test("writes schematic sheet annotations as native records", async () => {
   const sheetRecord = schematic.getRecordsByKind("31")[0]
   const labels = schematic.getRecordsByKind("4")
   const rectangle = schematic.getRecordsByKind("14")[0]
+  const inheritedFillRectangle = schematic
+    .getRecordsByKind("14")
+    .find((record) => record.getNumber("COLOR") === 0x56_34_12)
   const line = schematic.getRecordsByKind("13")[0]
   const polyline = schematic.getRecordsByKind("6")[0]
   const polygon = schematic.getRecordsByKind("7")[0]
@@ -142,6 +157,13 @@ test("writes schematic sheet annotations as native records", async () => {
     color: 0x33_22_11,
     isSolid: true,
     lineWidth: 2,
+  })
+  expect({
+    areaColor: inheritedFillRectangle?.getNumber("AREACOLOR"),
+    isSolid: inheritedFillRectangle?.getBoolean("ISSOLID"),
+  }).toEqual({
+    areaColor: 0x56_34_12,
+    isSolid: true,
   })
   expect({
     color: line?.getNumber("COLOR"),
