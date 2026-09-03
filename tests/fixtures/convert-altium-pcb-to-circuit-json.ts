@@ -521,6 +521,40 @@ function toCircuitSolderMaskLayer(
   return undefined
 }
 
+function appendSilkscreenGraphicElements({
+  componentIds,
+  document,
+  elements,
+}: {
+  componentIds: ReadonlyMap<AltiumComponentRecord, string>
+  document: AltiumPcbDocument
+  elements: CircuitElement[]
+}): void {
+  const regions = document
+    .getRecordsByKind("Region")
+    .filter((region) => isOverlayLayer(region.getDecoded("LAYER")))
+  for (const [regionIndex, region] of regions.entries()) {
+    const geometry = getPcbRegionGeometry(region)
+    if (geometry.outline.points.length < 3) continue
+    const pcbComponentId = getOwnedComponentId(document, componentIds, region)
+    elements.push({
+      type: "pcb_silkscreen_graphic",
+      pcb_silkscreen_graphic_id: `pcb_silkscreen_graphic_${regionIndex}`,
+      ...(pcbComponentId ? { pcb_component_id: pcbComponentId } : {}),
+      layer: toCircuitLayer(region.getDecoded("LAYER")),
+      shape: "brep",
+      brep_shape: {
+        outer_ring: {
+          vertices: toCircuitBrepRing(geometry.outline.points),
+        },
+        inner_rings: geometry.holes.map((hole) => ({
+          vertices: toCircuitBrepRing(hole.points),
+        })),
+      },
+    })
+  }
+}
+
 export function convertAltiumPcbToCircuitJson(
   document: AltiumPcbDocument,
 ): CircuitElement[] {
@@ -780,6 +814,7 @@ export function convertAltiumPcbToCircuitJson(
     elements,
     sourceNetLookupContext,
   })
+  appendSilkscreenGraphicElements({ componentIds, document, elements })
 
   for (const [textIndex, text] of document.getRecordsByKind("Text").entries()) {
     const layer = text.getDecoded("LAYER")

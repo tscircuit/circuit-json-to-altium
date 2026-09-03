@@ -16,6 +16,7 @@ const preservedPrimitiveTypes = [
   "pcb_copper_pour",
   "pcb_silkscreen_text",
   "pcb_cutout",
+  "pcb_silkscreen_graphic",
   "pcb_courtyard_outline",
   "pcb_keepout",
   "pcb_fabrication_note_path",
