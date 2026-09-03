@@ -40,6 +40,7 @@ export function appendAltiumSchematicSheetElements(
         type: "schematic_sheet",
         schematic_sheet_id: schematicSheetId,
         name,
+        source_filename: sheetLink.fileName,
         sheet_index: sheetIndex,
         subcircuit_id: subcircuitId,
       },
