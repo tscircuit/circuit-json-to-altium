@@ -117,8 +117,7 @@ const elements: CircuitElement[] = [
     rotation: 0,
     stroke_width: 0.1,
     color: "#445566",
-    fill_color: "#ffffff",
-    is_filled: false,
+    is_filled: true,
     is_dashed: false,
   },
 ]
@@ -167,6 +166,9 @@ test("writes custom symbol primitives as owned native Altium records", async () 
   expect(arc?.getNumber("STARTANGLE")).toBe(30)
   expect(arc?.getNumber("ENDANGLE")).toBe(120)
   expect(rectangle).toMatchObject({ recordKind: "14" })
+  expect(rectangle?.getNumber("COLOR")).toBe(0x66_55_44)
+  expect(rectangle?.getNumber("AREACOLOR")).toBe(0x66_55_44)
+  expect(rectangle?.getBoolean("ISSOLID")).toBe(true)
   expect(
     ownedRecords.filter((record) => record.recordKind === "14"),
   ).toHaveLength(1)

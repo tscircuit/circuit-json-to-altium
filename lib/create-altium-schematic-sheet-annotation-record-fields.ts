@@ -87,6 +87,12 @@ function createRectRecordFields({
     x: circuitCenter.x + widthCircuitUnits / 2,
     y: circuitCenter.y + heightCircuitUnits / 2,
   })
+  const altiumColor = getAltiumColor({
+    annotation,
+    colorFieldName: "color",
+    fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR,
+  })
+  const isFilled = annotation.is_filled === true
 
   return [
     "RECORD=14",
@@ -95,9 +101,9 @@ function createRectRecordFields({
     `CORNER.X=${secondCorner.x}`,
     `CORNER.Y=${secondCorner.y}`,
     `LINEWIDTH=${getAltiumLineWidth(annotation)}`,
-    `COLOR=${getAltiumColor({ annotation, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR })}`,
-    `AREACOLOR=${getAltiumColor({ annotation, colorFieldName: "fill_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_FILL_COLOR })}`,
-    `ISSOLID=${annotation.is_filled === true ? "T" : "F"}`,
+    `COLOR=${altiumColor}`,
+    `AREACOLOR=${getAltiumColor({ annotation, colorFieldName: "fill_color", fallbackAltiumColor: isFilled ? altiumColor : ALTIUM_SCHEMATIC_DEFAULT_FILL_COLOR })}`,
+    `ISSOLID=${isFilled ? "T" : "F"}`,
   ]
 }
 
