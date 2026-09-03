@@ -8,6 +8,7 @@ import {
 } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { convertAltiumPcbToCircuitJson } from "./fixtures/convert-altium-pcb-to-circuit-json"
+import { createOpenSourceBoardRoundTrip } from "./fixtures/create-open-source-board-round-trip"
 import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
 
 test("preserves mechanical and drill-layer PCB text as documentation", async () => {
@@ -51,4 +52,61 @@ test("preserves mechanical and drill-layer PCB text as documentation", async () 
       serializeAltiumPcbToSvg(roundTripDocument),
     ),
   ).toMatchSvgSnapshot(import.meta.path)
+})
+
+test("shows recovered NodeMCU antenna text at readable scale", async () => {
+  const nodeMcuAntennaDetail = await createOpenSourceBoardRoundTrip({
+    boardName: "NodeMCU ESP-12 antenna text detail",
+    filename: "nodemcu-esp12.PcbDoc",
+    sourceSvgOptions: {
+      viewBox: { x: 2_650, y: 3_880, width: 260, height: 160 },
+    },
+    roundTripSvgOptions: {
+      viewBox: { x: 1_174, y: 2_730, width: 260, height: 160 },
+    },
+  })
+  await expect(
+    createSideBySideSvg(
+      nodeMcuAntennaDetail.sourceSvg,
+      nodeMcuAntennaDetail.roundTripSvg,
+    ),
+  ).toMatchSvgSnapshot(import.meta.path, "nodemcu-antenna-text")
+})
+
+test("shows the recovered NodeMCU legend at readable scale", async () => {
+  const nodeMcuLegendDetail = await createOpenSourceBoardRoundTrip({
+    boardName: "NodeMCU ESP-12 legend detail",
+    filename: "nodemcu-esp12.PcbDoc",
+    sourceSvgOptions: {
+      viewBox: { x: 3_730, y: 1_830, width: 260, height: 240 },
+    },
+    roundTripSvgOptions: {
+      viewBox: { x: 2_254, y: 680, width: 260, height: 240 },
+    },
+  })
+  await expect(
+    createSideBySideSvg(
+      nodeMcuLegendDetail.sourceSvg,
+      nodeMcuLegendDetail.roundTripSvg,
+    ),
+  ).toMatchSvgSnapshot(import.meta.path, "nodemcu-legend")
+})
+
+test("shows recovered HERON connector text at readable scale", async () => {
+  const heronConnectorDetail = await createOpenSourceBoardRoundTrip({
+    boardName: "HERON payload connector text detail",
+    filename: "heron-payload-ssm.PcbDoc",
+    sourceSvgOptions: {
+      viewBox: { x: 2_150, y: 790, width: 760, height: 350 },
+    },
+    roundTripSvgOptions: {
+      viewBox: { x: 3_150, y: 1_790, width: 760, height: 350 },
+    },
+  })
+  await expect(
+    createSideBySideSvg(
+      heronConnectorDetail.sourceSvg,
+      heronConnectorDetail.roundTripSvg,
+    ),
+  ).toMatchSvgSnapshot(import.meta.path, "heron-connector-text")
 })
