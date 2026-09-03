@@ -29,7 +29,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "altiumts": "github:tscircuit/altiumts#204cba9c0b38f48c4fa066af68d8e6519d51d935",
+    "altiumts": "github:tscircuit/altiumts#ccc714c9f2b17b82dd33b3630c48fa8a0705fd0f",
     "cfb": "^1.2.2",
     "circuit-json": "^0.0.480",
     "color-string": "2.1.4",
