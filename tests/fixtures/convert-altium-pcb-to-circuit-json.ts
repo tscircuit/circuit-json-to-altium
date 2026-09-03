@@ -392,6 +392,20 @@ export function convertAltiumPcbToCircuitJson(
   const elements: CircuitElement[] = []
   const outline = document.boardGeometry.outline.points.map(toCircuitPoint)
   elements.push({ type: "pcb_board", pcb_board_id: "pcb_board_0", outline })
+  for (const [
+    cutoutIndex,
+    cutout,
+  ] of document.boardGeometry.cutouts.entries()) {
+    const points = toCircuitBrepRing(cutout.outline.points)
+    if (points.length < 3) continue
+    elements.push({
+      type: "pcb_cutout",
+      pcb_cutout_id: `pcb_cutout_${cutoutIndex}`,
+      pcb_board_id: "pcb_board_0",
+      shape: "polygon",
+      points,
+    })
+  }
 
   const sourceNetIds = new Map(
     document.nets.map((net, index) => [net, `source_net_${index}`]),
@@ -511,9 +525,10 @@ export function convertAltiumPcbToCircuitJson(
 
     const holeWidthMils =
       getMeasurementMils(pad, "HOLEWIDTH", "SLOTLENGTH") ?? holeSizeMils
+    const isSlotted = Math.abs(holeWidthMils - holeSizeMils) > 1e-9
     const holeRotation = toCircuitRotation(
-      pad.getNumber("HOLEROTATION") ??
-        pad.getNumber("SLOTROTATION") ??
+      (isSlotted ? pad.getNumber("SLOTROTATION") : undefined) ??
+        pad.getNumber("HOLEROTATION") ??
         pad.getNumber("ROTATION") ??
         0,
     )
@@ -536,7 +551,7 @@ export function convertAltiumPcbToCircuitJson(
         ...holeFields,
         outer_width: toCircuitLength(outerWidthMils),
         outer_height: toCircuitLength(outerHeightMils),
-        shape: toCircuitPadShape(pad.getDecoded("SHAPE")),
+        shape: isSlotted ? "pill" : toCircuitPadShape(pad.getDecoded("SHAPE")),
       })
     }
   }
