@@ -5,6 +5,7 @@ import {
   type CircuitElement,
   expectValidSchematic,
   extractArchive,
+  sourceComponent,
 } from "./fixtures"
 
 const elements: CircuitElement[] = [
@@ -187,5 +188,44 @@ test("writes schematic sheet annotations as native records", async () => {
     polylineColor: 0x99_88_77,
     polylinePointCount: 3,
   })
+  expectValidSchematic(schematic)
+})
+
+test("writes filled sheet rectangles behind schematic components", async () => {
+  const { schematics } = await extractArchive([
+    board(),
+    sourceComponent("source_component", "U1"),
+    {
+      type: "schematic_component",
+      schematic_component_id: "schematic_component",
+      source_component_id: "source_component",
+      center: { x: 0, y: 0 },
+      size: { width: 2, height: 1 },
+    },
+    {
+      type: "schematic_rect",
+      schematic_rect_id: "background",
+      center: { x: 0, y: 0 },
+      width: 6,
+      height: 4,
+      rotation: 0,
+      stroke_width: 0.05,
+      color: "#274e13",
+      is_filled: true,
+      fill_color: "#d9ead3",
+      is_dashed: false,
+    },
+  ])
+  const schematic = schematics[0] as AltiumSchDoc
+  const background = schematic
+    .getRecordsByKind("14")
+    .find((record) => schematic.getParent(record) === undefined)
+  const component = schematic.components[0]
+
+  expect(background).toBeDefined()
+  expect(component).toBeDefined()
+  expect(schematic.records.indexOf(background!)).toBeLessThan(
+    schematic.records.indexOf(component!),
+  )
   expectValidSchematic(schematic)
 })
