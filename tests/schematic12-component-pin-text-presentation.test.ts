@@ -10,6 +10,7 @@ import {
   sourcePort,
 } from "./fixtures"
 import { getRecordLocation } from "./fixtures/altium-schematic-coordinate-utils"
+import { convertAltiumSchematicToCircuitJson } from "./fixtures/convert-altium-schematic-to-circuit-json"
 
 function getFontSizePoints({
   fontId,
@@ -203,4 +204,60 @@ test("preserves component and pin text presentation", async () => {
     },
   })
   expectValidSchematic(schematic)
+})
+
+test("keeps native Altium pin names vertically centered", async () => {
+  const elements: CircuitElement[] = [
+    board(),
+    sourceComponent("source_connector", "P4"),
+    sourcePort({
+      sourcePortId: "source_port_1",
+      sourceComponentId: "source_connector",
+      pinNumber: 1,
+    }),
+    {
+      type: "schematic_component",
+      schematic_component_id: "schematic_connector",
+      source_component_id: "source_connector",
+      center: { x: 0, y: 0 },
+      size: { width: 1.5, height: 1 },
+    },
+    {
+      type: "schematic_port",
+      schematic_port_id: "schematic_port_1",
+      schematic_component_id: "schematic_connector",
+      source_port_id: "source_port_1",
+      center: { x: 1.15, y: 0 },
+      distance_from_component_edge: 0.4,
+      facing_direction: "right",
+      display_pin_label: "1",
+    },
+  ]
+
+  const { schematics } = await extractArchive(elements)
+  const schematic = schematics[0]
+  const component = schematic?.components[0]
+  const pin = component
+    ? schematic
+        .getOwnedRecords(component)
+        .find((record) => record.recordKind === "2")
+    : undefined
+  if (!schematic || !pin) throw new Error("Expected one generated pin")
+
+  // Reproduce P4: its digits are stored as visible pin names, not designators.
+  pin.set("NAME", "1")
+  pin.set("DESIGNATOR", "")
+  pin.set("PINCONGLOMERATE", "40")
+
+  const pinTexts = convertAltiumSchematicToCircuitJson(schematic).filter(
+    (element) =>
+      element.type === "schematic_text" &&
+      String(element.schematic_text_id).includes("_pin_"),
+  )
+  expect(
+    pinTexts.map((element) => ({
+      anchor: element.anchor,
+      text: element.text,
+    })),
+  ).toEqual([{ anchor: "center_right", text: "1" }])
 })
