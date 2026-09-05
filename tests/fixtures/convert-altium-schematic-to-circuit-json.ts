@@ -28,6 +28,7 @@ import { appendAltiumSchematicSheetAnnotationElements } from "./append-altium-sc
 import { appendAltiumSchematicSheetElements } from "./append-altium-schematic-sheet-elements"
 import { appendAltiumSchematicSymbolPrimitives } from "./append-altium-schematic-symbol-primitives"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
+import { getCssColorFromAltiumRecord } from "./get-css-color-from-altium-record"
 import { isAltiumSchematicComponentRecordVisible } from "./is-altium-schematic-component-record-visible"
 import { preserveAltiumNoConnectRecords } from "./preserve-altium-no-connect-records"
 import { resolveAltiumComponentParameterText } from "./resolve-altium-component-parameter-text"
@@ -556,20 +557,38 @@ function appendWireElements(
         type: "schematic_trace",
         schematic_trace_id: `schematic_trace_wire_${wireIndex}`,
         source_trace_id: sourceTraceId,
+        color: getCssColorFromAltiumRecord({
+          fallbackCssColor: "#008800",
+          fieldNames: ["COLOR"],
+          record: wire,
+        }),
         edges,
         junctions: [],
       },
     )
   }
 
-  const junctions = document
+  const junctionsByColor = new Map<string, CircuitPoint[]>()
+  for (const junction of document
     .getRecordsByKind("29")
-    .filter((junction) => document.getParent(junction) === undefined)
-    .map((junction) => toCircuitPoint(getRecordLocation(junction)))
-  if (junctions.length > 0) {
+    .filter((junction) => document.getParent(junction) === undefined)) {
+    const color = getCssColorFromAltiumRecord({
+      fallbackCssColor: "#008800",
+      fieldNames: ["COLOR"],
+      record: junction,
+    })
+    junctionsByColor.set(color, [
+      ...(junctionsByColor.get(color) ?? []),
+      toCircuitPoint(getRecordLocation(junction)),
+    ])
+  }
+  for (const [junctionIndex, [color, junctions]] of [
+    ...junctionsByColor,
+  ].entries()) {
     elements.push({
       type: "schematic_trace",
-      schematic_trace_id: "schematic_trace_junctions",
+      schematic_trace_id: `schematic_trace_junctions_${junctionIndex}`,
+      color,
       edges: [],
       junctions,
     })

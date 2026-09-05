@@ -51,6 +51,7 @@ test("preserves symbols, pins, wires, labels, and unique junctions", async () =>
     {
       type: "schematic_trace",
       schematic_trace_id: "scht1",
+      color: "#123456",
       edges: [{ from: { x: -2, y: 0 }, to: { x: -1, y: 0 } }],
       junctions: [{ x: -2, y: 0 }],
     },
@@ -80,6 +81,10 @@ test("preserves symbols, pins, wires, labels, and unique junctions", async () =>
   expect(schematic.pins.map((pin) => pin.designator)).toEqual(["1", "2"])
   expect(schematic.wires).toHaveLength(2)
   expect(schematic.getRecordsByKind("29")).toHaveLength(1)
+  expect(schematic.wires[0]?.getNumber("COLOR")).toBe(0x56_34_12)
+  expect(schematic.getRecordsByKind("29")[0]?.getNumber("COLOR")).toBe(
+    0x56_34_12,
+  )
   expect(schematic.netLabels.map((label) => label.text)).toEqual(["SIG NA ME"])
   expect(
     owned.find((record) => record.get("NAME") === "Designator")?.get("TEXT"),

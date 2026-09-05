@@ -99,6 +99,7 @@ const ALTIUM_PIN_CLOCK_SYMBOL = 3
 const ALTIUM_PIN_INVERSION_SYMBOL = 1
 const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
 const ALTIUM_SCHEMATIC_FALLBACK_BODY_COLOR = 0xc2_ffff
+const ALTIUM_SCHEMATIC_FALLBACK_TRACE_COLOR = 0x00_88_00
 const ALTIUM_PIN_ORIENTATION_BY_FACING_DIRECTION: Record<string, number> = {
   left: 2,
   right: 0,
@@ -832,6 +833,10 @@ export function createSchematicDocument({
     (element) => element.type === "schematic_trace",
   )) {
     if (!Array.isArray(schematicTrace.edges)) continue
+    const traceColor = getAltiumColorFromCss({
+      cssColor: asString(schematicTrace.color),
+      fallbackAltiumColor: ALTIUM_SCHEMATIC_FALLBACK_TRACE_COLOR,
+    })
     for (const edge of schematicTrace.edges) {
       if (!isCircuitElement(edge)) continue
       const circuitStartPoint = asPoint(edge.from)
@@ -848,7 +853,7 @@ export function createSchematicDocument({
           `Y1=${altiumStartPoint.y}`,
           `X2=${altiumEndPoint.x}`,
           `Y2=${altiumEndPoint.y}`,
-          "COLOR=34816",
+          `COLOR=${traceColor}`,
         ],
         schematicRecordContext,
       )
@@ -860,6 +865,10 @@ export function createSchematicDocument({
     (element) => element.type === "schematic_trace",
   )) {
     if (!Array.isArray(schematicTrace.junctions)) continue
+    const junctionColor = getAltiumColorFromCss({
+      cssColor: asString(schematicTrace.color),
+      fallbackAltiumColor: ALTIUM_SCHEMATIC_FALLBACK_TRACE_COLOR,
+    })
     for (const junction of schematicTrace.junctions) {
       const circuitJunctionPoint = asPoint(junction)
       if (!circuitJunctionPoint) continue
@@ -873,7 +882,7 @@ export function createSchematicDocument({
           "RECORD=29",
           `LOCATION.X=${altiumJunctionPoint.x}`,
           `LOCATION.Y=${altiumJunctionPoint.y}`,
-          "COLOR=34816",
+          `COLOR=${junctionColor}`,
         ],
         schematicRecordContext,
       )
