@@ -16,7 +16,6 @@ import { getAltiumSchematicTextFrameLines } from "./get-altium-schematic-text-fr
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import { getCssColorFromAltiumRecord } from "./get-css-color-from-altium-record"
 
-const ANNOTATION_RECORD_KINDS = new Set(["4", "6", "7", "10", "14", "28"])
 const GENERATED_NET_LABEL_DECORATION_PREFIXES = ["CJNP", "CJNT"]
 
 function isGeneratedNetLabelDecoration(record: AltiumRecord): boolean {
