@@ -3,8 +3,12 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
-import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-table"
-import { asNumber, asString } from "./format"
+import {
+  type AltiumSchematicFontTable,
+  SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS,
+} from "./create-altium-schematic-font-table"
+import { estimateAltiumSchematicLabelTextWidth } from "./estimate-altium-schematic-label-text-width"
+import { asNumber, asString, pointsEqual } from "./format"
 import {
   getAltiumSchematicTextJustification,
   getAltiumSchematicTextOrientation,
@@ -30,12 +34,9 @@ type SchematicNetLabelRecordFieldsInput = {
   textPresentation: CircuitElement | undefined
 }
 
-const ALTIUM_SCHEMATIC_LABEL_FONT_ID = 2
+const ALTIUM_SCHEMATIC_POWER_PORT_FONT_ID = 2
 const ALTIUM_SCHEMATIC_POWER_PORT_COLOR_INDEX = 132
-const ALTIUM_SCHEMATIC_NET_LABEL_HEIGHT = 4
 const ALTIUM_SCHEMATIC_NET_LABEL_MINIMUM_WIDTH = 10
-const ALTIUM_SCHEMATIC_NET_LABEL_POINT_DEPTH = 1
-const ALTIUM_SCHEMATIC_NET_LABEL_TEXT_INSET = 2
 
 type NetLabelAnchorSide = "bottom" | "left" | "right" | "top"
 
@@ -63,7 +64,7 @@ const NET_LABEL_TEXT_PRESENTATION_BY_ANCHOR_SIDE: Record<
   bottom: { justification: 3, orientation: 1 },
   left: { justification: 3, orientation: 0 },
   right: { justification: 5, orientation: 0 },
-  top: { justification: 5, orientation: 3 },
+  top: { justification: 5, orientation: 1 },
 }
 
 const ALTIUM_JUSTIFICATION_BY_NET_LABEL_ANCHOR_SIDE: Record<string, number> = {
@@ -125,11 +126,12 @@ function getNetLabelDisplayGeometry({
   altiumLabelCenter,
   altiumLabelPosition,
   anchorSide,
+  fontSize,
   labelText,
 }: Pick<
   SchematicNetLabelRecordFieldsInput,
   "altiumLabelCenter" | "altiumLabelPosition" | "anchorSide" | "labelText"
->): NetLabelDisplayGeometry | undefined {
+> & { fontSize: number }): NetLabelDisplayGeometry | undefined {
   if (!isNetLabelAnchorSide(anchorSide)) return undefined
 
   const direction = NET_LABEL_GROWTH_DIRECTION_BY_ANCHOR_SIDE[anchorSide]
@@ -139,23 +141,23 @@ function getNetLabelDisplayGeometry({
   }
   const projectedHalfWidth =
     centerOffset.x * direction.x + centerOffset.y * direction.y
-  const estimatedWidth = Math.max(
-    labelText.length * 2 + 6,
+  const pointDepth = fontSize * 0.3
+  const textInset = fontSize * 0.5
+  const endPadding = fontSize * 0.2
+  const textWidth = estimateAltiumSchematicLabelTextWidth(labelText, fontSize)
+  const width = Math.max(
+    projectedHalfWidth * 2,
+    textInset + textWidth + endPadding,
     ALTIUM_SCHEMATIC_NET_LABEL_MINIMUM_WIDTH,
   )
-  const width =
-    projectedHalfWidth > 0
-      ? Math.max(
-          projectedHalfWidth * 2,
-          ALTIUM_SCHEMATIC_NET_LABEL_MINIMUM_WIDTH,
-        )
-      : estimatedWidth
   const perpendicular = { x: -direction.y, y: direction.x }
   const point = (along: number, across = 0): Point => ({
     x: altiumLabelPosition.x + direction.x * along + perpendicular.x * across,
     y: altiumLabelPosition.y + direction.y * along + perpendicular.y * across,
   })
-  const halfHeight = ALTIUM_SCHEMATIC_NET_LABEL_HEIGHT / 2
+  // Match Circuit JSON's 0.2-unit body around its 0.18-unit default font.
+  // This keeps adjacent labels on a 0.2-unit pin pitch from overlapping.
+  const halfHeight = (fontSize * (0.2 / 0.18)) / 2
   const textPresentation =
     NET_LABEL_TEXT_PRESENTATION_BY_ANCHOR_SIDE[anchorSide]
 
@@ -163,13 +165,13 @@ function getNetLabelDisplayGeometry({
     orientation: textPresentation.orientation,
     outlinePoints: [
       point(0),
-      point(ALTIUM_SCHEMATIC_NET_LABEL_POINT_DEPTH, halfHeight),
+      point(pointDepth, halfHeight),
       point(width, halfHeight),
       point(width, -halfHeight),
-      point(ALTIUM_SCHEMATIC_NET_LABEL_POINT_DEPTH, -halfHeight),
+      point(pointDepth, -halfHeight),
     ],
     textJustification: textPresentation.justification,
-    textPosition: point(ALTIUM_SCHEMATIC_NET_LABEL_TEXT_INSET),
+    textPosition: point(textInset),
   }
 }
 
@@ -207,7 +209,12 @@ export function createAltiumSchematicNetLabelRecordFields({
   const fontId =
     fontTable.fontIdBySizeCircuitUnits.get(
       asNumber(textPresentation?.font_size),
-    ) ?? ALTIUM_SCHEMATIC_LABEL_FONT_ID
+    ) ??
+    (powerPortStyle
+      ? ALTIUM_SCHEMATIC_POWER_PORT_FONT_ID
+      : (fontTable.fontIdBySizeCircuitUnits.get(
+          SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS,
+        ) ?? ALTIUM_SCHEMATIC_POWER_PORT_FONT_ID))
   const color = getAltiumColorFromCss({
     cssColor: asString(textPresentation?.color),
     fallbackAltiumColor: powerPortStyle
@@ -244,10 +251,17 @@ export function createAltiumSchematicNetLabelRecordFields({
     `COLOR=${color}`,
     `TEXT=${labelText}`,
   ]
+  // Imported inline labels carry their original text presentation at the
+  // electrical anchor, without a separate pointed body. Keep that placement
+  // and rotation so the text stays beside the wire instead of across it.
+  if (textPresentation && pointsEqual(altiumLabelCenter, altiumLabelPosition)) {
+    return [nativeNetLabelFields]
+  }
   const displayGeometry = getNetLabelDisplayGeometry({
     altiumLabelCenter,
     altiumLabelPosition,
     anchorSide,
+    fontSize: fontTable.fontSizePointsById.get(fontId) ?? 4,
     labelText,
   })
   if (!displayGeometry) return [nativeNetLabelFields]
@@ -260,7 +274,7 @@ export function createAltiumSchematicNetLabelRecordFields({
     [
       "RECORD=7",
       "OWNERPARTID=-1",
-      "LINEWIDTH=1",
+      "LINEWIDTH=0",
       `LOCATIONCOUNT=${displayGeometry.outlinePoints.length}`,
       ...displayGeometry.outlinePoints.flatMap((point, pointIndex) => [
         `X${pointIndex + 1}=${point.x}`,

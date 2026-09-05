@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { AltiumSchDoc } from "altiumts"
+import { type AltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
 import {
   board,
   type CircuitElement,
@@ -77,9 +77,6 @@ test("uses matching schematic text to present native net labels", async () => {
   const netLabel = schematic.netLabels[0]
   const powerPort = schematic.powerPorts[0]
   const sheetLabels = schematic.getRecordsByKind("4")
-  const generatedNetLabelDisplay = sheetLabels.find((label) =>
-    label.getDecoded("UNIQUEID")?.startsWith("CJNT"),
-  )
 
   expect({
     netLabel: {
@@ -96,22 +93,8 @@ test("uses matching schematic text to present native net labels", async () => {
         `SIZE${powerPort?.getNumber("FONTID") ?? 1}`,
       ),
     },
-    generatedNetLabelDisplay: {
-      color: generatedNetLabelDisplay?.getNumber("COLOR"),
-      fontSizePoints: sheetRecord?.getNumber(
-        `SIZE${generatedNetLabelDisplay?.getNumber("FONTID") ?? 1}`,
-      ),
-      text: generatedNetLabelDisplay?.getDecoded("TEXT"),
-    },
-    sheetLabels: sheetLabels
-      .filter((label) => !label.getDecoded("UNIQUEID")?.startsWith("CJNT"))
-      .map((label) => label.getDecoded("TEXT")),
+    sheetLabels: sheetLabels.map((label) => label.getDecoded("TEXT")),
   }).toEqual({
-    generatedNetLabelDisplay: {
-      color: 0x56_34_12,
-      fontSizePoints: 11,
-      text: "SIGNAL",
-    },
     netLabel: {
       color: 0x56_34_12,
       fontSizePoints: 11,
@@ -124,5 +107,17 @@ test("uses matching schematic text to present native net labels", async () => {
     },
     sheetLabels: ["NOTE", "SIGNAL"],
   })
+  expect(netLabel?.getBoolean("ISHIDDEN")).not.toBe(true)
+  expect(
+    schematic.records.some((record) =>
+      record.getDecoded("UNIQUEID")?.startsWith("CJNP"),
+    ),
+  ).toBe(false)
+  const renderedNetLabel = serializeAltiumSheetToSvg(schematic).match(
+    /<text data-record="25"[^>]*>SIGNAL<\/text>/u,
+  )?.[0]
+  expect(renderedNetLabel).toContain('text-anchor="end"')
+  expect(renderedNetLabel).toContain('dominant-baseline="text-before-edge"')
+  expect(renderedNetLabel).toContain("rotate(-90)")
   expectValidSchematic(schematic)
 })
