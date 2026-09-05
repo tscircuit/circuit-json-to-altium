@@ -14,6 +14,7 @@ test("round-trips the open-source PiDP-11 I/O Expander Altium board", async () =
   expect(result.geometryMaxDeltaMm).toBeLessThan(0.03)
   expect(result.rotationMismatchCount).toBe(0)
   expect(result.silkscreenTextMismatchCount).toBe(0)
+  expect(result.sourceCounts.pcb_silkscreen_graphic).toBe(18)
   expect(result.sourcePrimitiveTotal).toBeGreaterThan(1_000)
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),

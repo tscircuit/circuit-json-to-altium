@@ -25,6 +25,16 @@ function isGeneratedNetLabelDecoration(record: AltiumRecord): boolean {
     uniqueId.startsWith(prefix),
   )
 }
+// Newer Altium note records use the same framed-text fields as text frames.
+const TEXT_FRAME_RECORD_KINDS = new Set(["28", "209"])
+const ANNOTATION_RECORD_KINDS = new Set([
+  "4",
+  "6",
+  "7",
+  "10",
+  "14",
+  ...TEXT_FRAME_RECORD_KINDS,
+])
 
 function appendLabelAnnotation({
   annotationIndex,
@@ -235,7 +245,7 @@ export function appendAltiumSchematicSheetAnnotationElements({
       appendPathAnnotation({ annotationIndex, elements, record })
     } else if (record.recordKind === "10" || record.recordKind === "14") {
       appendRectAnnotation({ annotationIndex, elements, record })
-    } else if (record.recordKind === "28") {
+    } else if (TEXT_FRAME_RECORD_KINDS.has(record.recordKind ?? "")) {
       appendTextFrameAnnotations({
         annotationIndex,
         document,

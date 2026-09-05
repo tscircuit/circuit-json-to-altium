@@ -229,6 +229,11 @@ function createRectRecordFields({
     y: center.y + height / 2,
   })
   const isFilled = graphic.is_filled === true
+  const altiumColor = getAltiumColor({
+    graphic,
+    colorFieldName: "color",
+    fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
+  })
   return [
     "RECORD=14",
     ...getOwnedGraphicRecordFields({
@@ -240,8 +245,8 @@ function createRectRecordFields({
     `LOCATION.Y=${altiumFirstCorner.y}`,
     `CORNER.X=${altiumSecondCorner.x}`,
     `CORNER.Y=${altiumSecondCorner.y}`,
-    `COLOR=${getAltiumColor({ graphic, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR })}`,
-    `AREACOLOR=${getAltiumColor({ graphic, colorFieldName: "fill_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_WHITE })}`,
+    `COLOR=${altiumColor}`,
+    `AREACOLOR=${getAltiumColor({ graphic, colorFieldName: "fill_color", fallbackAltiumColor: isFilled ? altiumColor : ALTIUM_SCHEMATIC_WHITE })}`,
     `ISSOLID=${isFilled ? "T" : "F"}`,
   ]
 }

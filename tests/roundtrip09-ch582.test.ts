@@ -11,9 +11,14 @@ test("round-trips the open-source CH582 Altium board", async () => {
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
   expect(result.roundTripSourceNetNames).toEqual(result.sourceNetNames)
   expect(result.cadComponentMismatchCount).toBe(0)
+  expect(result.copperPourComponentMismatchCount).toBe(0)
+  expect(result.copperPourCutoutMismatchCount).toBe(0)
+  expect(result.copperPourSolderMaskMismatchCount).toBe(0)
   expect(result.geometryMaxDeltaMm).toBeLessThan(0.03)
   expect(result.rotationMismatchCount).toBe(0)
   expect(result.silkscreenTextMismatchCount).toBe(0)
+  expect(result.sourceComponentCopperPourCount).toBe(12)
+  expect(result.sourceCopperPourCutoutCount).toBe(4)
   expect(result.sourcePrimitiveTotal).toBeGreaterThan(1_400)
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
