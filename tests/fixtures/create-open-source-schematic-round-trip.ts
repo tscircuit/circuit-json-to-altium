@@ -60,6 +60,18 @@ function parseProjectDocument(projectBytes: Uint8Array): AltiumPrjPcb {
   return document
 }
 
+function getSourceSheetSettings(document: AltiumSchDoc) {
+  const sheetRecord = document.getRecordsByKind("31")[0]
+  const width = sheetRecord?.getNumber("CUSTOMX")
+  const height = sheetRecord?.getNumber("CUSTOMY")
+  if (!width || !height) return undefined
+  return {
+    circuitOrigin: { x: 0, y: 0 },
+    height: height / 20,
+    width: width / 20,
+  }
+}
+
 async function readReference(filename: string): Promise<Uint8Array> {
   const referencePath = resolve(
     import.meta.dir,
@@ -93,6 +105,7 @@ export async function createOpenSourceSchematicRoundTrip({
   )
   const converter = new CircuitJsonToAltiumConverter(sourceCircuitJson, {
     projectName,
+    schematicSheet: getSourceSheetSettings(sourceDocument),
   })
   converter.runUntilFinished()
   const generatedOutput = converter.getOutput()

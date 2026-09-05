@@ -97,6 +97,7 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         circuitJson: this.input,
         schematicSheetId: definition.schematicSheetId,
         includeAllSchematicElements: definition.includeAllSchematicElements,
+        sheetSettings: this.context.schematicSheet,
       })
       return {
         asciiContent,

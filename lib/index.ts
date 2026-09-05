@@ -7,6 +7,7 @@ export type {
   AltiumPcbFile,
   AltiumProjectFile,
   AltiumSchematicFile,
+  AltiumSchematicSheetSettings,
   CircuitElement,
   CircuitJson,
   CircuitJsonInput,
