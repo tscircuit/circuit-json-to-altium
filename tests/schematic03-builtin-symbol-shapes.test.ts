@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { AltiumRecord } from "altiumts"
+import { type AltiumRecord, getSchematicRecordPoints } from "altiumts"
 import {
   board,
   type CircuitElement,
@@ -67,13 +67,206 @@ test("converts built-in resistor and capacitor symbols to native paths", async (
 
   expect(getGraphicRecordKinds(resistorRecords)).toEqual(["6", "6", "6"])
   expect(getGraphicRecordKinds(capacitorRecords)).toEqual(["6", "6", "6", "6"])
-  expect(resistorFirstPath?.getNumber("X1")).toBe(94)
-  expect(resistorFirstPath?.getNumber("X2")).toBe(96)
-  expect(resistorDesignator?.getNumber("LOCATION.X")).toBe(100)
-  expect(resistorDesignator?.getNumber("LOCATION.Y")).toBe(103)
+  expect(resistorFirstPath?.getNumber("X1")).toBe(174)
+  expect(resistorFirstPath?.getNumber("X2")).toBe(176)
+  expect(resistorDesignator?.getNumber("LOCATION.X")).toBe(180)
+  expect(resistorDesignator?.getNumber("LOCATION.Y")).toBe(153)
   expect(resistorDesignator?.getNumber("JUSTIFICATION")).toBe(1)
-  expect(resistorComment?.getNumber("LOCATION.X")).toBe(100)
-  expect(resistorComment?.getNumber("LOCATION.Y")).toBe(97)
+  expect(resistorComment?.getNumber("LOCATION.X")).toBe(180)
+  expect(resistorComment?.getNumber("LOCATION.Y")).toBe(147)
   expect(resistorComment?.getNumber("JUSTIFICATION")).toBe(7)
+  expectValidSchematic(schematic)
+})
+
+test("preserves sub-grid path details in built-in LED arrows", async () => {
+  const elements: CircuitElement[] = [
+    board(),
+    sourceComponent("source_led", "D1"),
+    {
+      type: "schematic_component",
+      schematic_component_id: "schematic_led",
+      source_component_id: "source_led",
+      center: { x: 0, y: 0 },
+      size: { width: 0.62, height: 1.08 },
+      symbol_name: "led_down",
+      symbol_display_value: "Green",
+    },
+  ]
+
+  const { schematics } = await extractArchive(elements)
+  const schematic = schematics[0]
+  if (!schematic) throw new Error("Expected one generated schematic")
+  const led = schematic.components.find(
+    (component) => component.libraryReference === "led_down",
+  )
+  if (!led) throw new Error("Expected a generated LED component")
+
+  const arrowShaft = schematic
+    .getOwnedRecords(led)
+    .filter((record) => record.recordKind === "6")
+    .find((record) => {
+      const points = getSchematicRecordPoints(record)
+      const lastPoint = points.at(-1)
+      const previousPoint = points.at(-2)
+      return (
+        points.length === 4 &&
+        lastPoint?.x === previousPoint?.x &&
+        lastPoint?.y === previousPoint?.y
+      )
+    })
+  if (!arrowShaft) throw new Error("Expected an LED arrow shaft")
+  const [arrowStart, nextArrowPoint] = getSchematicRecordPoints(arrowShaft)
+  if (!arrowStart || !nextArrowPoint) {
+    throw new Error("Expected the LED arrow shaft to contain two points")
+  }
+
+  expect(
+    Math.hypot(
+      nextArrowPoint.x - arrowStart.x,
+      nextArrowPoint.y - arrowStart.y,
+    ),
+  ).toBeCloseTo(0.2, 8)
+  const fractionalCoordinateFields = arrowShaft.fields.filter(({ key }) =>
+    key.endsWith("_FRAC"),
+  )
+  expect(fractionalCoordinateFields.length).toBeGreaterThan(0)
+  expect(
+    fractionalCoordinateFields.every(({ value }) => /^\d{5}$/u.test(value)),
+  ).toBe(true)
+  expectValidSchematic(schematic)
+})
+
+test("matches built-in pin geometry by semantic labels before pin numbers", async () => {
+  const elements: CircuitElement[] = [
+    board(),
+    sourceComponent("source_opamp", "U1A"),
+    ...[
+      { displayLabel: "inp1", name: "IN_POS_A", pinNumber: 3 },
+      { displayLabel: "inp2", name: "IN_NEG_A", pinNumber: 2 },
+      { displayLabel: "out", name: "OUT_A", pinNumber: 1 },
+    ].flatMap(({ displayLabel, name, pinNumber }) => {
+      const sourcePortId = `source_opamp_port_${pinNumber}`
+      return [
+        {
+          type: "source_port",
+          source_port_id: sourcePortId,
+          source_component_id: "source_opamp",
+          pin_number: pinNumber,
+          name,
+          port_hints: [name, displayLabel, `pin${pinNumber}`],
+        },
+        {
+          type: "schematic_port",
+          schematic_port_id: `schematic_opamp_port_${pinNumber}`,
+          schematic_component_id: "schematic_opamp",
+          source_port_id: sourcePortId,
+          center:
+            displayLabel === "out"
+              ? { x: 0.5, y: 0 }
+              : { x: -0.5, y: displayLabel === "inp1" ? 0.15 : -0.15 },
+          facing_direction: displayLabel === "out" ? "right" : "left",
+          display_pin_label: displayLabel,
+        },
+      ]
+    }),
+    {
+      type: "schematic_component",
+      schematic_component_id: "schematic_opamp",
+      source_component_id: "source_opamp",
+      center: { x: 0, y: 0 },
+      symbol_name: "opamp_no_power_right",
+    },
+  ]
+
+  const { schematics } = await extractArchive(elements)
+  const schematic = schematics[0]
+  if (!schematic) throw new Error("Expected one generated schematic")
+  const opamp = schematic.components.find(
+    (component) => component.libraryReference === "opamp_no_power_right",
+  )
+  if (!opamp) throw new Error("Expected a generated op-amp component")
+  const pins = schematic
+    .getOwnedRecords(opamp)
+    .filter((record) => record.recordKind === "2")
+  const positiveInputPin = pins.find(
+    (pin) => pin.getDecoded("DESIGNATOR") === "3",
+  )
+  const outputPin = pins.find((pin) => pin.getDecoded("DESIGNATOR") === "1")
+
+  expect(positiveInputPin?.getNumber("LOCATION.X")).toBeLessThan(
+    opamp.position?.x ?? 0,
+  )
+  expect(positiveInputPin?.getNumber("PINCONGLOMERATE")).toBe(34)
+  expect(outputPin?.getNumber("LOCATION.X")).toBeGreaterThan(
+    opamp.position?.x ?? 0,
+  )
+  expect(outputPin?.getNumber("PINCONGLOMERATE")).toBe(32)
+  expectValidSchematic(schematic)
+})
+
+test("maps stacked physical switch pins to their shared visual terminals", async () => {
+  const elements: CircuitElement[] = [
+    board(),
+    sourceComponent("source_switch", "S1"),
+    ...[1, 2, 3, 4].flatMap((pinNumber) => {
+      const sourcePortId = `source_switch_port_${pinNumber}`
+      const isLeftTerminal = pinNumber <= 2
+      return [
+        {
+          type: "source_port",
+          source_port_id: sourcePortId,
+          source_component_id: "source_switch",
+          pin_number: pinNumber,
+          name: `pin${pinNumber}`,
+          port_hints: [`pin${pinNumber}`, `${pinNumber}`],
+        },
+        {
+          type: "schematic_port",
+          schematic_port_id: `schematic_switch_port_${pinNumber}`,
+          schematic_component_id: "schematic_switch",
+          source_port_id: sourcePortId,
+          center: { x: isLeftTerminal ? -0.47 : 0.47, y: -0.05 },
+          facing_direction: isLeftTerminal ? "left" : "right",
+        },
+      ]
+    }),
+    {
+      type: "schematic_component",
+      schematic_component_id: "schematic_switch",
+      source_component_id: "source_switch",
+      center: { x: 0, y: 0 },
+      size: { width: 0.94, height: 0.7189107 },
+      symbol_name: "push_button_normally_open_momentary_right",
+    },
+  ]
+
+  const { schematics } = await extractArchive(elements)
+  const schematic = schematics[0]
+  if (!schematic) throw new Error("Expected one generated schematic")
+  const switchComponent = schematic.components.find(
+    (component) =>
+      component.libraryReference ===
+      "push_button_normally_open_momentary_right",
+  )
+  if (!switchComponent) throw new Error("Expected a generated switch")
+  const pins = schematic
+    .getOwnedRecords(switchComponent)
+    .filter((record) => record.recordKind === "2")
+  const pinByDesignator = new Map(
+    pins.map((pin) => [pin.getDecoded("DESIGNATOR"), pin]),
+  )
+  const pin1 = pinByDesignator.get("1")
+  const pin2 = pinByDesignator.get("2")
+  const pin3 = pinByDesignator.get("3")
+  const pin4 = pinByDesignator.get("4")
+
+  expect(pin1?.getNumber("LOCATION.X")).toBe(pin2?.getNumber("LOCATION.X"))
+  expect(pin3?.getNumber("LOCATION.X")).toBe(pin4?.getNumber("LOCATION.X"))
+  expect(pin1?.getNumber("LOCATION.X")).toBeLessThan(
+    switchComponent.position?.x ?? 0,
+  )
+  expect(pin3?.getNumber("LOCATION.X")).toBeGreaterThan(
+    switchComponent.position?.x ?? 0,
+  )
   expectValidSchematic(schematic)
 })

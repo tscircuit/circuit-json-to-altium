@@ -5,6 +5,35 @@ import { createSchematicDocument } from "../create-schematic-document"
 import { asNumber, asString, byType } from "../format"
 import type { AltiumSchematicFile, NormalizedCircuitJson } from "../types"
 
+function getSchematicFilename({
+  fallbackFilename,
+  sourceFilename,
+}: {
+  fallbackFilename: string
+  sourceFilename: string
+}): string {
+  const filenameWithoutDirectories = sourceFilename
+    .replaceAll("\\", "/")
+    .split("/")
+    .at(-1)
+  const filenameWithoutExtension = filenameWithoutDirectories?.replace(
+    /\.SchDoc$/iu,
+    "",
+  )
+  let safeFilename = filenameWithoutExtension
+    ?.replace(/[<>:"/\\|?*]/gu, "-")
+    .replace(/[. ]+$/gu, "")
+    .trim()
+  for (let characterCode = 0; characterCode <= 31; characterCode++) {
+    safeFilename = safeFilename?.replaceAll(
+      String.fromCharCode(characterCode),
+      "-",
+    )
+  }
+
+  return safeFilename ? `${safeFilename}.SchDoc` : fallbackFilename
+}
+
 export class BuildSchematicDocumentsStage extends ConverterStage<
   NormalizedCircuitJson,
   AltiumSchematicFile[]
@@ -15,13 +44,29 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         asNumber(leftSheet.sheet_index) - asNumber(rightSheet.sheet_index),
     )
     const childSheets: AltiumSchematicChildSheet[] = sheets.map(
-      (sheet, index) => ({
-        filename: `${this.context.safeProjectName}-${String(index + 1).padStart(2, "0")}.SchDoc`,
-        name: asString(sheet.name) || `Sheet ${index + 1}`,
-        schematicSheetId: asString(sheet.schematic_sheet_id),
-        subcircuitId: asString(sheet.subcircuit_id) || undefined,
-      }),
+      (sheet, index) => {
+        const fallbackFilename = `${this.context.safeProjectName}-${String(index + 1).padStart(2, "0")}.SchDoc`
+        return {
+          filename: getSchematicFilename({
+            fallbackFilename,
+            sourceFilename: asString(sheet.source_filename),
+          }),
+          name:
+            asString(sheet.display_name) ||
+            asString(sheet.name) ||
+            `Sheet ${index + 1}`,
+          schematicSheetId: asString(sheet.schematic_sheet_id),
+          subcircuitId: asString(sheet.subcircuit_id) || undefined,
+        }
+      },
     )
+    const seenChildFilenames = new Set<string>()
+    const uniqueChildSheets = childSheets.filter((childSheet) => {
+      const normalizedFilename = childSheet.filename.toLocaleLowerCase("en-US")
+      if (seenChildFilenames.has(normalizedFilename)) return false
+      seenChildFilenames.add(normalizedFilename)
+      return true
+    })
     const documentDefinitions =
       childSheets.length === 0
         ? [
@@ -39,7 +84,7 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
               includeAllSchematicElements: false,
               schematicSheetId: undefined,
             },
-            ...childSheets.map((childSheet) => ({
+            ...uniqueChildSheets.map((childSheet) => ({
               childSheets: [],
               filename: childSheet.filename,
               includeAllSchematicElements: false,

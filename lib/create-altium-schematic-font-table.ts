@@ -23,7 +23,7 @@ type CreateAltiumSchematicFontTableInput = {
 
 const ALTIUM_UNITS_PER_CIRCUIT_UNIT = 20
 const ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS = 4
-const ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME = "Times New Roman"
+const ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME = "Arial"
 
 export function createAltiumSchematicFontTable({
   schematicElements,

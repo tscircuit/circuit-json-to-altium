@@ -5,6 +5,10 @@ import type {
 } from "schematic-symbols"
 import type { Matrix } from "transformation-matrix"
 import { applyToPoint } from "transformation-matrix"
+import {
+  ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
+  ALTIUM_SCHEMATIC_WHITE,
+} from "./altium-schematic-colors"
 import { pointsEqual } from "./format"
 import type { Point, PointTransform } from "./types"
 
@@ -13,6 +17,7 @@ type SchematicGraphicPrimitive = BoxPrimitive | CirclePrimitive | PathPrimitive
 export type AltiumSchematicSymbolMapping = {
   altiumComponentRecordIndex: number
   circuitToAltiumSchematicPoint: PointTransform
+  circuitToAltiumSchematicPrecisePoint: PointTransform
   symbolToCircuitMatrix: Matrix
 }
 
@@ -20,9 +25,6 @@ type CreateAltiumSchematicGraphicRecordFieldsOptions = {
   graphicPrimitive: SchematicGraphicPrimitive
   symbolMapping: AltiumSchematicSymbolMapping
 }
-
-const ALTIUM_SCHEMATIC_PRIMARY_COLOR = 132
-const ALTIUM_SCHEMATIC_WHITE = 16_777_215
 
 export function createAltiumSchematicGraphicRecordFields({
   graphicPrimitive,
@@ -54,7 +56,7 @@ function createAltiumPathRecordFields({
   symbolMapping: AltiumSchematicSymbolMapping
 }): string[] {
   const altiumPathPoints = pathPrimitive.points.map((symbolPoint) =>
-    transformSchematicSymbolPoint({ symbolMapping, symbolPoint }),
+    transformSchematicSymbolPointPrecisely({ symbolMapping, symbolPoint }),
   )
   const firstPoint = altiumPathPoints[0]
   const lastPoint = altiumPathPoints.at(-1)
@@ -75,12 +77,46 @@ function createAltiumPathRecordFields({
     "LINEWIDTH=1",
     `LOCATIONCOUNT=${altiumPathPoints.length}`,
     ...altiumPathPoints.flatMap((altiumPoint, pointIndex) => [
-      `X${pointIndex + 1}=${altiumPoint.x}`,
-      `Y${pointIndex + 1}=${altiumPoint.y}`,
+      ...createAltiumSchematicCoordinateRecordFields(
+        `X${pointIndex + 1}`,
+        altiumPoint.x,
+      ),
+      ...createAltiumSchematicCoordinateRecordFields(
+        `Y${pointIndex + 1}`,
+        altiumPoint.y,
+      ),
     ]),
-    `COLOR=${ALTIUM_SCHEMATIC_PRIMARY_COLOR}`,
+    `COLOR=${ALTIUM_SCHEMATIC_GRAPHIC_COLOR}`,
     ...(pathPrimitive.fill
-      ? [`AREACOLOR=${ALTIUM_SCHEMATIC_PRIMARY_COLOR}`, "ISSOLID=T"]
+      ? [`AREACOLOR=${ALTIUM_SCHEMATIC_GRAPHIC_COLOR}`, "ISSOLID=T"]
+      : []),
+  ]
+}
+
+const ALTIUM_SCHEMATIC_FRACTION_DIGITS = 5
+const ALTIUM_SCHEMATIC_FRACTION_SCALE = 10 ** ALTIUM_SCHEMATIC_FRACTION_DIGITS
+
+function createAltiumSchematicCoordinateRecordFields(
+  fieldName: string,
+  coordinate: number,
+): string[] {
+  // Altium represents sub-grid schematic coordinates as an integer field plus
+  // a five-digit *_FRAC field in 1/100000 schematic-unit increments. Emitting
+  // more digits makes native Altium interpret the fraction as a much larger
+  // fixed-point offset, even though decimal-string renderers may look correct.
+  const roundedCoordinate =
+    Math.round(coordinate * ALTIUM_SCHEMATIC_FRACTION_SCALE) /
+    ALTIUM_SCHEMATIC_FRACTION_SCALE
+  const integerPart = Math.trunc(roundedCoordinate)
+  const fractionalPart = Math.round(
+    Math.abs(roundedCoordinate - integerPart) * ALTIUM_SCHEMATIC_FRACTION_SCALE,
+  )
+  return [
+    `${fieldName}=${integerPart}`,
+    ...(fractionalPart > 0
+      ? [
+          `${fieldName}_FRAC=${String(fractionalPart).padStart(ALTIUM_SCHEMATIC_FRACTION_DIGITS, "0")}`,
+        ]
       : []),
   ]
 }
@@ -118,8 +154,8 @@ function createAltiumCircleRecordFields({
     `RADIUS=${altiumRadius}`,
     `SECONDARYRADIUS=${altiumRadius}`,
     "LINEWIDTH=1",
-    `COLOR=${ALTIUM_SCHEMATIC_PRIMARY_COLOR}`,
-    `AREACOLOR=${circlePrimitive.fill ? ALTIUM_SCHEMATIC_PRIMARY_COLOR : ALTIUM_SCHEMATIC_WHITE}`,
+    `COLOR=${ALTIUM_SCHEMATIC_GRAPHIC_COLOR}`,
+    `AREACOLOR=${circlePrimitive.fill ? ALTIUM_SCHEMATIC_GRAPHIC_COLOR : ALTIUM_SCHEMATIC_WHITE}`,
     `ISSOLID=${circlePrimitive.fill ? "T" : "F"}`,
   ]
 }
@@ -157,7 +193,7 @@ function createAltiumBoxRecordFields({
     `CORNER.X=${altiumSecondCorner.x}`,
     `CORNER.Y=${altiumSecondCorner.y}`,
     "LINEWIDTH=1",
-    `COLOR=${ALTIUM_SCHEMATIC_PRIMARY_COLOR}`,
+    `COLOR=${ALTIUM_SCHEMATIC_GRAPHIC_COLOR}`,
     `AREACOLOR=${ALTIUM_SCHEMATIC_WHITE}`,
     "ISSOLID=F",
   ]
@@ -192,6 +228,20 @@ export function transformSchematicSymbolPoint({
     symbolPoint,
   )
   return symbolMapping.circuitToAltiumSchematicPoint(circuitPoint)
+}
+
+function transformSchematicSymbolPointPrecisely({
+  symbolMapping,
+  symbolPoint,
+}: {
+  symbolMapping: AltiumSchematicSymbolMapping
+  symbolPoint: Point
+}): Point {
+  const circuitPoint = applyToPoint(
+    symbolMapping.symbolToCircuitMatrix,
+    symbolPoint,
+  )
+  return symbolMapping.circuitToAltiumSchematicPrecisePoint(circuitPoint)
 }
 
 export function createOwnedSchematicRecordFields(

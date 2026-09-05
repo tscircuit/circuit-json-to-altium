@@ -52,6 +52,19 @@ test("round-trips the open-source HERON PAY-SSM Altium schematic", async () => {
   expect(result.componentSizeMaxDeltaCircuitUnits).toBeLessThan(0.06)
   expect(result.sourceCounts.off_sheet_port).toBe(94)
   expect(result.sourceSheetSignatures).toHaveLength(16)
+  expect(result.roundTripSchematicFilenames).toEqual([
+    "HERON-PAY-SSM-schematic.SchDoc",
+    "can-SN65HVD233.SchDoc",
+    "Environmental Sensors.SchDoc",
+    "Boost Converter 10V.SchDoc",
+    "micro-circuit-ATMEGA64M1.SchDoc",
+    "Port Expander Breakout.SchDoc",
+    "Motors.SchDoc",
+    "Heater Control.SchDoc",
+    "MF Thermistors.SchDoc",
+    "ADC Breakout.SchDoc",
+    "Boost Converter 6V.SchDoc",
+  ])
   expect(result.sourceCounts.do_not_connect).toBe(22)
   expect(result.sourceCounts.power_port).toBe(28)
   expect(result.sourceSymbolPrimitiveCounts.total).toBe(36)

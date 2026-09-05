@@ -7,6 +7,7 @@ import { createPcbCutoutRecords } from "./create-pcb-cutout-records"
 import { createPcbDocumentationRecords } from "./create-pcb-documentation-records"
 import { createPcbKeepoutRecords } from "./create-pcb-keepout-records"
 import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
+import { createPcbSilkscreenGraphicRecords } from "./create-pcb-silkscreen-graphic-records"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
 import {
   asNumber,
@@ -108,6 +109,13 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       net.sourcePortIds.map((sourcePortId) => [sourcePortId, net] as const),
     ),
   )
+  const pcbComponents = byType(circuitJson, "pcb_component")
+  const componentIndex = new Map<PcbComponentId, number>(
+    pcbComponents.map((component, index) => [
+      asString(component.pcb_component_id) || `pcb_component_${index}`,
+      index,
+    ]),
+  )
 
   for (const net of netEntries) {
     lines.push(
@@ -126,16 +134,14 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     ...createPcbCopperPourRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
+      componentIndex,
       netEntries,
     }),
   )
 
-  const pcbComponents = byType(circuitJson, "pcb_component")
-  const componentIndex = new Map<PcbComponentId, number>()
   for (const [index, component] of pcbComponents.entries()) {
     const componentId =
       asString(component.pcb_component_id) || `pcb_component_${index}`
-    componentIndex.set(componentId, index)
     const sourceComponent = sourceComponents.get(
       asString(component.source_component_id),
     )
@@ -270,7 +276,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
         "LOCKED=FALSE",
         `X=${formatMil(altiumCenter.x)}`,
         `Y=${formatMil(altiumCenter.y)}`,
-        `SHAPE=${hole.shape === "circle" ? "ROUND" : "RECTANGLE"}`,
+        `SHAPE=${hole.shape === "circle" || hole.shape === "oval" || hole.shape === "pill" ? "ROUND" : "RECTANGLE"}`,
         `XSIZE=${formatMil(outerWidth * MILLIMETERS_TO_MILS)}`,
         `YSIZE=${formatMil(outerHeight * MILLIMETERS_TO_MILS)}`,
       ].join("|"),
@@ -433,6 +439,14 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       )
     }
   }
+
+  lines.push(
+    ...createPcbSilkscreenGraphicRecords({
+      circuitJson,
+      circuitToAltiumPcbPoint,
+      componentIndex,
+    }),
+  )
 
   for (const silkscreenText of byType(circuitJson, "pcb_silkscreen_text")) {
     lines.push(

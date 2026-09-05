@@ -13,11 +13,15 @@ import type {
 type SchematicTransform = {
   circuitToAltiumSchematicLength: LengthTransform
   circuitToAltiumSchematicPoint: PointTransform
+  circuitToAltiumSchematicPrecisePoint: PointTransform
   height: number
   width: number
 }
 
 const ALTIUM_UNITS_PER_CIRCUIT_UNIT = 20
+const MINIMUM_ALTIUM_SHEET_HEIGHT = 300
+const MINIMUM_ALTIUM_SHEET_WIDTH = 400
+const SCHEMATIC_CONTENT_MARGIN = 100
 
 function getAltiumSchematicPoint(
   circuitPoint: Point,
@@ -138,19 +142,44 @@ export function getSchematicTransform(
     circuitPoints.length > 0
       ? Math.min(...circuitPoints.map((point) => point.y))
       : 0
+  const maxX =
+    circuitPoints.length > 0
+      ? Math.max(...circuitPoints.map((point) => point.x))
+      : 0
+  const maxY =
+    circuitPoints.length > 0
+      ? Math.max(...circuitPoints.map((point) => point.y))
+      : 0
   const altiumGridMinX =
     Math.round(minX * ALTIUM_UNITS_PER_CIRCUIT_UNIT) /
     ALTIUM_UNITS_PER_CIRCUIT_UNIT
   const altiumGridMinY =
     Math.round(minY * ALTIUM_UNITS_PER_CIRCUIT_UNIT) /
     ALTIUM_UNITS_PER_CIRCUIT_UNIT
+  const altiumGridMaxX =
+    Math.round(maxX * ALTIUM_UNITS_PER_CIRCUIT_UNIT) /
+    ALTIUM_UNITS_PER_CIRCUIT_UNIT
+  const altiumGridMaxY =
+    Math.round(maxY * ALTIUM_UNITS_PER_CIRCUIT_UNIT) /
+    ALTIUM_UNITS_PER_CIRCUIT_UNIT
+  const altiumContentWidth =
+    (altiumGridMaxX - altiumGridMinX) * ALTIUM_UNITS_PER_CIRCUIT_UNIT
+  const altiumContentHeight =
+    (altiumGridMaxY - altiumGridMinY) * ALTIUM_UNITS_PER_CIRCUIT_UNIT
+  const sheetWidth = Math.max(
+    MINIMUM_ALTIUM_SHEET_WIDTH,
+    altiumContentWidth + SCHEMATIC_CONTENT_MARGIN * 2,
+  )
+  const sheetHeight = Math.max(
+    MINIMUM_ALTIUM_SHEET_HEIGHT,
+    altiumContentHeight + SCHEMATIC_CONTENT_MARGIN * 2,
+  )
+  const contentOffsetX = (sheetWidth - altiumContentWidth) / 2
+  const contentOffsetY = (sheetHeight - altiumContentHeight) / 2
   const circuitToAltiumSchematicMatrix = compose(
-    translate(100, 100),
+    translate(contentOffsetX, contentOffsetY),
     scale(ALTIUM_UNITS_PER_CIRCUIT_UNIT, ALTIUM_UNITS_PER_CIRCUIT_UNIT),
     translate(-altiumGridMinX, -altiumGridMinY),
-  )
-  const altiumPoints = circuitPoints.map((circuitPoint) =>
-    getAltiumSchematicPoint(circuitPoint, circuitToAltiumSchematicMatrix),
   )
   const altiumOrigin = applyToPoint(circuitToAltiumSchematicMatrix, {
     x: 0,
@@ -167,7 +196,9 @@ export function getSchematicTransform(
     },
     circuitToAltiumSchematicPoint: (circuitPoint) =>
       getAltiumSchematicPoint(circuitPoint, circuitToAltiumSchematicMatrix),
-    width: Math.max(400, ...altiumPoints.map((point) => point.x + 100)),
-    height: Math.max(300, ...altiumPoints.map((point) => point.y + 100)),
+    circuitToAltiumSchematicPrecisePoint: (circuitPoint) =>
+      applyToPoint(circuitToAltiumSchematicMatrix, circuitPoint),
+    width: sheetWidth,
+    height: sheetHeight,
   }
 }

@@ -22,12 +22,16 @@ type GetAltiumSchematicTextPresentationInput = {
 }
 
 const ALTIUM_JUSTIFICATION_BY_TEXT_ANCHOR: Record<string, number> = {
+  bottom: 1,
   bottom_left: 0,
   bottom_center: 1,
   bottom_right: 2,
+  left: 3,
   center_left: 3,
   center: 4,
   center_right: 5,
+  right: 5,
+  top: 7,
   top_left: 6,
   top_center: 7,
   top_right: 8,

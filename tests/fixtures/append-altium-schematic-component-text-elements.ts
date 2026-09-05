@@ -6,6 +6,7 @@ import type {
 import type { CircuitElement, SchematicComponentId } from "../../lib/types"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import { isAltiumSchematicComponentRecordVisible } from "./is-altium-schematic-component-record-visible"
+import { resolveAltiumComponentParameterText } from "./resolve-altium-component-parameter-text"
 
 type AppendAltiumSchematicComponentTextElementsInput = {
   component: AltiumSchComponentRecord
@@ -51,13 +52,18 @@ export function appendAltiumSchematicComponentTextElements({
     ) {
       continue
     }
-    const text = record.getDecoded("TEXT") ?? record.getDecoded("NAME") ?? ""
-    if (!text || record.getBoolean("ISHIDDEN") === true) continue
+    const sourceText =
+      record.getDecoded("TEXT") ?? record.getDecoded("NAME") ?? ""
+    if (!sourceText || record.getBoolean("ISHIDDEN") === true) continue
     elements.push({
       type: "schematic_text",
       schematic_text_id: `schematic_text_component_label_${recordIndex}`,
       schematic_component_id: schematicComponentId,
-      text,
+      text: resolveAltiumComponentParameterText({
+        component,
+        document,
+        parameterReference: sourceText,
+      }),
       ...getAltiumSchematicTextPresentation({
         document,
         fallbackFontSizePoints: 9,

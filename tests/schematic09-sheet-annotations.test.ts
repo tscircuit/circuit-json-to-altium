@@ -29,6 +29,16 @@ const elements: CircuitElement[] = [
     anchor: "bottom_right",
     color: "#0000ff",
   },
+  ...(["bottom", "left", "right", "top"] as const).map((anchor, index) => ({
+    type: "schematic_text" as const,
+    schematic_text_id: `short_anchor_${anchor}`,
+    text: `SHORT ${anchor.toUpperCase()}`,
+    font_size: 0.6,
+    position: { x: index * 2, y: 3 },
+    rotation: 0,
+    anchor,
+    color: "#ff0000",
+  })),
   {
     type: "schematic_rect",
     schematic_rect_id: "section_box",
@@ -40,6 +50,29 @@ const elements: CircuitElement[] = [
     color: "#112233",
     is_filled: true,
     fill_color: "#445566",
+    is_dashed: false,
+  },
+  {
+    type: "schematic_line",
+    schematic_line_id: "feedback_line",
+    x1: 3,
+    y1: -2,
+    x2: 4,
+    y2: -1,
+    stroke_width: 0.1,
+    color: "#008000",
+    is_dashed: true,
+  },
+  {
+    type: "schematic_rect",
+    schematic_rect_id: "inherited_fill_box",
+    center: { x: 8, y: 0 },
+    width: 2,
+    height: 1,
+    rotation: 0,
+    stroke_width: 0.1,
+    color: "#123456",
+    is_filled: true,
     is_dashed: false,
   },
   {
@@ -77,6 +110,10 @@ test("writes schematic sheet annotations as native records", async () => {
   const sheetRecord = schematic.getRecordsByKind("31")[0]
   const labels = schematic.getRecordsByKind("4")
   const rectangle = schematic.getRecordsByKind("14")[0]
+  const inheritedFillRectangle = schematic
+    .getRecordsByKind("14")
+    .find((record) => record.getNumber("COLOR") === 0x56_34_12)
+  const line = schematic.getRecordsByKind("13")[0]
   const polyline = schematic.getRecordsByKind("6")[0]
   const polygon = schematic.getRecordsByKind("7")[0]
 
@@ -92,7 +129,7 @@ test("writes schematic sheet annotations as native records", async () => {
     ],
   }).toEqual({
     fontCount: 5,
-    fontNames: ["Times New Roman", "Times New Roman"],
+    fontNames: ["Arial", "Arial"],
     fontSizesPoints: [12, 24],
   })
   expect(
@@ -105,6 +142,10 @@ test("writes schematic sheet annotations as native records", async () => {
   ).toEqual([
     { color: 0x00_00_ff, fontId: 4, justification: 6, text: "POWER SUPPLY" },
     { color: 0xff_00_00, fontId: 5, justification: 2, text: "3.3 V" },
+    { color: 0x00_00_ff, fontId: 4, justification: 1, text: "SHORT BOTTOM" },
+    { color: 0x00_00_ff, fontId: 4, justification: 3, text: "SHORT LEFT" },
+    { color: 0x00_00_ff, fontId: 4, justification: 5, text: "SHORT RIGHT" },
+    { color: 0x00_00_ff, fontId: 4, justification: 7, text: "SHORT TOP" },
   ])
   expect({
     areaColor: rectangle?.getNumber("AREACOLOR"),
@@ -115,6 +156,22 @@ test("writes schematic sheet annotations as native records", async () => {
     areaColor: 0x66_55_44,
     color: 0x33_22_11,
     isSolid: true,
+    lineWidth: 2,
+  })
+  expect({
+    areaColor: inheritedFillRectangle?.getNumber("AREACOLOR"),
+    isSolid: inheritedFillRectangle?.getBoolean("ISSOLID"),
+  }).toEqual({
+    areaColor: 0x56_34_12,
+    isSolid: true,
+  })
+  expect({
+    color: line?.getNumber("COLOR"),
+    lineStyle: line?.getNumber("LINESTYLE"),
+    lineWidth: line?.getNumber("LINEWIDTH"),
+  }).toEqual({
+    color: 0x00_80_00,
+    lineStyle: 1,
     lineWidth: 2,
   })
   expect({

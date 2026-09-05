@@ -1,9 +1,17 @@
 import { expect, test } from "bun:test"
-import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
+import { parseAltiumSchDoc } from "altiumts"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { Circuit } from "tscircuit"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
+import { renderAltiumSchematicDetail } from "./fixtures/render-altium-schematic-detail"
+
+const PASSIVE_CHAIN_VIEW_BOX = {
+  x: 139.5,
+  y: 117,
+  width: 121,
+  height: 66,
+}
 
 test("snapshots the Circuit JSON and generated Altium schematic", async () => {
   const circuit = new Circuit()
@@ -30,7 +38,10 @@ test("snapshots the Circuit JSON and generated Altium schematic", async () => {
   if (!firstSchematic) throw new Error("Converter did not create a schematic")
   const altiumSchematic = parseAltiumSchDoc(firstSchematic.content)
   const circuitJsonSvg = await convertCircuitJsonToSchematicSvg(circuitJson)
-  const altiumSvg = serializeAltiumSheetToSvg(altiumSchematic)
+  const altiumSvg = renderAltiumSchematicDetail(
+    altiumSchematic,
+    PASSIVE_CHAIN_VIEW_BOX,
+  )
 
   await expect(
     createSideBySideSvg(circuitJsonSvg, altiumSvg),

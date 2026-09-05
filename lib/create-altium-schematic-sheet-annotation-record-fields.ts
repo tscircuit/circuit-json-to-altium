@@ -87,6 +87,12 @@ function createRectRecordFields({
     x: circuitCenter.x + widthCircuitUnits / 2,
     y: circuitCenter.y + heightCircuitUnits / 2,
   })
+  const altiumColor = getAltiumColor({
+    annotation,
+    colorFieldName: "color",
+    fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR,
+  })
+  const isFilled = annotation.is_filled === true
 
   return [
     "RECORD=14",
@@ -95,9 +101,34 @@ function createRectRecordFields({
     `CORNER.X=${secondCorner.x}`,
     `CORNER.Y=${secondCorner.y}`,
     `LINEWIDTH=${getAltiumLineWidth(annotation)}`,
+    `COLOR=${altiumColor}`,
+    `AREACOLOR=${getAltiumColor({ annotation, colorFieldName: "fill_color", fallbackAltiumColor: isFilled ? altiumColor : ALTIUM_SCHEMATIC_DEFAULT_FILL_COLOR })}`,
+    `ISSOLID=${isFilled ? "T" : "F"}`,
+  ]
+}
+
+function createLineRecordFields({
+  annotation,
+  circuitToAltiumSchematicPoint,
+}: CreateAltiumSchematicSheetAnnotationRecordFieldsInput): string[] {
+  const altiumStart = circuitToAltiumSchematicPoint({
+    x: asNumber(annotation.x1),
+    y: asNumber(annotation.y1),
+  })
+  const altiumEnd = circuitToAltiumSchematicPoint({
+    x: asNumber(annotation.x2),
+    y: asNumber(annotation.y2),
+  })
+
+  return [
+    "RECORD=13",
+    `LOCATION.X=${altiumStart.x}`,
+    `LOCATION.Y=${altiumStart.y}`,
+    `CORNER.X=${altiumEnd.x}`,
+    `CORNER.Y=${altiumEnd.y}`,
+    `LINEWIDTH=${getAltiumLineWidth(annotation)}`,
+    `LINESTYLE=${annotation.is_dashed === true ? 1 : 0}`,
     `COLOR=${getAltiumColor({ annotation, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR })}`,
-    `AREACOLOR=${getAltiumColor({ annotation, colorFieldName: "fill_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_FILL_COLOR })}`,
-    `ISSOLID=${annotation.is_filled === true ? "T" : "F"}`,
   ]
 }
 
@@ -140,6 +171,9 @@ export function createAltiumSchematicSheetAnnotationRecordFields(
   if (!isSchematicSheetAnnotation(input.annotation)) return undefined
   if (input.annotation.type === "schematic_text") {
     return createTextRecordFields(input)
+  }
+  if (input.annotation.type === "schematic_line") {
+    return createLineRecordFields(input)
   }
   if (input.annotation.type === "schematic_rect") {
     return createRectRecordFields(input)

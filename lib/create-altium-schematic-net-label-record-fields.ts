@@ -1,4 +1,5 @@
 import { getAltiumColorFromCss } from "./altium-color"
+import { ALTIUM_SCHEMATIC_GRAPHIC_COLOR } from "./altium-schematic-colors"
 import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-table"
 import { asNumber, asString } from "./format"
 import {
@@ -16,6 +17,7 @@ type AltiumPowerPortStyle = {
 }
 
 type SchematicNetLabelRecordFieldsInput = {
+  anchorSide: string
   altiumLabelPosition: Point
   fontTable: AltiumSchematicFontTable
   labelText: string
@@ -24,8 +26,14 @@ type SchematicNetLabelRecordFieldsInput = {
 }
 
 const ALTIUM_SCHEMATIC_LABEL_FONT_ID = 2
-const ALTIUM_SCHEMATIC_LABEL_COLOR = 0x37_29_1f
-const ALTIUM_SCHEMATIC_POWER_PORT_COLOR_INDEX = 128
+const ALTIUM_SCHEMATIC_POWER_PORT_COLOR_INDEX = 132
+
+const ALTIUM_JUSTIFICATION_BY_NET_LABEL_ANCHOR_SIDE: Record<string, number> = {
+  bottom: 1,
+  left: 3,
+  right: 5,
+  top: 7,
+}
 
 const ALTIUM_ORIENTATION_INDEX_BY_POWER_PORT_DIRECTION: Record<
   AltiumPowerPortDirection,
@@ -78,6 +86,7 @@ function getAltiumPowerPortStyle(
 }
 
 export function createAltiumSchematicNetLabelRecordFields({
+  anchorSide,
   altiumLabelPosition,
   fontTable,
   labelText,
@@ -93,7 +102,7 @@ export function createAltiumSchematicNetLabelRecordFields({
     cssColor: asString(textPresentation?.color),
     fallbackAltiumColor: powerPortStyle
       ? ALTIUM_SCHEMATIC_POWER_PORT_COLOR_INDEX
-      : ALTIUM_SCHEMATIC_LABEL_COLOR,
+      : ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   })
   if (powerPortStyle) {
     return [
@@ -115,7 +124,11 @@ export function createAltiumSchematicNetLabelRecordFields({
     `LOCATION.Y=${altiumLabelPosition.y}`,
     `FONTID=${fontId}`,
     `ORIENTATION=${getAltiumSchematicTextOrientation(asNumber(textPresentation?.rotation))}`,
-    `JUSTIFICATION=${getAltiumSchematicTextJustification(asString(textPresentation?.anchor))}`,
+    `JUSTIFICATION=${
+      textPresentation
+        ? getAltiumSchematicTextJustification(asString(textPresentation.anchor))
+        : (ALTIUM_JUSTIFICATION_BY_NET_LABEL_ANCHOR_SIDE[anchorSide] ?? 0)
+    }`,
     `COLOR=${color}`,
     `TEXT=${labelText}`,
   ]

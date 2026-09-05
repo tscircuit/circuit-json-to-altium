@@ -58,9 +58,22 @@ const elements: CircuitElement[] = [
       },
     ]
   }),
+  {
+    type: "source_port",
+    source_port_id: "source_port_unconnected",
+    name: "UNCONNECTED",
+  },
+  {
+    type: "schematic_port",
+    schematic_port_id: "schematic_port_unconnected",
+    source_port_id: "source_port_unconnected",
+    center: { x: 8, y: 0 },
+    display_pin_label: "UNCONNECTED",
+    is_connected: false,
+  },
 ]
 
-test("writes componentless schematic ports as native off-sheet ports", async () => {
+test("writes visible componentless schematic ports as native off-sheet ports", async () => {
   const { schematics } = await extractArchive(elements)
   const schematic = schematics[0] as AltiumSchDoc
   const sheetRecord = schematic.getRecordsByKind("31")[0]
@@ -89,20 +102,20 @@ test("writes componentless schematic ports as native off-sheet ports", async () 
     {
       ioType: 0,
       name: "UNSPECIFIED",
-      position: { x: 100, y: 100 },
+      position: { x: 140, y: 150 },
       width: 88,
     },
-    { ioType: 1, name: "INPUT", position: { x: 140, y: 100 }, width: 40 },
+    { ioType: 1, name: "INPUT", position: { x: 180, y: 150 }, width: 40 },
     {
       ioType: 2,
       name: "OUTPUT_SIGNAL",
-      position: { x: 180, y: 100 },
+      position: { x: 220, y: 150 },
       width: 104,
     },
     {
       ioType: 3,
       name: "BIDIRECTIONAL",
-      position: { x: 220, y: 100 },
+      position: { x: 260, y: 150 },
       width: 104,
     },
   ])

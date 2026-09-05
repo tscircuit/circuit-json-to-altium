@@ -66,9 +66,9 @@ test("preserves boxed component body and pin geometry", async () => {
       designatorY: designator?.getNumber("LOCATION.Y"),
     },
   }).toEqual({
-    body: { left: 108, bottom: 90, right: 140, top: 110 },
-    pin: { x: 108, y: 106, length: 8 },
-    text: { commentY: 78, designatorY: 122 },
+    body: { left: 196, bottom: 137, right: 228, top: 157 },
+    pin: { x: 196, y: 153, length: 8 },
+    text: { commentY: 125, designatorY: 169 },
   })
   expect(comment?.getBoolean("ISHIDDEN")).toBe(true)
   expect(comment?.getDecoded("TEXT")).toBe("")

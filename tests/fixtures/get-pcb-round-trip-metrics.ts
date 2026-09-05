@@ -1,3 +1,4 @@
+import { pcb_copper_pour } from "circuit-json"
 import type { CircuitElement } from "../../lib/types"
 
 const preservedPrimitiveTypes = [
@@ -14,6 +15,8 @@ const preservedPrimitiveTypes = [
   "pcb_via",
   "pcb_copper_pour",
   "pcb_silkscreen_text",
+  "pcb_cutout",
+  "pcb_silkscreen_graphic",
   "pcb_courtyard_outline",
   "pcb_keepout",
   "pcb_fabrication_note_path",
@@ -51,7 +54,11 @@ export type PreservedPrimitiveCounts = Record<PreservedPrimitiveType, number>
 
 export type PcbRoundTripMetrics = {
   cadComponentMismatchCount: number
+  copperPourComponentMismatchCount: number
+  copperPourCutoutMismatchCount: number
+  copperPourSolderMaskMismatchCount: number
   geometryMaxDeltaMm: number
+  platedHoleDimensionMismatchCount: number
   rotationMismatchCount: number
   roundTripCounts: PreservedPrimitiveCounts
   roundTripSourceNetNames: string[]
@@ -59,6 +66,126 @@ export type PcbRoundTripMetrics = {
   sourceNetNames: string[]
   sourcePrimitiveTotal: number
   silkscreenTextMismatchCount: number
+  sourceComponentCopperPourCount: number
+  sourceCopperPourCutoutCount: number
+}
+
+function getCopperPourCutoutCounts(circuitJson: CircuitElement[]): number[] {
+  return circuitJson.flatMap((element) => {
+    if (element.type !== "pcb_copper_pour") return []
+    const copperPour = pcb_copper_pour.parse(element)
+    return [
+      copperPour.shape === "brep"
+        ? copperPour.brep_shape.inner_rings.length
+        : 0,
+    ]
+  })
+}
+
+function getCopperPourCutoutMismatchCount(
+  sourceCircuitJson: CircuitElement[],
+  roundTripCircuitJson: CircuitElement[],
+): number {
+  const sourceCounts = getCopperPourCutoutCounts(sourceCircuitJson)
+  const roundTripCounts = getCopperPourCutoutCounts(roundTripCircuitJson)
+  if (sourceCounts.length !== roundTripCounts.length) {
+    return Number.POSITIVE_INFINITY
+  }
+  return sourceCounts.reduce(
+    (mismatchCount, count, index) =>
+      mismatchCount + (count === roundTripCounts[index] ? 0 : 1),
+    0,
+  )
+}
+
+function getCopperPourSolderMaskMismatchCount(
+  sourceCircuitJson: CircuitElement[],
+  roundTripCircuitJson: CircuitElement[],
+): number {
+  const getCoverage = (circuitJson: CircuitElement[]): boolean[] => {
+    const coverage: boolean[] = []
+    for (const element of circuitJson) {
+      if (
+        element.type === "pcb_copper_pour" &&
+        typeof element.covered_with_solder_mask === "boolean"
+      ) {
+        coverage.push(element.covered_with_solder_mask)
+      }
+    }
+    return coverage
+  }
+  const sourceCoverage = getCoverage(sourceCircuitJson)
+  const roundTripCoverage = getCoverage(roundTripCircuitJson)
+  if (sourceCoverage.length !== roundTripCoverage.length) {
+    return Number.POSITIVE_INFINITY
+  }
+  return sourceCoverage.reduce(
+    (mismatchCount, isCovered, index) =>
+      mismatchCount + (isCovered === roundTripCoverage[index] ? 0 : 1),
+    0,
+  )
+}
+
+function getCopperPourComponentMismatchCount(
+  sourceCircuitJson: CircuitElement[],
+  roundTripCircuitJson: CircuitElement[],
+): number {
+  const sourceComponentIds = sourceCircuitJson.flatMap((element) =>
+    element.type === "pcb_copper_pour" &&
+    typeof element.pcb_component_id === "string"
+      ? [element.pcb_component_id]
+      : [],
+  )
+  const roundTripComponentIds = roundTripCircuitJson.flatMap((element) =>
+    element.type === "pcb_copper_pour" &&
+    typeof element.pcb_component_id === "string"
+      ? [element.pcb_component_id]
+      : [],
+  )
+  if (sourceComponentIds.length !== roundTripComponentIds.length) {
+    return Number.POSITIVE_INFINITY
+  }
+  return sourceComponentIds.reduce(
+    (mismatchCount, componentId, index) =>
+      mismatchCount + (componentId === roundTripComponentIds[index] ? 0 : 1),
+    0,
+  )
+}
+
+const platedHoleDimensionFields = [
+  "hole_width",
+  "hole_height",
+  "outer_width",
+  "outer_height",
+] as const
+
+function getPlatedHoleDimensionMismatchCount(
+  sourceCircuitJson: CircuitElement[],
+  roundTripCircuitJson: CircuitElement[],
+): number {
+  const sourceHoles = sourceCircuitJson.filter(
+    (element) => element.type === "pcb_plated_hole",
+  )
+  const roundTripHoles = roundTripCircuitJson.filter(
+    (element) => element.type === "pcb_plated_hole",
+  )
+  if (sourceHoles.length !== roundTripHoles.length) {
+    return Number.POSITIVE_INFINITY
+  }
+  return sourceHoles.reduce((mismatchCount, sourceHole, holeIndex) => {
+    const roundTripHole = roundTripHoles[holeIndex]
+    if (!roundTripHole) return mismatchCount + 1
+    const dimensionsMatch = platedHoleDimensionFields.every((fieldName) => {
+      const sourceDimension = sourceHole[fieldName]
+      const roundTripDimension = roundTripHole[fieldName]
+      return (
+        typeof sourceDimension === "number" &&
+        typeof roundTripDimension === "number" &&
+        Math.abs(sourceDimension - roundTripDimension) <= 0.0001
+      )
+    })
+    return mismatchCount + (dimensionsMatch ? 0 : 1)
+  }, 0)
 }
 
 function getPoint3(
@@ -397,7 +524,23 @@ export function getPcbRoundTripMetrics({
       sourceCircuitJson,
       roundTripCircuitJson,
     ),
+    copperPourComponentMismatchCount: getCopperPourComponentMismatchCount(
+      sourceCircuitJson,
+      roundTripCircuitJson,
+    ),
+    copperPourCutoutMismatchCount: getCopperPourCutoutMismatchCount(
+      sourceCircuitJson,
+      roundTripCircuitJson,
+    ),
+    copperPourSolderMaskMismatchCount: getCopperPourSolderMaskMismatchCount(
+      sourceCircuitJson,
+      roundTripCircuitJson,
+    ),
     geometryMaxDeltaMm: getGeometryMaxDeltaMm(
+      sourceCircuitJson,
+      roundTripCircuitJson,
+    ),
+    platedHoleDimensionMismatchCount: getPlatedHoleDimensionMismatchCount(
       sourceCircuitJson,
       roundTripCircuitJson,
     ),
@@ -417,5 +560,13 @@ export function getPcbRoundTripMetrics({
       sourceCircuitJson,
       roundTripCircuitJson,
     ),
+    sourceComponentCopperPourCount: sourceCircuitJson.filter(
+      (element) =>
+        element.type === "pcb_copper_pour" &&
+        typeof element.pcb_component_id === "string",
+    ).length,
+    sourceCopperPourCutoutCount: getCopperPourCutoutCounts(
+      sourceCircuitJson,
+    ).reduce((total, count) => total + count, 0),
   }
 }

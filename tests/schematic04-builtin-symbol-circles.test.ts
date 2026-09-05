@@ -33,8 +33,8 @@ test("converts built-in symbol circles to native ellipses", async () => {
   const voltmeterRecords = schematic.getOwnedRecords(voltmeter)
   const circle = voltmeterRecords.find((record) => record.recordKind === "8")
 
-  expect(circle?.getNumber("LOCATION.X")).toBe(100)
-  expect(circle?.getNumber("LOCATION.Y")).toBe(100)
+  expect(circle?.getNumber("LOCATION.X")).toBe(200)
+  expect(circle?.getNumber("LOCATION.Y")).toBe(150)
   expect(circle?.getNumber("RADIUS")).toBe(6)
   expect(circle?.getNumber("SECONDARYRADIUS")).toBe(6)
   expect(circle?.getBoolean("ISSOLID")).toBe(false)

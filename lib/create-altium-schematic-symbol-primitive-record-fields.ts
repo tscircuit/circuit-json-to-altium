@@ -1,5 +1,11 @@
 import { getAltiumColorFromCss } from "./altium-color"
+import {
+  ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
+  ALTIUM_SCHEMATIC_WHITE,
+} from "./altium-schematic-colors"
+import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-table"
 import { createOwnedSchematicRecordFields } from "./create-altium-schematic-graphic-record-fields"
+import { createAltiumSchematicTextRecordFields } from "./create-altium-schematic-text-record-fields"
 import { asNumber, asPoint, asString, formatNumber } from "./format"
 import { isSchematicSymbolPrimitive } from "./is-schematic-symbol-primitive"
 import type { CircuitElement, LengthTransform, PointTransform } from "./types"
@@ -8,11 +14,9 @@ type CreateAltiumSchematicSymbolPrimitiveRecordFieldsInput = {
   altiumComponentRecordIndex: number
   circuitToAltiumSchematicLength: LengthTransform
   circuitToAltiumSchematicPoint: PointTransform
+  fontTable: AltiumSchematicFontTable
   graphic: CircuitElement
 }
-
-const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
-const ALTIUM_SCHEMATIC_DEFAULT_FILL_COLOR = 0xff_ff_ff
 
 function getAltiumLineWidth({
   circuitToAltiumSchematicLength,
@@ -100,10 +104,10 @@ function createPathRecordFields({
       `X${pointIndex + 1}=${point.x}`,
       `Y${pointIndex + 1}=${point.y}`,
     ]),
-    `COLOR=${getAltiumColor({ graphic, colorFieldName: "stroke_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR })}`,
+    `COLOR=${getAltiumColor({ graphic, colorFieldName: "stroke_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR })}`,
     ...(isFilled
       ? [
-          `AREACOLOR=${getAltiumColor({ graphic, colorFieldName: "fill_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_FILL_COLOR })}`,
+          `AREACOLOR=${getAltiumColor({ graphic, colorFieldName: "fill_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_WHITE })}`,
           "ISSOLID=T",
         ]
       : []),
@@ -134,8 +138,8 @@ function createCircleRecordFields({
     `LOCATION.Y=${altiumCenter.y}`,
     `RADIUS=${formatNumber(getAltiumRadius({ circuitToAltiumSchematicLength, radius }))}`,
     `SECONDARYRADIUS=${formatNumber(getAltiumRadius({ circuitToAltiumSchematicLength, radius }))}`,
-    `COLOR=${getAltiumColor({ graphic, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR })}`,
-    `AREACOLOR=${getAltiumColor({ graphic, colorFieldName: "fill_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_FILL_COLOR })}`,
+    `COLOR=${getAltiumColor({ graphic, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR })}`,
+    `AREACOLOR=${getAltiumColor({ graphic, colorFieldName: "fill_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_WHITE })}`,
     `ISSOLID=${isFilled ? "T" : "F"}`,
   ]
 }
@@ -167,7 +171,7 @@ function createArcRecordFields({
     `RADIUS=${formatNumber(getAltiumRadius({ circuitToAltiumSchematicLength, radius }))}`,
     `STARTANGLE=${formatNumber(isClockwise ? endAngleDegrees : startAngleDegrees)}`,
     `ENDANGLE=${formatNumber(isClockwise ? startAngleDegrees : endAngleDegrees)}`,
-    `COLOR=${getAltiumColor({ graphic, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR })}`,
+    `COLOR=${getAltiumColor({ graphic, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR })}`,
   ]
 }
 
@@ -196,7 +200,7 @@ function createLineRecordFields({
     `LOCATION.Y=${altiumStart.y}`,
     `CORNER.X=${altiumEnd.x}`,
     `CORNER.Y=${altiumEnd.y}`,
-    `COLOR=${getAltiumColor({ graphic, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR })}`,
+    `COLOR=${getAltiumColor({ graphic, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR })}`,
   ]
 }
 
@@ -225,6 +229,11 @@ function createRectRecordFields({
     y: center.y + height / 2,
   })
   const isFilled = graphic.is_filled === true
+  const altiumColor = getAltiumColor({
+    graphic,
+    colorFieldName: "color",
+    fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
+  })
   return [
     "RECORD=14",
     ...getOwnedGraphicRecordFields({
@@ -236,8 +245,8 @@ function createRectRecordFields({
     `LOCATION.Y=${altiumFirstCorner.y}`,
     `CORNER.X=${altiumSecondCorner.x}`,
     `CORNER.Y=${altiumSecondCorner.y}`,
-    `COLOR=${getAltiumColor({ graphic, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR })}`,
-    `AREACOLOR=${getAltiumColor({ graphic, colorFieldName: "fill_color", fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_FILL_COLOR })}`,
+    `COLOR=${altiumColor}`,
+    `AREACOLOR=${getAltiumColor({ graphic, colorFieldName: "fill_color", fallbackAltiumColor: isFilled ? altiumColor : ALTIUM_SCHEMATIC_WHITE })}`,
     `ISSOLID=${isFilled ? "T" : "F"}`,
   ]
 }
@@ -246,6 +255,14 @@ export function createAltiumSchematicSymbolPrimitiveRecordFields(
   input: CreateAltiumSchematicSymbolPrimitiveRecordFieldsInput,
 ): string[] | undefined {
   if (!isSchematicSymbolPrimitive(input.graphic)) return undefined
+  if (input.graphic.type === "schematic_text") {
+    return createAltiumSchematicTextRecordFields({
+      altiumComponentRecordIndex: input.altiumComponentRecordIndex,
+      circuitToAltiumSchematicPoint: input.circuitToAltiumSchematicPoint,
+      fontTable: input.fontTable,
+      schematicText: input.graphic,
+    })
+  }
   if (input.graphic.type === "schematic_path") {
     return createPathRecordFields(input)
   }
