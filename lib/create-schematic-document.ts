@@ -34,6 +34,7 @@ import { getSchematicTransform } from "./get-schematic-transform"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
 import { isSchematicSymbolPrimitive } from "./is-schematic-symbol-primitive"
 import type {
+  AltiumSchematicSheetSettings,
   CircuitElement,
   Point,
   PointTransform,
@@ -49,6 +50,7 @@ type CreateSchematicDocumentParams = {
   circuitJson: CircuitElement[]
   includeAllSchematicElements: boolean
   schematicSheetId: SchematicSheetId | undefined
+  sheetSettings?: AltiumSchematicSheetSettings
 }
 
 type SchematicSheetMembershipParams = {
@@ -299,6 +301,7 @@ export function createSchematicDocument({
   circuitJson,
   includeAllSchematicElements,
   schematicSheetId,
+  sheetSettings,
 }: CreateSchematicDocumentParams): string {
   const sourcePorts = new Map<SourcePortId, CircuitElement>(
     byType(circuitJson, "source_port").map((sourcePort) => [
@@ -329,7 +332,7 @@ export function createSchematicDocument({
     circuitToAltiumSchematicPrecisePoint,
     width: contentWidth,
     height: contentHeight,
-  } = getSchematicTransform(schematicElements)
+  } = getSchematicTransform(schematicElements, sheetSettings)
   const sheetSymbolPlans = createAltiumSchematicSheetSymbolPlans({
     childSheets,
     circuitJson,

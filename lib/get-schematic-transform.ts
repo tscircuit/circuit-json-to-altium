@@ -4,6 +4,7 @@ import { asNumber, asPoint, asString, isCircuitElement } from "./format"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
 import { isSchematicSymbolPrimitive } from "./is-schematic-symbol-primitive"
 import type {
+  AltiumSchematicSheetSettings,
   CircuitElement,
   LengthTransform,
   Point,
@@ -80,6 +81,7 @@ function appendSchematicSymbolPrimitivePoints({
 
 export function getSchematicTransform(
   schematicElements: CircuitElement[],
+  sheetSettings?: AltiumSchematicSheetSettings,
 ): SchematicTransform {
   const circuitPoints: Point[] = []
   for (const element of schematicElements) {
@@ -171,21 +173,33 @@ export function getSchematicTransform(
     (altiumGridMaxX - altiumGridMinX) * ALTIUM_UNITS_PER_CIRCUIT_UNIT
   const altiumContentHeight =
     (altiumGridMaxY - altiumGridMinY) * ALTIUM_UNITS_PER_CIRCUIT_UNIT
-  const sheetWidth = Math.max(
-    MINIMUM_ALTIUM_SHEET_WIDTH,
-    altiumContentWidth + SCHEMATIC_CONTENT_MARGIN * 2,
-  )
-  const sheetHeight = Math.max(
-    MINIMUM_ALTIUM_SHEET_HEIGHT,
-    altiumContentHeight + SCHEMATIC_CONTENT_MARGIN * 2,
-  )
+  const sheetWidth = sheetSettings
+    ? sheetSettings.width * ALTIUM_UNITS_PER_CIRCUIT_UNIT
+    : Math.max(
+        MINIMUM_ALTIUM_SHEET_WIDTH,
+        altiumContentWidth + SCHEMATIC_CONTENT_MARGIN * 2,
+      )
+  const sheetHeight = sheetSettings
+    ? sheetSettings.height * ALTIUM_UNITS_PER_CIRCUIT_UNIT
+    : Math.max(
+        MINIMUM_ALTIUM_SHEET_HEIGHT,
+        altiumContentHeight + SCHEMATIC_CONTENT_MARGIN * 2,
+      )
   const contentOffsetX = (sheetWidth - altiumContentWidth) / 2
   const contentOffsetY = (sheetHeight - altiumContentHeight) / 2
-  const circuitToAltiumSchematicMatrix = compose(
-    translate(contentOffsetX, contentOffsetY),
-    scale(ALTIUM_UNITS_PER_CIRCUIT_UNIT, ALTIUM_UNITS_PER_CIRCUIT_UNIT),
-    translate(-altiumGridMinX, -altiumGridMinY),
-  )
+  const circuitToAltiumSchematicMatrix = sheetSettings?.circuitOrigin
+    ? compose(
+        translate(
+          sheetSettings.circuitOrigin.x * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+          sheetSettings.circuitOrigin.y * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+        ),
+        scale(ALTIUM_UNITS_PER_CIRCUIT_UNIT, ALTIUM_UNITS_PER_CIRCUIT_UNIT),
+      )
+    : compose(
+        translate(contentOffsetX, contentOffsetY),
+        scale(ALTIUM_UNITS_PER_CIRCUIT_UNIT, ALTIUM_UNITS_PER_CIRCUIT_UNIT),
+        translate(-altiumGridMinX, -altiumGridMinY),
+      )
   const altiumOrigin = applyToPoint(circuitToAltiumSchematicMatrix, {
     x: 0,
     y: 0,
