@@ -268,10 +268,18 @@ function isFilledSchematicSheetBackground({
 
   return schematicComponents.some((component) => {
     const componentCenter = asPoint(component.center)
+    const componentSize = isCircuitElement(component.size)
+      ? component.size
+      : undefined
+    const componentHalfWidth = asNumber(componentSize?.width) / 2
+    const componentHalfHeight = asNumber(componentSize?.height) / 2
     return (
       componentCenter !== undefined &&
-      Math.abs(componentCenter.x - center.x) <= halfWidth &&
-      Math.abs(componentCenter.y - center.y) <= halfHeight
+      componentHalfWidth > 0 &&
+      componentHalfHeight > 0 &&
+      Math.abs(componentCenter.x - center.x) + componentHalfWidth <=
+        halfWidth &&
+      Math.abs(componentCenter.y - center.y) + componentHalfHeight <= halfHeight
     )
   })
 }
