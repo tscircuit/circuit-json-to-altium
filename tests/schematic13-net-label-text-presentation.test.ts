@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { AltiumSchDoc } from "altiumts"
+import { type AltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
 import {
   board,
   type CircuitElement,
@@ -107,5 +107,17 @@ test("uses matching schematic text to present native net labels", async () => {
     },
     sheetLabels: ["NOTE", "SIGNAL"],
   })
+  expect(netLabel?.getBoolean("ISHIDDEN")).not.toBe(true)
+  expect(
+    schematic.records.some((record) =>
+      record.getDecoded("UNIQUEID")?.startsWith("CJNP"),
+    ),
+  ).toBe(false)
+  const renderedNetLabel = serializeAltiumSheetToSvg(schematic).match(
+    /<text data-record="25"[^>]*>SIGNAL<\/text>/u,
+  )?.[0]
+  expect(renderedNetLabel).toContain('text-anchor="end"')
+  expect(renderedNetLabel).toContain('dominant-baseline="text-before-edge"')
+  expect(renderedNetLabel).toContain("rotate(-90)")
   expectValidSchematic(schematic)
 })

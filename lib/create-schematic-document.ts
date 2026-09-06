@@ -934,9 +934,9 @@ export function createSchematicDocument({
     }
   }
 
-  for (const schematicNetLabel of schematicElements.filter(
-    (element) => element.type === "schematic_net_label",
-  )) {
+  for (const [netLabelIndex, schematicNetLabel] of schematicElements
+    .filter((element) => element.type === "schematic_net_label")
+    .entries()) {
     const labelText = sanitizeField(schematicNetLabel.text)
     if (!labelText) continue
     const circuitLabelPosition = asPoint(schematicNetLabel.anchor_position) ??
@@ -948,18 +948,21 @@ export function createSchematicDocument({
       targetPosition: circuitLabelPosition,
     })
     if (textPresentation) consumedSheetTexts.add(textPresentation)
-    addSchematicRecord(
-      createAltiumSchematicNetLabelRecordFields({
-        anchorSide: asString(schematicNetLabel.anchor_side),
-        altiumLabelPosition:
-          circuitToAltiumSchematicPoint(circuitLabelPosition),
-        fontTable: altiumSchematicFontTable,
-        labelText,
-        symbolName: asString(schematicNetLabel.symbol_name),
-        textPresentation,
-      }),
-      schematicRecordContext,
-    )
+    const netLabelRecordFields = createAltiumSchematicNetLabelRecordFields({
+      anchorSide: asString(schematicNetLabel.anchor_side),
+      altiumLabelCenter: circuitToAltiumSchematicPoint(
+        asPoint(schematicNetLabel.center) ?? circuitLabelPosition,
+      ),
+      altiumLabelPosition: circuitToAltiumSchematicPoint(circuitLabelPosition),
+      decorationIndex: netLabelIndex,
+      fontTable: altiumSchematicFontTable,
+      labelText,
+      symbolName: asString(schematicNetLabel.symbol_name),
+      textPresentation,
+    })
+    for (const recordFields of netLabelRecordFields) {
+      addSchematicRecord(recordFields, schematicRecordContext)
+    }
   }
 
   for (const schematicPort of schematicElements.filter(
