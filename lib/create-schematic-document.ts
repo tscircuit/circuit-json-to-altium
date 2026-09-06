@@ -247,6 +247,43 @@ function doesElementBelongToSchematicSheet({
     : !elementSchematicSheetId || includeAllSchematicElements
 }
 
+function isFilledSchematicSheetBackground({
+  element,
+  schematicComponents,
+}: {
+  element: CircuitElement
+  schematicComponents: CircuitElement[]
+}): boolean {
+  if (
+    element.type !== "schematic_rect" ||
+    element.is_filled !== true ||
+    !isSchematicSheetAnnotation(element)
+  ) {
+    return false
+  }
+  const center = asPoint(element.center)
+  const halfWidth = asNumber(element.width) / 2
+  const halfHeight = asNumber(element.height) / 2
+  if (!center || halfWidth <= 0 || halfHeight <= 0) return false
+
+  return schematicComponents.some((component) => {
+    const componentCenter = asPoint(component.center)
+    const componentSize = isCircuitElement(component.size)
+      ? component.size
+      : undefined
+    const componentHalfWidth = asNumber(componentSize?.width) / 2
+    const componentHalfHeight = asNumber(componentSize?.height) / 2
+    return (
+      componentCenter !== undefined &&
+      componentHalfWidth > 0 &&
+      componentHalfHeight > 0 &&
+      Math.abs(componentCenter.x - center.x) + componentHalfWidth <=
+        halfWidth &&
+      Math.abs(componentCenter.y - center.y) + componentHalfHeight <= halfHeight
+    )
+  })
+}
+
 function addSchematicRecord(
   recordFields: string[],
   ctx: SchematicRecordContext,
@@ -369,6 +406,26 @@ export function createSchematicDocument({
     ],
     schematicRecordContext,
   )
+
+  const schematicComponents = schematicElements.filter(
+    (element) => element.type === "schematic_component",
+  )
+  const filledSheetBackgrounds = new Set(
+    schematicElements.filter((element) =>
+      isFilledSchematicSheetBackground({ element, schematicComponents }),
+    ),
+  )
+  for (const background of filledSheetBackgrounds) {
+    const backgroundRecordFields =
+      createAltiumSchematicSheetAnnotationRecordFields({
+        annotation: background,
+        circuitToAltiumSchematicPoint,
+        fontTable: altiumSchematicFontTable,
+      })
+    if (backgroundRecordFields) {
+      addSchematicRecord(backgroundRecordFields, schematicRecordContext)
+    }
+  }
 
   let automaticallyPlacedPlanIndex = 0
   for (const plan of sheetSymbolPlans) {
@@ -922,7 +979,12 @@ export function createSchematicDocument({
   }
 
   for (const annotation of schematicElements) {
-    if (consumedSheetTexts.has(annotation)) continue
+    if (
+      consumedSheetTexts.has(annotation) ||
+      filledSheetBackgrounds.has(annotation)
+    ) {
+      continue
+    }
     const annotationRecordFields =
       createAltiumSchematicSheetAnnotationRecordFields({
         annotation,
