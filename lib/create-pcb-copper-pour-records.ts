@@ -26,6 +26,8 @@ type CreatePcbCopperPourRecordsOptions = {
   netEntries: PcbNetEntry[]
 }
 
+type AltiumPolygonRole = "outline" | "region"
+
 const MAXIMUM_ARC_STEP_RADIANS = Math.PI / 24
 
 export function createPcbCopperPourRecords({
@@ -46,6 +48,8 @@ export function createPcbCopperPourRecords({
     return [
       {
         copperPour: pcb_copper_pour.parse(element),
+        polygonId: getAltiumPolygonId(element.altium_polygon_id),
+        polygonRole: getAltiumPolygonRole(element.altium_polygon_role),
         polygonCutoutCount: Math.max(
           0,
           Math.trunc(asNumber(element.altium_polygon_cutout_count)),
@@ -55,9 +59,27 @@ export function createPcbCopperPourRecords({
     ]
   })
   const records: string[] = []
+  const usedPolygonIds = new Set(
+    copperPours.flatMap(({ polygonId }) =>
+      polygonId === undefined ? [] : [polygonId],
+    ),
+  )
+  let nextGeneratedPolygonId = 0
 
-  for (const [polygonIndex, entry] of copperPours.entries()) {
-    const { copperPour, pcbComponentId, polygonCutoutCount } = entry
+  const allocatePolygonId = (): number => {
+    while (usedPolygonIds.has(nextGeneratedPolygonId)) {
+      nextGeneratedPolygonId++
+    }
+    const polygonId = nextGeneratedPolygonId
+    usedPolygonIds.add(polygonId)
+    nextGeneratedPolygonId++
+    return polygonId
+  }
+
+  for (const entry of copperPours) {
+    const { copperPour, pcbComponentId, polygonCutoutCount, polygonRole } =
+      entry
+    const polygonId = entry.polygonId ?? allocatePolygonId()
     const circuitRings = getCopperPourRings(copperPour)
     const altiumRings = {
       outerRing: circuitRings.outerRing.map(circuitToAltiumPcbPoint),
@@ -105,33 +127,45 @@ export function createPcbCopperPourRecords({
       continue
     }
 
+    if (polygonRole !== "region") {
+      records.push(
+        createPolygonRecord({
+          layer,
+          net,
+          outerRing: altiumRings.outerRing,
+          polygonIndex: polygonId,
+        }),
+      )
+    }
+    if (polygonRole !== "outline") {
+      records.push(
+        createRegionRecord({
+          innerRings: inlineInnerRings,
+          layer,
+          net,
+          outerRing: altiumRings.outerRing,
+          polygonIndex: polygonId,
+        }),
+      )
+    }
     records.push(
-      createPolygonRecord({
-        layer,
-        net,
-        outerRing: altiumRings.outerRing,
-        polygonIndex,
-      }),
-      createRegionRecord({
-        innerRings: inlineInnerRings,
-        layer,
-        net,
-        outerRing: altiumRings.outerRing,
-        polygonIndex,
-      }),
       ...polygonCutoutRings.map((innerRing) =>
         createRegionRecord({
           innerRings: [],
           layer,
           net,
           outerRing: closeRing(innerRing),
-          polygonIndex,
+          polygonIndex: polygonId,
           regionKind: "POLYGON_CUTOUT",
         }),
       ),
     )
 
-    if (!copperPour.covered_with_solder_mask && isOuterCopperLayer(layer)) {
+    if (
+      polygonRole !== "outline" &&
+      !copperPour.covered_with_solder_mask &&
+      isOuterCopperLayer(layer)
+    ) {
       records.push(
         createRegionRecord({
           innerRings: altiumRings.innerRings,
@@ -143,6 +177,19 @@ export function createPcbCopperPourRecords({
   }
 
   return records
+}
+
+function getAltiumPolygonId(value: unknown): number | undefined {
+  return typeof value === "number" &&
+    Number.isInteger(value) &&
+    value >= 0 &&
+    value < 65_535
+    ? value
+    : undefined
+}
+
+function getAltiumPolygonRole(value: unknown): AltiumPolygonRole | undefined {
+  return value === "outline" || value === "region" ? value : undefined
 }
 
 function getCopperPourRings(copperPour: PcbCopperPour): CopperPourRings {
