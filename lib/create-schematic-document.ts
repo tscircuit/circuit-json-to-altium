@@ -7,6 +7,7 @@ import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-t
 import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
 import { createAltiumSchematicOffSheetPortRecordFields } from "./create-altium-schematic-off-sheet-port-record-fields"
+import { createAltiumSchematicPinEdgeSymbolRecordFields } from "./create-altium-schematic-pin-edge-symbol-record-fields"
 import { createAltiumSchematicSheetAnnotationRecordFields } from "./create-altium-schematic-sheet-annotation-record-fields"
 import {
   type AltiumSchematicChildSheet,
@@ -93,8 +94,6 @@ type SchematicSymbolPrimitiveMaps = {
 const ALTIUM_PIN_STANDARD_FLAGS = 0x20
 const ALTIUM_PIN_NAME_VISIBLE_FLAG = 0x08
 const ALTIUM_PIN_DESIGNATOR_VISIBLE_FLAG = 0x10
-const ALTIUM_PIN_CLOCK_SYMBOL = 3
-const ALTIUM_PIN_INVERSION_SYMBOL = 1
 const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
 const ALTIUM_SCHEMATIC_FALLBACK_BODY_COLOR = 0xc2_ffff
 const ALTIUM_PIN_ORIENTATION_BY_FACING_DIRECTION: Record<string, number> = {
@@ -729,7 +728,10 @@ export function createSchematicDocument({
       schematicPortsByComponentId.get(schematicComponentId) ?? []
     for (const [pinIndex, schematicPort] of schematicPorts.entries()) {
       const sourcePort = sourcePorts.get(asString(schematicPort.source_port_id))
-      const circuitPinTerminal = asPoint(schematicPort.center) ?? { x: 0, y: 0 }
+      const circuitPinTerminal = asPoint(schematicPort.center) ?? {
+        x: 0,
+        y: 0,
+      }
       const facingDirection = asString(schematicPort.facing_direction)
       const boxedSchematicPinGeometry = getBoxedSchematicPinGeometry({
         circuitPinTerminal,
@@ -833,17 +835,25 @@ export function createSchematicDocument({
           `LOCATION.X=${altiumPinLocation.x}`,
           `LOCATION.Y=${altiumPinLocation.y}`,
           `PINLENGTH=${altiumPinLength}`,
-          ...(schematicPort.has_input_arrow === true
-            ? [`SYMBOL_INNEREDGE=${ALTIUM_PIN_CLOCK_SYMBOL}`]
-            : []),
-          ...(schematicPort.is_drawn_with_inversion_circle === true
-            ? [`SYMBOL_OUTEREDGE=${ALTIUM_PIN_INVERSION_SYMBOL}`]
-            : []),
           `COLOR=${pinColor}`,
           "FONTID=2",
         ],
         schematicRecordContext,
       )
+      for (const recordFields of createAltiumSchematicPinEdgeSymbolRecordFields(
+        {
+          altiumComponentRecordIndex,
+          altiumPinBody: altiumPinLocation,
+          circuitToAltiumSchematicLength,
+          color: pinColor,
+          facingDirection,
+          hasInputArrow: schematicPort.has_input_arrow === true,
+          hasInversionCircle:
+            schematicPort.is_drawn_with_inversion_circle === true,
+        },
+      )) {
+        addSchematicRecord(recordFields, schematicRecordContext)
+      }
     }
     for (const componentGraphicText of componentGraphicTexts) {
       const recordFields = createAltiumSchematicTextRecordFields({
