@@ -13,7 +13,10 @@ export type OpenSourceSchematicRoundTrip = ReturnType<
   typeof getSchematicRoundTripMetrics
 > & {
   roundTripOffSheetPortFontSizePoints: number[]
+  roundTripEmbeddedImageCount: number
   roundTripSchematicFilenames: string[]
+  roundTripTemplateOwnedRecordCount: number
+  roundTripTemplateRecordCount: number
   roundTripSvg: string
   sourceOffSheetPortFontSizePoints: number[]
   sourceSheetSize: { height: number; width: number }
@@ -41,6 +44,11 @@ function getOffSheetPortFontSizePoints(document: AltiumSchDoc): number[] {
       ALTIUM_SCHEMATIC_PORT_FALLBACK_FONT_SIZE_POINTS
     )
   })
+}
+
+function getTemplateOwnedRecordCount(document: AltiumSchDoc): number {
+  const templateRecord = document.getRecordsByKind("39")[0]
+  return templateRecord ? document.getOwnedRecords(templateRecord).length : 0
 }
 
 function parseSchematicDocument(schematicBytes: Uint8Array): AltiumSchDoc {
@@ -114,9 +122,12 @@ export async function createOpenSourceSchematicRoundTrip({
     sourceProjectContext,
   )
   const sourceSheetSettings = getSourceSheetSettings(sourceSvg)
+  const templateContent = sourceDocument.getRecordsByKind("39")[0]
+    ? sourceBytes
+    : undefined
   const converter = new CircuitJsonToAltiumConverter(sourceCircuitJson, {
     projectName,
-    schematicSheets: [sourceSheetSettings],
+    schematicSheets: [{ ...sourceSheetSettings, templateContent }],
   })
   converter.runUntilFinished()
   const generatedOutput = converter.getOutput()
@@ -135,9 +146,14 @@ export async function createOpenSourceSchematicRoundTrip({
     }),
     roundTripOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(roundTripDocument),
+    roundTripEmbeddedImageCount: roundTripDocument.embeddedImages.length,
     roundTripSchematicFilenames: generatedOutput.schematics.map(
       (schematic) => schematic.filename,
     ),
+    roundTripTemplateOwnedRecordCount:
+      getTemplateOwnedRecordCount(roundTripDocument),
+    roundTripTemplateRecordCount:
+      roundTripDocument.getRecordsByKind("39").length,
     roundTripSvg: serializeAltiumSheetToSvg(roundTripDocument),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
