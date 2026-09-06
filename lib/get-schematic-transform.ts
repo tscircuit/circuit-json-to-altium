@@ -65,9 +65,14 @@ function appendSchematicSymbolPrimitivePoints({
   }
   if (element.type === "schematic_circle" || element.type === "schematic_arc") {
     const radius = asNumber(element.radius)
+    const secondaryRadius =
+      element.type === "schematic_arc"
+        ? asNumber(element.altium_secondary_radius)
+        : 0
+    const radiusY = secondaryRadius > 0 ? secondaryRadius : radius
     points.push(
-      { x: center.x - radius, y: center.y - radius },
-      { x: center.x + radius, y: center.y + radius },
+      { x: center.x - radius, y: center.y - radiusY },
+      { x: center.x + radius, y: center.y + radiusY },
     )
     return
   }
