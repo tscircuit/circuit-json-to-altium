@@ -29,12 +29,27 @@ export type CircuitJsonToAltiumOutput = {
   schematics: AltiumSchematicFile[]
 }
 
+export type AltiumSchematicSheetSettings = {
+  /** Position of Circuit JSON (0, 0) within the sheet, in Circuit JSON units. */
+  circuitOrigin?: Point
+  /** Sheet height in Circuit JSON units. */
+  height: number
+  /** Sheet width in Circuit JSON units. */
+  width: number
+}
+
+export type AltiumSchematicSheetOptions = AltiumSchematicSheetSettings & {
+  /** Omit for a standalone schematic or the root sheet. */
+  schematicSheetId?: SchematicSheetId
+}
+
 export type CircuitJsonToAltiumConverterContext = {
   circuitJson: NormalizedCircuitJson
   pcb?: AltiumPcbFile
   project?: AltiumProjectFile
   projectName: string
   safeProjectName: string
+  schematicSheets: AltiumSchematicSheetOptions[]
   schematics?: AltiumSchematicFile[]
   validated: boolean
 }
