@@ -159,8 +159,10 @@ function createArcRecordFields({
   const startAngleDegrees = asNumber(graphic.start_angle_degrees)
   const endAngleDegrees = asNumber(graphic.end_angle_degrees)
   const isClockwise = asString(graphic.direction) === "clockwise"
+  const secondaryRadius = asNumber(graphic.altium_secondary_radius)
+  const isEllipticalArc = secondaryRadius > 0
   return [
-    "RECORD=12",
+    `RECORD=${isEllipticalArc ? 11 : 12}`,
     ...getOwnedGraphicRecordFields({
       altiumComponentRecordIndex,
       circuitToAltiumSchematicLength,
@@ -169,6 +171,16 @@ function createArcRecordFields({
     `LOCATION.X=${altiumCenter.x}`,
     `LOCATION.Y=${altiumCenter.y}`,
     `RADIUS=${formatNumber(getAltiumRadius({ circuitToAltiumSchematicLength, radius }))}`,
+    ...(isEllipticalArc
+      ? [
+          `SECONDARYRADIUS=${formatNumber(
+            getAltiumRadius({
+              circuitToAltiumSchematicLength,
+              radius: secondaryRadius,
+            }),
+          )}`,
+        ]
+      : []),
     `STARTANGLE=${formatNumber(isClockwise ? endAngleDegrees : startAngleDegrees)}`,
     `ENDANGLE=${formatNumber(isClockwise ? startAngleDegrees : endAngleDegrees)}`,
     `COLOR=${getAltiumColor({ graphic, colorFieldName: "color", fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR })}`,
