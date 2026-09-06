@@ -7,6 +7,7 @@ import {
   formatMil,
   formatNumber,
   MILLIMETERS_TO_MILS,
+  sanitizeField,
 } from "./format"
 import type { CircuitElement, Point, PointTransform } from "./types"
 
@@ -36,6 +37,11 @@ export function createPcbTextRecord({
   const isMirrored =
     typeof explicitMirroring === "boolean" ? explicitMirroring : isBottomLayer
   const fontSizeMm = asPositiveNumber(circuitText.font_size, 1)
+  const fontFamily = sanitizeField(asString(circuitText.font_family)) || "Arial"
+  const fontWeight =
+    asString(circuitText.font_weight) === "bold" ? "TRUE" : "FALSE"
+  const fontStyle =
+    asString(circuitText.font_style) === "italic" ? "TRUE" : "FALSE"
 
   return [
     "|RECORD=Text",
@@ -50,7 +56,9 @@ export function createPcbTextRecord({
     `HEIGHT=${formatMil(fontSizeMm * MILLIMETERS_TO_MILS)}`,
     `WIDTH=${formatMil(Math.max(0.05, fontSizeMm * 0.1) * MILLIMETERS_TO_MILS)}`,
     "USETTFONTS=TRUE",
-    "FONTNAME=Arial",
+    `FONTNAME=${fontFamily}`,
+    `BOLD=${fontWeight}`,
+    `ITALIC=${fontStyle}`,
     `JUSTIFICATION=${getAltiumTextJustification(circuitText.anchor_alignment)}`,
     `WIDESTRING=${encodeAltiumWideString(asString(circuitText.text))}`,
   ].join("|")

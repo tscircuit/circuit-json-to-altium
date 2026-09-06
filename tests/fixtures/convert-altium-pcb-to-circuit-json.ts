@@ -838,6 +838,9 @@ export function convertAltiumPcbToCircuitJson(
       ),
       font_size: toCircuitLength(getMeasurementMils(text, "HEIGHT") ?? 30),
       font: "tscircuit2024",
+      font_family: text.getDecoded("FONTNAME") || "Arial",
+      font_weight: text.getBoolean("BOLD") === true ? "bold" : "normal",
+      font_style: text.getBoolean("ITALIC") === true ? "italic" : "normal",
       ccw_rotation: toCircuitRotation(text.getNumber("ROTATION") ?? 0),
       is_mirrored:
         text.getBoolean("MIRROR") ?? toCircuitLayer(layer) === "bottom",

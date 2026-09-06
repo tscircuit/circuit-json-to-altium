@@ -1,5 +1,8 @@
 import { getAltiumColorFromCss } from "./altium-color"
-import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-table"
+import {
+  type AltiumSchematicFontTable,
+  getAltiumSchematicFontId,
+} from "./create-altium-schematic-font-table"
 import { asNumber, asPoint, asString } from "./format"
 import type { CircuitElement, Point, PointTransform } from "./types"
 
@@ -60,15 +63,16 @@ export function getAltiumSchematicTextPresentation({
   schematicText,
 }: GetAltiumSchematicTextPresentationInput): AltiumSchematicTextPresentation {
   const circuitPosition = asPoint(schematicText?.position)
-  const fontSizeCircuitUnits = asNumber(schematicText?.font_size)
   return {
     color: getAltiumColorFromCss({
       cssColor: asString(schematicText?.color),
       fallbackAltiumColor,
     }),
-    fontId:
-      fontTable.fontIdBySizeCircuitUnits.get(fontSizeCircuitUnits) ??
+    fontId: getAltiumSchematicFontId({
       fallbackFontId,
+      fontTable,
+      schematicText,
+    }),
     justification: schematicText
       ? getAltiumSchematicTextJustification(asString(schematicText.anchor))
       : fallbackJustification,

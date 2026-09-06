@@ -1,6 +1,9 @@
 import { sanitizeAltiumFieldText } from "altiumts"
 import { getAltiumColorFromCss } from "./altium-color"
-import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-table"
+import {
+  type AltiumSchematicFontTable,
+  getAltiumSchematicFontId,
+} from "./create-altium-schematic-font-table"
 import { asNumber, asPoint, asString, formatNumber } from "./format"
 import {
   getAltiumSchematicTextJustification,
@@ -50,8 +53,11 @@ function createTextRecordFields({
   | undefined {
   const text = sanitizeAltiumFieldText(asString(annotation.text))
   const circuitPosition = asPoint(annotation.position)
-  const fontSizeCircuitUnits = asNumber(annotation.font_size)
-  const fontId = fontTable.fontIdBySizeCircuitUnits.get(fontSizeCircuitUnits)
+  const fontId = getAltiumSchematicFontId({
+    fallbackFontId: 2,
+    fontTable,
+    schematicText: annotation,
+  })
   if (!text || !circuitPosition || !fontId) return undefined
   const altiumPosition = circuitToAltiumSchematicPoint(circuitPosition)
 

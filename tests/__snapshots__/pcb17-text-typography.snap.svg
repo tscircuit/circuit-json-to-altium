@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1000" height="626" viewBox="0 0 842.5197 527.559" role="img" aria-label="Altium PCB" class="altium-pcb" data-renderer="altiumts">
+  <title>Altium PCB</title>
+  <rect width="100%" height="100%" fill="#071a16"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <polygon data-record="BoardOutline" points="27.5591,500 814.9607,500 814.9607,27.5591 27.5591,27.5591 27.5591,500" fill="#123d32" stroke="#6ee7b7" stroke-width="3"/>
+    <text data-record="Text" data-layer="TOPOVERLAY" x="0" y="0" fill="#f8fafc" font-family="Consolas, sans-serif" font-size="31.4961" font-weight="bold" font-style="italic" text-anchor="middle" dominant-baseline="central" transform="translate(421.2599 263.7795) rotate(0) scale(1 1)">Imported legend</text>
+  </g>
+</svg>

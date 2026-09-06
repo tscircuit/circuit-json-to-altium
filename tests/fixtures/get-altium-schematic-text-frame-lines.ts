@@ -18,11 +18,16 @@ export type SchematicTextAnchor =
 export type AltiumSchematicFont = {
   family: string
   sizePoints: number
+  style: "italic" | "normal"
+  weight: "bold" | "normal"
 }
 
 export type AltiumSchematicTextFrameLine = {
   anchor: SchematicTextAnchor
+  fontFamily: string
   fontSizePoints: number
+  fontStyle: "italic" | "normal"
+  fontWeight: "bold" | "normal"
   position: AltiumPoint
   text: string
 }
@@ -44,6 +49,10 @@ export function getAltiumSchematicFont({
       sheetRecord?.getNumber(`SIZE${fontId}`) ?? fallbackSizePoints,
       1,
     ),
+    style:
+      sheetRecord?.getBoolean(`ITALIC${fontId}`) === true ? "italic" : "normal",
+    weight:
+      sheetRecord?.getBoolean(`BOLD${fontId}`) === true ? "bold" : "normal",
   }
 }
 
@@ -183,7 +192,10 @@ export function getAltiumSchematicTextFrameLines({
       ? [
           {
             anchor,
+            fontFamily: font.family,
             fontSizePoints: font.sizePoints,
+            fontStyle: font.style,
+            fontWeight: font.weight,
             position: {
               x: textX,
               y: maxY - textMarginAltiumUnits - lineIndex * font.sizePoints,
