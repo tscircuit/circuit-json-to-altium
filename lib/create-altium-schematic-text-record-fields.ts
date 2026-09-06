@@ -1,4 +1,7 @@
-import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-table"
+import {
+  ALTIUM_SCHEMATIC_COMPONENT_FONT_ID,
+  type AltiumSchematicFontTable,
+} from "./create-altium-schematic-font-table"
 import { asString, sanitizeField } from "./format"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import type { CircuitElement, PointTransform } from "./types"
@@ -24,7 +27,7 @@ export function createAltiumSchematicTextRecordFields({
     circuitToAltiumSchematicPoint,
     fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR,
     fallbackAltiumPosition: { x: 0, y: 0 },
-    fallbackFontId: 2,
+    fallbackFontId: ALTIUM_SCHEMATIC_COMPONENT_FONT_ID,
     fallbackJustification: 0,
     fontTable,
     schematicText,

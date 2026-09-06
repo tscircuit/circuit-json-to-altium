@@ -1,6 +1,9 @@
 import { getAltiumColorFromCss } from "./altium-color"
 import { ALTIUM_SCHEMATIC_GRAPHIC_COLOR } from "./altium-schematic-colors"
-import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-table"
+import {
+  ALTIUM_SCHEMATIC_COMPONENT_FONT_ID,
+  type AltiumSchematicFontTable,
+} from "./create-altium-schematic-font-table"
 import { asNumber, asString } from "./format"
 import {
   getAltiumSchematicTextJustification,
@@ -25,7 +28,6 @@ type SchematicNetLabelRecordFieldsInput = {
   textPresentation: CircuitElement | undefined
 }
 
-const ALTIUM_SCHEMATIC_LABEL_FONT_ID = 2
 const ALTIUM_SCHEMATIC_POWER_PORT_COLOR_INDEX = 132
 
 const ALTIUM_JUSTIFICATION_BY_NET_LABEL_ANCHOR_SIDE: Record<string, number> = {
@@ -97,7 +99,7 @@ export function createAltiumSchematicNetLabelRecordFields({
   const fontId =
     fontTable.fontIdBySizeCircuitUnits.get(
       asNumber(textPresentation?.font_size),
-    ) ?? ALTIUM_SCHEMATIC_LABEL_FONT_ID
+    ) ?? ALTIUM_SCHEMATIC_COMPONENT_FONT_ID
   const color = getAltiumColorFromCss({
     cssColor: asString(textPresentation?.color),
     fallbackAltiumColor: powerPortStyle

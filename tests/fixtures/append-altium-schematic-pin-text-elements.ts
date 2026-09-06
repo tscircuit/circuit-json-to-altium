@@ -2,7 +2,7 @@ import type { AltiumSchDoc, AltiumSchPinRecord } from "altiumts"
 import type { CircuitElement, SchematicComponentId } from "../../lib/types"
 import {
   getRecordLocation,
-  toCircuitLength,
+  toCircuitFontSize,
   toCircuitPoint,
 } from "./altium-schematic-coordinate-utils"
 import { getAltiumSchematicFont } from "./get-altium-schematic-text-frame-lines"
@@ -120,7 +120,7 @@ export function appendAltiumSchematicPinTextElements({
       anchor: designatorAnchor,
       componentIndex,
       elements,
-      fontSizeCircuitUnits: toCircuitLength(pinFont.sizePoints),
+      fontSizeCircuitUnits: toCircuitFontSize(pinFont.sizePoints),
       pinColor,
       pinIndex,
       position: toCircuitPoint({
@@ -138,7 +138,7 @@ export function appendAltiumSchematicPinTextElements({
       anchor: nameAnchor,
       componentIndex,
       elements,
-      fontSizeCircuitUnits: toCircuitLength(pinFont.sizePoints),
+      fontSizeCircuitUnits: toCircuitFontSize(pinFont.sizePoints),
       pinColor,
       pinIndex,
       position: toCircuitPoint({
