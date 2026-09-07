@@ -290,6 +290,50 @@ function toCircuitBrepRing(points: AltiumPoint[]): CircuitPoint[] {
   return ring
 }
 
+function areAltiumPointsEquivalent(
+  left: AltiumPoint,
+  right: AltiumPoint,
+): boolean {
+  return (
+    Math.abs(left.x - right.x) <= 0.001 && Math.abs(left.y - right.y) <= 0.001
+  )
+}
+
+function removeClosingAltiumPoint(points: AltiumPoint[]): AltiumPoint[] {
+  const ring = [...points]
+  const firstPoint = ring[0]
+  const lastPoint = ring.at(-1)
+  if (
+    firstPoint &&
+    lastPoint &&
+    areAltiumPointsEquivalent(firstPoint, lastPoint)
+  ) {
+    ring.pop()
+  }
+  return ring
+}
+
+function areAltiumContoursEquivalent(
+  leftPoints: AltiumPoint[],
+  rightPoints: AltiumPoint[],
+): boolean {
+  const left = removeClosingAltiumPoint(leftPoints)
+  const right = removeClosingAltiumPoint(rightPoints)
+  if (left.length === 0 || left.length !== right.length) return false
+
+  return right.some((rightStart, rightStartIndex) => {
+    if (!areAltiumPointsEquivalent(left[0]!, rightStart)) return false
+    return [1, -1].some((direction) =>
+      left.every((leftPoint, pointIndex) => {
+        const rightIndex =
+          (rightStartIndex + direction * pointIndex + right.length) %
+          right.length
+        return areAltiumPointsEquivalent(leftPoint, right[rightIndex]!)
+      }),
+    )
+  })
+}
+
 function getPolygonCutoutRings({
   copperBounds,
   copperRecord,
@@ -350,21 +394,40 @@ function appendCopperPourElements({
       record.getBoolean("KEEPOUT") !== true &&
       toCircuitCopperLayer(record.getDecoded("LAYER")) !== undefined,
   )
-  const pouredPolygonIndexes = new Set(
-    copperRegions.flatMap((region) => {
-      const polygonIndex = region.getNumber("POLYGON")
-      return polygonIndex === undefined || polygonIndex === 65_535
-        ? []
-        : [polygonIndex]
+  const polygonRegionsById = new Map<number, AltiumRecord[]>()
+  for (const region of copperRegions) {
+    const polygonId = region.getNumber("POLYGON")
+    if (polygonId === undefined || polygonId === 65_535) continue
+    polygonRegionsById.set(polygonId, [
+      ...(polygonRegionsById.get(polygonId) ?? []),
+      region,
+    ])
+  }
+  const preservedPolygonIds = new Set(
+    document.polygons.flatMap((polygon, polygonIndex) => {
+      const polygonId = polygon.getNumber("ID") ?? polygonIndex
+      const polygonPoints = getPcbContour(polygon).points
+      const hasMatchingRegion = (polygonRegionsById.get(polygonId) ?? []).some(
+        (region) =>
+          areAltiumContoursEquivalent(
+            polygonPoints,
+            getPcbRegionGeometry(region).outline.points,
+          ),
+      )
+      return hasMatchingRegion ? [] : [polygonId]
     }),
   )
-
   for (const [regionIndex, region] of copperRegions.entries()) {
     const layer = toCircuitCopperLayer(region.getDecoded("LAYER"))
     const geometry = getPcbRegionGeometry(region)
     if (!layer || geometry.outline.points.length < 3) continue
     const sourceNetId = getSourceNetId(region, sourceNetLookupContext)
     const pcbComponentId = getOwnedComponentId(document, componentIds, region)
+    const polygonId = region.getNumber("POLYGON")
+    const belongsToPolygon =
+      polygonId !== undefined &&
+      preservedPolygonIds.has(polygonId) &&
+      !pcbComponentId
     const polygonCutoutRings = getPolygonCutoutRings({
       copperBounds: geometry.outline.bounds,
       copperRecord: region,
@@ -375,6 +438,9 @@ function appendCopperPourElements({
       pcb_copper_pour_id: `pcb_copper_pour_region_${regionIndex}`,
       ...(sourceNetId ? { source_net_id: sourceNetId } : {}),
       ...(pcbComponentId ? { pcb_component_id: pcbComponentId } : {}),
+      ...(belongsToPolygon
+        ? { altium_polygon_id: polygonId, altium_polygon_role: "region" }
+        : {}),
       ...(polygonCutoutRings.length > 0
         ? { altium_polygon_cutout_count: polygonCutoutRings.length }
         : {}),
@@ -400,7 +466,7 @@ function appendCopperPourElements({
 
   for (const [polygonIndex, polygon] of document.polygons.entries()) {
     const polygonId = polygon.getNumber("ID") ?? polygonIndex
-    if (pouredPolygonIndexes.has(polygonId)) continue
+    if (!preservedPolygonIds.has(polygonId)) continue
     const layer = toCircuitCopperLayer(polygon.layer)
     const polygonContour = getPcbContour(polygon)
     const points = toCircuitBrepRing(polygonContour.points)
@@ -414,6 +480,8 @@ function appendCopperPourElements({
     elements.push({
       type: "pcb_copper_pour",
       pcb_copper_pour_id: `pcb_copper_pour_polygon_${polygonIndex}`,
+      altium_polygon_id: polygonId,
+      altium_polygon_role: "outline",
       ...(sourceNetId ? { source_net_id: sourceNetId } : {}),
       ...(polygonCutoutRings.length > 0
         ? { altium_polygon_cutout_count: polygonCutoutRings.length }

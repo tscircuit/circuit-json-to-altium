@@ -5,6 +5,7 @@ import {
   type CircuitElement,
   expectValidSchematic,
   extractArchive,
+  sourceComponent,
 } from "./fixtures"
 
 const elements: CircuitElement[] = [
@@ -104,6 +105,66 @@ const elements: CircuitElement[] = [
   },
 ]
 
+async function createFilledRectangleOrderingFixture({
+  center,
+  height,
+  text,
+  width,
+}: {
+  center: { x: number; y: number }
+  height: number
+  text?: string
+  width: number
+}) {
+  const circuitJson: CircuitElement[] = [
+    board(),
+    sourceComponent("source_component", "U1"),
+    {
+      type: "schematic_component",
+      schematic_component_id: "schematic_component",
+      source_component_id: "source_component",
+      center: { x: 0, y: 0 },
+      size: { width: 2, height: 1 },
+    },
+    {
+      type: "schematic_rect",
+      schematic_rect_id: "filled_rectangle",
+      center,
+      width,
+      height,
+      rotation: 0,
+      stroke_width: 0.05,
+      color: "#274e13",
+      is_filled: true,
+      fill_color: "#d9ead3",
+      is_dashed: false,
+    },
+  ]
+  if (text) {
+    circuitJson.push({
+      type: "schematic_text",
+      schematic_text_id: "rectangle_label",
+      text,
+      font_size: 0.3,
+      position: center,
+      rotation: 0,
+      anchor: "center",
+      color: "#000000",
+    })
+  }
+
+  const { schematics } = await extractArchive(circuitJson)
+  const schematic = schematics[0] as AltiumSchDoc
+  const rectangle = schematic
+    .getRecordsByKind("14")
+    .find((record) => schematic.getParent(record) === undefined)
+  const component = schematic.components[0]
+  if (!rectangle || !component) {
+    throw new Error("Missing filled rectangle or schematic component record")
+  }
+  return { component, rectangle, schematic }
+}
+
 test("writes schematic sheet annotations as native records", async () => {
   const { schematics } = await extractArchive(elements)
   const schematic = schematics[0] as AltiumSchDoc
@@ -187,5 +248,48 @@ test("writes schematic sheet annotations as native records", async () => {
     polylineColor: 0x99_88_77,
     polylinePointCount: 3,
   })
+  expectValidSchematic(schematic)
+})
+
+test("writes filled sheet rectangles behind schematic components", async () => {
+  const { component, rectangle, schematic } =
+    await createFilledRectangleOrderingFixture({
+      center: { x: 0, y: 0 },
+      width: 6,
+      height: 4,
+    })
+
+  expect(schematic.records.indexOf(rectangle)).toBeLessThan(
+    schematic.records.indexOf(component),
+  )
+  expectValidSchematic(schematic)
+})
+
+test("keeps a filled text-frame annotation in front when it only contains the component center", async () => {
+  const { component, rectangle, schematic } =
+    await createFilledRectangleOrderingFixture({
+      center: { x: 0, y: 0 },
+      width: 1,
+      height: 0.5,
+      text: "ANNOTATION",
+    })
+
+  expect(schematic.records.indexOf(rectangle)).toBeGreaterThan(
+    schematic.records.indexOf(component),
+  )
+  expectValidSchematic(schematic)
+})
+
+test("keeps a partially overlapping filled rectangle in front of the component", async () => {
+  const { component, rectangle, schematic } =
+    await createFilledRectangleOrderingFixture({
+      center: { x: 1.5, y: 0 },
+      width: 2,
+      height: 2,
+    })
+
+  expect(schematic.records.indexOf(rectangle)).toBeGreaterThan(
+    schematic.records.indexOf(component),
+  )
   expectValidSchematic(schematic)
 })

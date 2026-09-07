@@ -14,6 +14,7 @@ export type AltiumSchematicFontTable = {
     SchematicFontSizeCircuitUnits,
     AltiumSchematicFontId
   >
+  fontSizePointsById: Map<AltiumSchematicFontId, number>
   sheetRecordFields: string[]
 }
 
@@ -24,6 +25,8 @@ type CreateAltiumSchematicFontTableInput = {
 const ALTIUM_UNITS_PER_CIRCUIT_UNIT = 20
 const ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS = 4
 const ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME = "Arial"
+// Circuit JSON renders ordinary net labels at 0.18 circuit units.
+export const SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS = 0.18
 
 export function createAltiumSchematicFontTable({
   schematicElements,
@@ -32,6 +35,14 @@ export function createAltiumSchematicFontTable({
     SchematicFontSizeCircuitUnits,
     AltiumSchematicFontId
   >()
+  const fontSizePointsById = new Map([
+    [1, ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS],
+    [2, ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS],
+    [
+      ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID,
+      ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS,
+    ],
+  ])
   const offSheetPortFontSizeCircuitUnits =
     ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS /
     ALTIUM_UNITS_PER_CIRCUIT_UNIT
@@ -39,15 +50,19 @@ export function createAltiumSchematicFontTable({
     offSheetPortFontSizeCircuitUnits,
     ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID,
   )
-
   const schematicFontSizesCircuitUnits = [
-    ...new Set(
-      schematicElements.flatMap((element) => {
+    ...new Set([
+      ...(schematicElements.some(
+        (element) => element.type === "schematic_net_label",
+      )
+        ? [SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS]
+        : []),
+      ...schematicElements.flatMap((element) => {
         const fontSizeCircuitUnits =
           element.type === "schematic_text" ? asNumber(element.font_size) : 0
         return fontSizeCircuitUnits > 0 ? [fontSizeCircuitUnits] : []
       }),
-    ),
+    ]),
   ].sort((left, right) => left - right)
 
   const schematicFontRecordFields: string[] = []
@@ -56,6 +71,10 @@ export function createAltiumSchematicFontTable({
     if (fontIdBySizeCircuitUnits.has(fontSizeCircuitUnits)) continue
     const fontId = nextFontId++
     fontIdBySizeCircuitUnits.set(fontSizeCircuitUnits, fontId)
+    fontSizePointsById.set(
+      fontId,
+      fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+    )
     schematicFontRecordFields.push(
       `SIZE${fontId}=${formatNumber(fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT)}`,
       `FONTNAME${fontId}=${ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME}`,
@@ -64,6 +83,7 @@ export function createAltiumSchematicFontTable({
 
   return {
     fontIdBySizeCircuitUnits,
+    fontSizePointsById,
     sheetRecordFields: [
       `FONTIDCOUNT=${nextFontId - 1}`,
       `SIZE1=${ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS}`,

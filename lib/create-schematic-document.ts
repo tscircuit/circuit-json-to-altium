@@ -35,6 +35,7 @@ import { getSchematicTransform } from "./get-schematic-transform"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
 import { isSchematicSymbolPrimitive } from "./is-schematic-symbol-primitive"
 import type {
+  AltiumSchematicSheetSettings,
   CircuitElement,
   Point,
   PointTransform,
@@ -50,6 +51,7 @@ type CreateSchematicDocumentParams = {
   circuitJson: CircuitElement[]
   includeAllSchematicElements: boolean
   schematicSheetId: SchematicSheetId | undefined
+  sheetSettings?: AltiumSchematicSheetSettings
 }
 
 type SchematicSheetMembershipParams = {
@@ -246,6 +248,43 @@ function doesElementBelongToSchematicSheet({
     : !elementSchematicSheetId || includeAllSchematicElements
 }
 
+function isFilledSchematicSheetBackground({
+  element,
+  schematicComponents,
+}: {
+  element: CircuitElement
+  schematicComponents: CircuitElement[]
+}): boolean {
+  if (
+    element.type !== "schematic_rect" ||
+    element.is_filled !== true ||
+    !isSchematicSheetAnnotation(element)
+  ) {
+    return false
+  }
+  const center = asPoint(element.center)
+  const halfWidth = asNumber(element.width) / 2
+  const halfHeight = asNumber(element.height) / 2
+  if (!center || halfWidth <= 0 || halfHeight <= 0) return false
+
+  return schematicComponents.some((component) => {
+    const componentCenter = asPoint(component.center)
+    const componentSize = isCircuitElement(component.size)
+      ? component.size
+      : undefined
+    const componentHalfWidth = asNumber(componentSize?.width) / 2
+    const componentHalfHeight = asNumber(componentSize?.height) / 2
+    return (
+      componentCenter !== undefined &&
+      componentHalfWidth > 0 &&
+      componentHalfHeight > 0 &&
+      Math.abs(componentCenter.x - center.x) + componentHalfWidth <=
+        halfWidth &&
+      Math.abs(componentCenter.y - center.y) + componentHalfHeight <= halfHeight
+    )
+  })
+}
+
 function addSchematicRecord(
   recordFields: string[],
   ctx: SchematicRecordContext,
@@ -261,6 +300,7 @@ export function createSchematicDocument({
   circuitJson,
   includeAllSchematicElements,
   schematicSheetId,
+  sheetSettings,
 }: CreateSchematicDocumentParams): string {
   const sourcePorts = new Map<SourcePortId, CircuitElement>(
     byType(circuitJson, "source_port").map((sourcePort) => [
@@ -291,7 +331,7 @@ export function createSchematicDocument({
     circuitToAltiumSchematicPrecisePoint,
     width: contentWidth,
     height: contentHeight,
-  } = getSchematicTransform(schematicElements)
+  } = getSchematicTransform(schematicElements, sheetSettings)
   const sheetSymbolPlans = createAltiumSchematicSheetSymbolPlans({
     childSheets,
     circuitJson,
@@ -368,6 +408,26 @@ export function createSchematicDocument({
     ],
     schematicRecordContext,
   )
+
+  const schematicComponents = schematicElements.filter(
+    (element) => element.type === "schematic_component",
+  )
+  const filledSheetBackgrounds = new Set(
+    schematicElements.filter((element) =>
+      isFilledSchematicSheetBackground({ element, schematicComponents }),
+    ),
+  )
+  for (const background of filledSheetBackgrounds) {
+    const backgroundRecordFields =
+      createAltiumSchematicSheetAnnotationRecordFields({
+        annotation: background,
+        circuitToAltiumSchematicPoint,
+        fontTable: altiumSchematicFontTable,
+      })
+    if (backgroundRecordFields) {
+      addSchematicRecord(backgroundRecordFields, schematicRecordContext)
+    }
+  }
 
   let automaticallyPlacedPlanIndex = 0
   for (const plan of sheetSymbolPlans) {
@@ -887,9 +947,9 @@ export function createSchematicDocument({
     }
   }
 
-  for (const schematicNetLabel of schematicElements.filter(
-    (element) => element.type === "schematic_net_label",
-  )) {
+  for (const [netLabelIndex, schematicNetLabel] of schematicElements
+    .filter((element) => element.type === "schematic_net_label")
+    .entries()) {
     const labelText = sanitizeField(schematicNetLabel.text)
     if (!labelText) continue
     const circuitLabelPosition = asPoint(schematicNetLabel.anchor_position) ??
@@ -901,18 +961,21 @@ export function createSchematicDocument({
       targetPosition: circuitLabelPosition,
     })
     if (textPresentation) consumedSheetTexts.add(textPresentation)
-    addSchematicRecord(
-      createAltiumSchematicNetLabelRecordFields({
-        anchorSide: asString(schematicNetLabel.anchor_side),
-        altiumLabelPosition:
-          circuitToAltiumSchematicPoint(circuitLabelPosition),
-        fontTable: altiumSchematicFontTable,
-        labelText,
-        symbolName: asString(schematicNetLabel.symbol_name),
-        textPresentation,
-      }),
-      schematicRecordContext,
-    )
+    const netLabelRecordFields = createAltiumSchematicNetLabelRecordFields({
+      anchorSide: asString(schematicNetLabel.anchor_side),
+      altiumLabelCenter: circuitToAltiumSchematicPoint(
+        asPoint(schematicNetLabel.center) ?? circuitLabelPosition,
+      ),
+      altiumLabelPosition: circuitToAltiumSchematicPoint(circuitLabelPosition),
+      decorationIndex: netLabelIndex,
+      fontTable: altiumSchematicFontTable,
+      labelText,
+      symbolName: asString(schematicNetLabel.symbol_name),
+      textPresentation,
+    })
+    for (const recordFields of netLabelRecordFields) {
+      addSchematicRecord(recordFields, schematicRecordContext)
+    }
   }
 
   for (const schematicPort of schematicElements.filter(
@@ -932,7 +995,12 @@ export function createSchematicDocument({
   }
 
   for (const annotation of schematicElements) {
-    if (consumedSheetTexts.has(annotation)) continue
+    if (
+      consumedSheetTexts.has(annotation) ||
+      filledSheetBackgrounds.has(annotation)
+    ) {
+      continue
+    }
     const annotationRecordFields =
       createAltiumSchematicSheetAnnotationRecordFields({
         annotation,

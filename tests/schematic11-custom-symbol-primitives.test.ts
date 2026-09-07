@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import {
   AltiumSchArcRecord,
   AltiumSchEllipseRecord,
+  AltiumSchEllipticalArcRecord,
   AltiumSchLineRecord,
   AltiumSchPolygonRecord,
   AltiumSchRectangleRecord,
@@ -108,6 +109,20 @@ const elements: CircuitElement[] = [
     is_dashed: false,
   },
   {
+    type: "schematic_arc",
+    schematic_arc_id: "schematic_elliptical_arc_custom",
+    schematic_symbol_id: schematicSymbolId,
+    center: { x: 10, y: 8 },
+    radius: 2,
+    altium_secondary_radius: 1,
+    start_angle_degrees: 210,
+    end_angle_degrees: 330,
+    direction: "counterclockwise",
+    stroke_width: 0.1,
+    color: "#556677",
+    is_dashed: false,
+  },
+  {
     type: "schematic_rect",
     schematic_rect_id: "schematic_rect_custom",
     schematic_symbol_id: schematicSymbolId,
@@ -146,6 +161,10 @@ test("writes custom symbol primitives as owned native Altium records", async () 
     (record): record is AltiumSchArcRecord =>
       record instanceof AltiumSchArcRecord,
   )
+  const ellipticalArc = ownedRecords.find(
+    (record): record is AltiumSchEllipticalArcRecord =>
+      record instanceof AltiumSchEllipticalArcRecord,
+  )
   const rectangle = ownedRecords.find(
     (record): record is AltiumSchRectangleRecord =>
       record instanceof AltiumSchRectangleRecord,
@@ -165,6 +184,9 @@ test("writes custom symbol primitives as owned native Altium records", async () 
   expect(arc).toMatchObject({ recordKind: "12" })
   expect(arc?.getNumber("STARTANGLE")).toBe(30)
   expect(arc?.getNumber("ENDANGLE")).toBe(120)
+  expect(ellipticalArc).toMatchObject({ recordKind: "11" })
+  expect(ellipticalArc?.getNumber("RADIUS")).toBe(40)
+  expect(ellipticalArc?.getNumber("SECONDARYRADIUS")).toBe(20)
   expect(rectangle).toMatchObject({ recordKind: "14" })
   expect(rectangle?.getNumber("COLOR")).toBe(0x66_55_44)
   expect(rectangle?.getNumber("AREACOLOR")).toBe(0x66_55_44)

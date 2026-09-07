@@ -3,7 +3,21 @@ import { ConverterStage } from "../converter-stage"
 import type { AltiumSchematicChildSheet } from "../create-altium-schematic-sheet-symbol-records"
 import { createSchematicDocument } from "../create-schematic-document"
 import { asNumber, asString, byType } from "../format"
-import type { AltiumSchematicFile, NormalizedCircuitJson } from "../types"
+import type {
+  AltiumSchematicFile,
+  AltiumSchematicSheetOptions,
+  NormalizedCircuitJson,
+  SchematicSheetId,
+} from "../types"
+
+function getSchematicSheetSettings(
+  schematicSheets: AltiumSchematicSheetOptions[],
+  schematicSheetId: SchematicSheetId | undefined,
+): AltiumSchematicSheetOptions | undefined {
+  return schematicSheets.find(
+    (sheet) => sheet.schematicSheetId === schematicSheetId,
+  )
+}
 
 function getSchematicFilename({
   fallbackFilename,
@@ -97,6 +111,10 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         circuitJson: this.input,
         schematicSheetId: definition.schematicSheetId,
         includeAllSchematicElements: definition.includeAllSchematicElements,
+        sheetSettings: getSchematicSheetSettings(
+          this.context.schematicSheets,
+          definition.schematicSheetId,
+        ),
       })
       return {
         asciiContent,

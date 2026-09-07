@@ -3,6 +3,7 @@ import {
   AltiumBinaryPcbDoc,
   AltiumPcbDoc,
   type AltiumPcbDocument,
+  type AltiumPcbSvgOptions,
   parseAltiumFile,
   serializeAltiumPcbToSvg,
 } from "altiumts"
@@ -20,6 +21,8 @@ export type OpenSourceBoardRoundTrip = ReturnType<
 type OpenSourceBoardRoundTripOptions = {
   boardName: string
   filename: string
+  roundTripSvgOptions?: AltiumPcbSvgOptions
+  sourceSvgOptions?: AltiumPcbSvgOptions
 }
 
 function parsePcbDoc(pcbDocBytes: Uint8Array): AltiumPcbDocument {
@@ -36,6 +39,8 @@ function parsePcbDoc(pcbDocBytes: Uint8Array): AltiumPcbDocument {
 export async function createOpenSourceBoardRoundTrip({
   boardName,
   filename,
+  roundTripSvgOptions,
+  sourceSvgOptions,
 }: OpenSourceBoardRoundTripOptions): Promise<OpenSourceBoardRoundTrip> {
   const sourcePath = resolve(
     import.meta.dir,
@@ -62,7 +67,10 @@ export async function createOpenSourceBoardRoundTrip({
 
   return {
     ...metrics,
-    roundTripSvg: serializeAltiumPcbToSvg(roundTripDocument),
-    sourceSvg: serializeAltiumPcbToSvg(sourceDocument),
+    roundTripSvg: serializeAltiumPcbToSvg(
+      roundTripDocument,
+      roundTripSvgOptions,
+    ),
+    sourceSvg: serializeAltiumPcbToSvg(sourceDocument, sourceSvgOptions),
   }
 }

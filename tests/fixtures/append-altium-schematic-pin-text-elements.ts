@@ -17,7 +17,11 @@ type AppendAltiumSchematicPinTextElementsInput = {
   schematicComponentId: SchematicComponentId
 }
 
-type SchematicTextAnchor = "bottom_left" | "bottom_right"
+type SchematicTextAnchor =
+  | "bottom_left"
+  | "bottom_right"
+  | "center_left"
+  | "center_right"
 
 const ALTIUM_PIN_NAME_VISIBLE_FLAG = 0x08
 const ALTIUM_PIN_NUMBER_VISIBLE_FLAG = 0x10
@@ -111,9 +115,11 @@ export function appendAltiumSchematicPinTextElements({
   const designatorAnchor: SchematicTextAnchor = directionMatchesText
     ? "bottom_left"
     : "bottom_right"
+  // Native Altium pin names are centered on the pin row, while designators
+  // use the bottom-aligned placement above the row.
   const nameAnchor: SchematicTextAnchor = directionMatchesText
-    ? "bottom_right"
-    : "bottom_left"
+    ? "center_right"
+    : "center_left"
 
   if (isNumberVisible) {
     appendPinText({

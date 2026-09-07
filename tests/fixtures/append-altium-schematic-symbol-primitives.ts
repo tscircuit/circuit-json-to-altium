@@ -160,7 +160,7 @@ function createArcElement({
     key: "SECONDARYRADIUS",
     record,
   })
-  if (radius !== secondaryRadius) return undefined
+  if (radius <= 0) return undefined
   return {
     type: "schematic_arc",
     schematic_arc_id: `schematic_arc_component_${graphicIndex}`,
@@ -171,6 +171,9 @@ function createArcElement({
     start_angle_degrees: record.getNumber("STARTANGLE") ?? 0,
     end_angle_degrees: record.getNumber("ENDANGLE") ?? 360,
     direction: "counterclockwise",
+    ...(record.recordKind === "11"
+      ? { altium_secondary_radius: toCircuitLength(secondaryRadius) }
+      : {}),
     ...getGraphicStroke(record),
     color: getGraphicColor(record),
   }
