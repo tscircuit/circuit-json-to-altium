@@ -16,6 +16,7 @@ export type OpenSourceSchematicRoundTrip = ReturnType<
   roundTripSchematicFilenames: string[]
   roundTripSvg: string
   sourceOffSheetPortFontSizePoints: number[]
+  sourceSheetSize: { height: number; width: number }
   sourceSvg: string
 }
 
@@ -60,11 +61,16 @@ function parseProjectDocument(projectBytes: Uint8Array): AltiumPrjPcb {
   return document
 }
 
-function getSourceSheetSettings(document: AltiumSchDoc) {
-  const sheetRecord = document.getRecordsByKind("31")[0]
-  const width = sheetRecord?.getNumber("CUSTOMX")
-  const height = sheetRecord?.getNumber("CUSTOMY")
-  if (!width || !height) return undefined
+function getSourceSheetSettings(sourceSvg: string) {
+  const paperClip = sourceSvg.match(
+    /<clipPath id="altium-sheet-paper">([\s\S]*?)<\/clipPath>/u,
+  )?.[1]
+  const paperRect = paperClip?.match(/<rect\b[^>]*>/u)?.[0]
+  const width = Number(paperRect?.match(/\bwidth="([\d.]+)"/u)?.[1])
+  const height = Number(paperRect?.match(/\bheight="([\d.]+)"/u)?.[1])
+  if (!(width > 0) || !(height > 0)) {
+    throw new Error("Could not read the rendered Altium source sheet size")
+  }
   return {
     circuitOrigin: { x: 0, y: 0 },
     height: height / 20,
@@ -103,11 +109,14 @@ export async function createOpenSourceSchematicRoundTrip({
     sourceDocument,
     sourceProjectContext,
   )
+  const sourceSvg = serializeAltiumSheetToSvg(
+    sourceDocument,
+    sourceProjectContext,
+  )
+  const sourceSheetSettings = getSourceSheetSettings(sourceSvg)
   const converter = new CircuitJsonToAltiumConverter(sourceCircuitJson, {
     projectName,
-    schematicSheets: [getSourceSheetSettings(sourceDocument)].filter(
-      (settings) => settings !== undefined,
-    ),
+    schematicSheets: [sourceSheetSettings],
   })
   converter.runUntilFinished()
   const generatedOutput = converter.getOutput()
@@ -132,6 +141,10 @@ export async function createOpenSourceSchematicRoundTrip({
     roundTripSvg: serializeAltiumSheetToSvg(roundTripDocument),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
-    sourceSvg: serializeAltiumSheetToSvg(sourceDocument, sourceProjectContext),
+    sourceSheetSize: {
+      height: sourceSheetSettings.height,
+      width: sourceSheetSettings.width,
+    },
+    sourceSvg,
   }
 }

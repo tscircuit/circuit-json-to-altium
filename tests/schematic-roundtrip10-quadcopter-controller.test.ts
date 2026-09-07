@@ -10,6 +10,7 @@ test("round-trips the open-source quadcopter controller Altium schematic", async
   })
 
   expectOpenSourceSchematicRoundTrip(result)
+  expect(result.sourceSheetSize).toEqual({ height: 37.5, width: 47.5 })
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
   ).toMatchSvgSnapshot(import.meta.path)

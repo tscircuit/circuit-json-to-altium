@@ -68,6 +68,7 @@ test("round-trips the open-source HERON PAY-SSM Altium schematic", async () => {
   expect(result.sourceCounts.do_not_connect).toBe(22)
   expect(result.sourceCounts.power_port).toBe(28)
   expect(result.sourceSymbolPrimitiveCounts.total).toBe(36)
+  expect(result.sourceSheetSize).toEqual({ height: 55.5, width: 77.5 })
   expect({
     path: result.sourceCounts.schematic_path,
     rect: result.sourceCounts.schematic_rect,
