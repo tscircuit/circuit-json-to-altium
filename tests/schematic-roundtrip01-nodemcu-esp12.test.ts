@@ -42,6 +42,15 @@ test("round-trips the open-source NodeMCU ESP-12 Altium schematic", async () => 
     text: result.sourceCounts.schematic_text,
   }).toEqual({ path: 17, rect: 3, text: 384 })
   expect(result.sourceSupportedPrimitiveTotal).toBeGreaterThan(300)
+  const inlineLabel = result.roundTripSvg.match(
+    /<text data-record="25"[^>]*>GPIO0<\/text>/u,
+  )?.[0]
+  expect(inlineLabel).toContain('dominant-baseline="text-after-edge"')
+  expect(inlineLabel).toContain("rotate(0)")
+  const verticalLabel = result.roundTripSvg.match(
+    /<text data-record="25"[^>]*>ADC_EX<\/text>/u,
+  )?.[0]
+  expect(verticalLabel).toContain("rotate(-90)")
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
   ).toMatchSvgSnapshot(import.meta.path)
