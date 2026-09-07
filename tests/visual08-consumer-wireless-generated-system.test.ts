@@ -1,6 +1,10 @@
 import { expect, test } from "bun:test"
 import { readFile } from "node:fs/promises"
-import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
+import {
+  getSchematicRecordPoints,
+  parseAltiumSchDoc,
+  serializeAltiumSheetToSvg,
+} from "altiumts"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { CircuitJsonToAltiumConverter } from "../lib"
@@ -57,6 +61,39 @@ test("reproduces the Consumer Wireless Module generated system", async () => {
     "sensors",
     "wireless_connectivity",
   ])
+
+  // These labels sit on adjacent sensor pins only 0.2 circuit units apart.
+  const sensors = parsedSchematics[7]!
+  const adjacentLabelBounds = ["L3P3_pin2", "U3P3_GND"].map((text) => {
+    const label = sensors
+      .getRecordsByKind("4")
+      .find(
+        (record) =>
+          record.getDecoded("TEXT") === text &&
+          record.getDecoded("UNIQUEID")?.startsWith("CJNT"),
+      )!
+    const outlineId = label.getDecoded("UNIQUEID")!.replace("CJNT", "CJNP")
+    const outline = sensors
+      .getRecordsByKind("7")
+      .find((record) => record.getDecoded("UNIQUEID") === outlineId)!
+    const points = getSchematicRecordPoints(outline)
+    const minY = Math.min(...points.map((point) => point.y))
+    const maxY = Math.max(...points.map((point) => point.y))
+    const width =
+      Math.max(...points.map((point) => point.x)) -
+      Math.min(...points.map((point) => point.x))
+    expect(maxY - minY).toBeCloseTo(4)
+    expect(
+      sensors
+        .getRecordsByKind("31")[0]
+        ?.getNumber(`SIZE${label.getNumber("FONTID")}`),
+    ).toBe(3.6)
+    return { minY, maxY, width }
+  })
+  const [upperLabel, lowerLabel] = adjacentLabelBounds
+  expect(upperLabel!.minY - lowerLabel!.maxY).toBeGreaterThanOrEqual(-0.0001)
+  expect(upperLabel!.width).toBeLessThanOrEqual(24.001)
+  expect(lowerLabel!.width).toBeLessThanOrEqual(22.001)
 
   const rootSchematic = parsedSchematics[0]
   if (!rootSchematic) throw new Error("Converter did not create a root sheet")
