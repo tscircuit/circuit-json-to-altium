@@ -3,6 +3,7 @@ import {
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_NAME,
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS,
 } from "./create-altium-schematic-off-sheet-port-record-fields"
+import type { AltiumSchematicTemplateFontFields } from "./extract-altium-schematic-template"
 import { asNumber, formatNumber } from "./format"
 import type { CircuitElement } from "./types"
 
@@ -16,10 +17,15 @@ export type AltiumSchematicFontTable = {
   >
   fontSizePointsById: Map<AltiumSchematicFontId, number>
   sheetRecordFields: string[]
+  templateFontIdBySourceFontId: Map<
+    AltiumSchematicFontId,
+    AltiumSchematicFontId
+  >
 }
 
 type CreateAltiumSchematicFontTableInput = {
   schematicElements: CircuitElement[]
+  templateFontFields?: AltiumSchematicTemplateFontFields[]
 }
 
 const ALTIUM_UNITS_PER_CIRCUIT_UNIT = 20
@@ -30,6 +36,7 @@ export const SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS = 0.18
 
 export function createAltiumSchematicFontTable({
   schematicElements,
+  templateFontFields = [],
 }: CreateAltiumSchematicFontTableInput): AltiumSchematicFontTable {
   const fontIdBySizeCircuitUnits = new Map<
     SchematicFontSizeCircuitUnits,
@@ -81,6 +88,20 @@ export function createAltiumSchematicFontTable({
     )
   }
 
+  const templateFontIdBySourceFontId = new Map<
+    AltiumSchematicFontId,
+    AltiumSchematicFontId
+  >()
+  for (const templateFont of templateFontFields) {
+    const fontId = nextFontId++
+    templateFontIdBySourceFontId.set(templateFont.sourceFontId, fontId)
+    schematicFontRecordFields.push(
+      ...templateFont.fields.map((field) =>
+        field.replace(/^(\w+?)\d+=/u, `$1${fontId}=`),
+      ),
+    )
+  }
+
   return {
     fontIdBySizeCircuitUnits,
     fontSizePointsById,
@@ -94,5 +115,6 @@ export function createAltiumSchematicFontTable({
       `FONTNAME${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID}=${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_NAME}`,
       ...schematicFontRecordFields,
     ],
+    templateFontIdBySourceFontId,
   }
 }

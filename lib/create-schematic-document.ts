@@ -18,6 +18,7 @@ import {
 import { createAltiumSchematicSymbolPrimitiveRecordFields } from "./create-altium-schematic-symbol-primitive-record-fields"
 import { createAltiumSchematicSymbolRecords } from "./create-altium-schematic-symbol-records"
 import { createAltiumSchematicTextRecordFields } from "./create-altium-schematic-text-record-fields"
+import type { AltiumSchematicTemplate } from "./extract-altium-schematic-template"
 import { findSchematicComponentText } from "./find-schematic-component-text"
 import { findSchematicTextPresentation } from "./find-schematic-text-presentation"
 import {
@@ -51,6 +52,7 @@ type CreateSchematicDocumentParams = {
   includeAllSchematicElements: boolean
   schematicSheetId: SchematicSheetId | undefined
   sheetSettings?: AltiumSchematicSheetSettings
+  template?: AltiumSchematicTemplate
 }
 
 type SchematicSheetMembershipParams = {
@@ -296,12 +298,28 @@ function addSchematicRecord(
   return altiumRecordIndex
 }
 
+function remapTemplateFontId({
+  fontIdBySourceFontId,
+  recordFields,
+}: {
+  fontIdBySourceFontId: Map<number, number>
+  recordFields: string[]
+}): string[] {
+  return recordFields.map((field) => {
+    const match = /^FONTID=(\d+)$/iu.exec(field)
+    const sourceFontId = Number(match?.[1])
+    const fontId = fontIdBySourceFontId.get(sourceFontId)
+    return fontId === undefined ? field : `FONTID=${fontId}`
+  })
+}
+
 export function createSchematicDocument({
   childSheets = [],
   circuitJson,
   includeAllSchematicElements,
   schematicSheetId,
   sheetSettings,
+  template,
 }: CreateSchematicDocumentParams): string {
   const sourcePorts = new Map<SourcePortId, CircuitElement>(
     byType(circuitJson, "source_port").map((sourcePort) => [
@@ -389,6 +407,7 @@ export function createSchematicDocument({
   )
   const altiumSchematicFontTable = createAltiumSchematicFontTable({
     schematicElements,
+    templateFontFields: template?.fontFields,
   })
   const schematicRecordContext: SchematicRecordContext = {
     lines: [
@@ -406,9 +425,21 @@ export function createSchematicDocument({
       "USECUSTOMSHEET=T",
       "SNAPGRIDON=T",
       "SNAPGRIDSIZE=10",
+      ...(template?.sheetRecordFields ?? []),
     ],
     schematicRecordContext,
   )
+
+  for (const recordFields of template?.recordFields ?? []) {
+    addSchematicRecord(
+      remapTemplateFontId({
+        fontIdBySourceFontId:
+          altiumSchematicFontTable.templateFontIdBySourceFontId,
+        recordFields,
+      }),
+      schematicRecordContext,
+    )
+  }
 
   const schematicComponents = schematicElements.filter(
     (element) => element.type === "schematic_component",

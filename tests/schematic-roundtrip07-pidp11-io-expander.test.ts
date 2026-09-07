@@ -25,6 +25,9 @@ test("round-trips the open-source PiDP-11 I/O Expander Altium schematic", async 
         annotation.fillColor === "#ffff96",
     ),
   ).toBe(true)
+  expect(result.roundTripTemplateRecordCount).toBe(1)
+  expect(result.roundTripTemplateOwnedRecordCount).toBe(28)
+  expect(result.roundTripEmbeddedImageCount).toBe(2)
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
   ).toMatchSvgSnapshot(import.meta.path)

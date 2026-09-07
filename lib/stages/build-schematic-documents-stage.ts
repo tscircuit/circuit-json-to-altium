@@ -2,6 +2,7 @@ import { serializeAltiumSchDocToBinary } from "altiumts"
 import { ConverterStage } from "../converter-stage"
 import type { AltiumSchematicChildSheet } from "../create-altium-schematic-sheet-symbol-records"
 import { createSchematicDocument } from "../create-schematic-document"
+import { extractAltiumSchematicTemplate } from "../extract-altium-schematic-template"
 import { asNumber, asString, byType } from "../format"
 import type {
   AltiumSchematicFile,
@@ -106,19 +107,28 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
             })),
           ]
     this.context.schematics = documentDefinitions.map((definition) => {
+      const sheetOptions = getSchematicSheetSettings(
+        this.context.schematicSheets,
+        definition.schematicSheetId,
+      )
+      const template = sheetOptions?.templateContent
+        ? extractAltiumSchematicTemplate({
+            content: sheetOptions.templateContent,
+          })
+        : undefined
       const asciiContent = createSchematicDocument({
         childSheets: definition.childSheets,
         circuitJson: this.input,
         schematicSheetId: definition.schematicSheetId,
         includeAllSchematicElements: definition.includeAllSchematicElements,
-        sheetSettings: getSchematicSheetSettings(
-          this.context.schematicSheets,
-          definition.schematicSheetId,
-        ),
+        sheetSettings: sheetOptions,
+        template,
       })
       return {
         asciiContent,
-        content: serializeAltiumSchDocToBinary(asciiContent),
+        content: serializeAltiumSchDocToBinary(asciiContent, {
+          embeddedImages: template?.embeddedImages,
+        }),
         filename: definition.filename,
       }
     })

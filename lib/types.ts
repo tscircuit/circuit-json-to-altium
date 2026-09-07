@@ -41,6 +41,8 @@ export type AltiumSchematicSheetSettings = {
 export type AltiumSchematicSheetOptions = AltiumSchematicSheetSettings & {
   /** Omit for a standalone schematic or the root sheet. */
   schematicSheetId?: SchematicSheetId
+  /** Native Altium SchDot or SchDoc bytes containing a custom sheet template. */
+  templateContent?: Uint8Array
 }
 
 export type CircuitJsonToAltiumConverterContext = {
