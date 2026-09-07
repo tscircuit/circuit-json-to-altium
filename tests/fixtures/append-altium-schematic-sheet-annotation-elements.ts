@@ -16,6 +16,14 @@ import { getAltiumSchematicTextFrameLines } from "./get-altium-schematic-text-fr
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import { getCssColorFromAltiumRecord } from "./get-css-color-from-altium-record"
 
+const GENERATED_NET_LABEL_DECORATION_PREFIXES = ["CJNP", "CJNT"]
+
+function isGeneratedNetLabelDecoration(record: AltiumRecord): boolean {
+  const uniqueId = record.getDecoded("UNIQUEID") ?? ""
+  return GENERATED_NET_LABEL_DECORATION_PREFIXES.some((prefix) =>
+    uniqueId.startsWith(prefix),
+  )
+}
 // Newer Altium note records use the same framed-text fields as text frames.
 const TEXT_FRAME_RECORD_KINDS = new Set(["28", "209"])
 const ANNOTATION_RECORD_KINDS = new Set([
@@ -219,6 +227,7 @@ export function appendAltiumSchematicSheetAnnotationElements({
   for (const [annotationIndex, record] of document.records.entries()) {
     if (
       !ANNOTATION_RECORD_KINDS.has(record.recordKind ?? "") ||
+      isGeneratedNetLabelDecoration(record) ||
       document.getParent(record) !== undefined
     ) {
       continue
