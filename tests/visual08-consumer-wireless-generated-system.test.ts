@@ -85,8 +85,8 @@ test("reproduces the Consumer Wireless Module generated system", async () => {
     expect(maxY - minY).toBeCloseTo(4)
     const sheet = sensors.getRecordsByKind("31")[0]!
     const fontId = label.getNumber("FONTID")!
-    expect(sheet.getNumber(`SIZE${fontId}`)).toBe(3)
-    expect(sheet.getNumber(`SIZE${fontId}_FRAC`)).toBe(60000)
+    expect(sheet.getNumber(`SIZE${fontId}`)).toBe(4)
+    expect(sheet.getNumber(`SIZE${fontId}_FRAC`)).toBeUndefined()
     return { minY, maxY, width }
   })
   const [upperLabel, lowerLabel] = adjacentLabelBounds

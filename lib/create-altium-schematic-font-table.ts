@@ -1,4 +1,3 @@
-import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import {
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID,
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_NAME,
@@ -79,15 +78,15 @@ export function createAltiumSchematicFontTable({
     if (fontIdBySizeCircuitUnits.has(fontSizeCircuitUnits)) continue
     const fontId = nextFontId++
     fontIdBySizeCircuitUnits.set(fontSizeCircuitUnits, fontId)
-    fontSizePointsById.set(
-      fontId,
-      fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+    // Native font table SIZE entries are integers, not fixed-point coordinates.
+    // Round up so small labels do not shrink when Altium ignores SIZE*_FRAC.
+    const nativeFontSize = Math.max(
+      1,
+      Math.ceil(fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT),
     )
+    fontSizePointsById.set(fontId, nativeFontSize)
     schematicFontRecordFields.push(
-      ...createAltiumSchematicCoordinateFields(
-        `SIZE${fontId}`,
-        fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
-      ),
+      `SIZE${fontId}=${nativeFontSize}`,
       `FONTNAME${fontId}=${ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME}`,
     )
   }

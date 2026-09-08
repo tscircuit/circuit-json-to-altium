@@ -274,7 +274,10 @@ export function createAltiumSchematicNetLabelRecordFields({
     altiumLabelCenter,
     altiumLabelPosition,
     anchorSide,
-    fontSize: fontTable.fontSizePointsById.get(fontId) ?? 4,
+    // Keep source outline geometry independent of native integer font rounding.
+    fontSize:
+      (asNumber(textPresentation?.font_size) ||
+        SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS) * 20,
     labelText,
   })
   if (!displayGeometry) return [nativeNetLabelFields]

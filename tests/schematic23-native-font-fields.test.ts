@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { serializeAltiumSheetToSvg } from "altiumts"
 import { board, extractArchive, sourceComponent, sourcePort } from "./fixtures"
 
-test("encodes fractional annotation font sizes without triggering native fallback", async () => {
+test("quantizes annotation fonts to native integers without unsupported fractions", async () => {
   const { schematics } = await extractArchive([
     board(),
     ...[0.12, 0.18, 0.2].map((fontSize, index) => ({
@@ -17,7 +17,7 @@ test("encodes fractional annotation font sizes without triggering native fallbac
   const doc = schematics[0]!
   const sheet = doc.getRecordsByKind("31")[0]!
   const svg = serializeAltiumSheetToSvg(doc)
-  for (const [index, expected] of [2.4, 3.6, 4].entries()) {
+  for (const [index, expected] of [3, 4, 4].entries()) {
     const record = doc
       .getRecordsByKind("4")
       .find((label) => label.getDecoded("TEXT") === `FONT_${index}`)!
@@ -27,6 +27,7 @@ test("encodes fractional annotation font sizes without triggering native fallbac
       sheet.getNumber(`SIZE${fontId}`)! +
       (sheet.getNumber(`SIZE${fontId}_FRAC`) ?? 0) / 100_000
     expect(size).toBeCloseTo(expected, 5)
+    expect(sheet.getCaseInsensitive(`SIZE${fontId}_FRAC`)).toBeUndefined()
     const text = svg.match(
       new RegExp(`<text\\b[^>]*>FONT_${index}</text>`, "u"),
     )?.[0]
