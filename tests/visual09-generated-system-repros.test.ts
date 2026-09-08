@@ -158,7 +158,12 @@ for (const repro of repros) {
       pinNameAndDesignatorPairCount += expectPinNameAndDesignatorBaselines(
         generatedSchematicSvg,
       )
-      snapshots.push(createSideBySideSvg(circuitJsonSvg, generatedSchematicSvg))
+      snapshots.push(
+        createSideBySideSvg(circuitJsonSvg, generatedSchematicSvg, {
+          source: "Circuit JSON",
+          converted: "Altium format preview (local altiumts renderer)",
+        }),
+      )
       snapshotNames.push(
         `${repro.projectName}-${String(index + 1).padStart(2, "0")}-${String(sourceSheet.name).replaceAll("_", "-")}`,
       )
