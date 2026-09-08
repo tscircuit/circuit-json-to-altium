@@ -113,6 +113,17 @@ export function createAltiumSchematicNetLabelRecordFields({
       : ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   })
   if (powerPortStyle) {
+    const direction = [
+      { x: 1, y: 0 },
+      { x: 0, y: 1 },
+      { x: -1, y: 0 },
+      { x: 0, y: -1 },
+    ][powerPortStyle.orientationIndex]!
+    const distance = powerPortStyle.styleIndex === 2 ? 12 : 16
+    const labelPosition = {
+      x: altiumLabelPosition.x + direction.x * distance,
+      y: altiumLabelPosition.y + direction.y * distance,
+    }
     return [
       [
         "RECORD=17",
@@ -128,9 +139,32 @@ export function createAltiumSchematicNetLabelRecordFields({
         `ORIENTATION=${powerPortStyle.orientationIndex}`,
         `STYLE=${powerPortStyle.styleIndex}`,
         `COLOR=${color}`,
-        "SHOWNETNAME=T",
+        // Unlike net-label ISHIDDEN, power-port SHOWNETNAME is supported.
+        // Keep the electrical identity here and draw its single caption in
+        // the source text color independently of the red power symbol.
+        `SHOWNETNAME=${textPresentation ? "T" : "F"}`,
         `TEXT=${labelText}`,
       ],
+      ...(textPresentation
+        ? []
+        : [
+            [
+              "RECORD=4",
+              "OWNERPARTID=-1",
+              ...createAltiumSchematicCoordinateFields(
+                "LOCATION.X",
+                labelPosition.x,
+              ),
+              ...createAltiumSchematicCoordinateFields(
+                "LOCATION.Y",
+                labelPosition.y,
+              ),
+              `FONTID=${fontId}`,
+              "COLOR=0",
+              `JUSTIFICATION=${direction.y > 0 ? 1 : direction.y < 0 ? 7 : direction.x > 0 ? 3 : 5}`,
+              `TEXT=${labelText}`,
+            ],
+          ]),
     ]
   }
 

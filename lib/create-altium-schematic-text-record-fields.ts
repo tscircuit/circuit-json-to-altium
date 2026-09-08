@@ -10,7 +10,7 @@ type CreateAltiumSchematicTextRecordFieldsInput = {
   schematicText: CircuitElement
 }
 
-const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
+const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0
 
 export function createAltiumSchematicTextRecordFields({
   altiumComponentRecordIndex,

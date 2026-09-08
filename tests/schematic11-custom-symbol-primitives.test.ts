@@ -171,7 +171,7 @@ test("writes custom symbol primitives as owned native Altium records", async () 
   )
 
   expect(line).toMatchObject({ recordKind: "13" })
-  expect(line?.getNumber("LINEWIDTH")).toBe(2)
+  expect(line?.getNumber("LINEWIDTH")).toBe(1)
   expect(line?.getNumber("LINESTYLE")).toBe(1)
   expect(line?.getNumber("COLOR")).toBe(0x56_34_12)
   expect(polygon).toMatchObject({ recordKind: "7" })

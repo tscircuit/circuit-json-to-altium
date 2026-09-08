@@ -664,6 +664,7 @@ function appendNetLabelElements(
       text,
       ...(symbolName ? { symbol_name: symbolName } : {}),
     })
+    if (powerPort.getBoolean("SHOWNETNAME") === false) continue
     appendNativeTextPresentation({
       document,
       elements,

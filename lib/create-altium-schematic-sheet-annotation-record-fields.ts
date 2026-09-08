@@ -2,6 +2,7 @@ import { sanitizeAltiumFieldText } from "altiumts"
 import { getAltiumColorFromCss } from "./altium-color"
 import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-table"
 import { asNumber, asPoint, asString, formatNumber } from "./format"
+import { getAltiumSchematicLineWidth } from "./get-altium-schematic-line-width"
 import {
   getAltiumSchematicTextJustification,
   getAltiumSchematicTextOrientation,
@@ -16,13 +17,15 @@ type CreateAltiumSchematicSheetAnnotationRecordFieldsInput = {
 }
 
 const ALTIUM_UNITS_PER_CIRCUIT_UNIT = 20
-const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
+const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0
 const ALTIUM_SCHEMATIC_DEFAULT_FILL_COLOR = 0xff_ff_ff
 
 function getAltiumLineWidth(annotation: CircuitElement): string {
   return formatNumber(
-    Math.max(asNumber(annotation.stroke_width), 0) *
-      ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+    getAltiumSchematicLineWidth(
+      Math.max(asNumber(annotation.stroke_width), 0) *
+        ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+    ),
   )
 }
 

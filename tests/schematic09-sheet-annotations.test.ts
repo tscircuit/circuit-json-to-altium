@@ -217,7 +217,7 @@ test("writes schematic sheet annotations as native records", async () => {
     areaColor: 0x66_55_44,
     color: 0x33_22_11,
     isSolid: true,
-    lineWidth: 2,
+    lineWidth: 1,
   })
   expect({
     areaColor: inheritedFillRectangle?.getNumber("AREACOLOR"),
@@ -233,7 +233,7 @@ test("writes schematic sheet annotations as native records", async () => {
   }).toEqual({
     color: 0x00_80_00,
     lineStyle: 1,
-    lineWidth: 2,
+    lineWidth: 1,
   })
   expect({
     polygonAreaColor: polygon?.getNumber("AREACOLOR"),

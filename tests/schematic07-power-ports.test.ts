@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { AltiumSchDoc } from "altiumts"
+import { type AltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
 import {
   board,
   type CircuitElement,
@@ -79,5 +79,14 @@ test("writes rail and ground net-label symbols as native power ports", async () 
   expect(schematic.netLabels.map((netLabel) => netLabel.text)).toEqual([
     "SIGNAL",
   ])
+  const svg = serializeAltiumSheetToSvg(schematic)
+  for (const powerPort of schematic.powerPorts) {
+    expect(powerPort.getBoolean("SHOWNETNAME")).toBe(false)
+    const caption = schematic
+      .getRecordsByKind("4")
+      .find((r) => r.getDecoded("TEXT") === powerPort.text)
+    expect(caption?.getNumber("COLOR")).toBe(0)
+    expect(svg.split(`>${powerPort.text}</text>`)).toHaveLength(2)
+  }
   expectValidSchematic(schematic)
 })
