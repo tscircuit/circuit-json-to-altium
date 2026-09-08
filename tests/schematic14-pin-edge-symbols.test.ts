@@ -95,10 +95,20 @@ test("renders a schematic pin edge symbol round trip", async () => {
     (pin) => pin.name === "INVERTED CLOCK",
   )
 
-  expect(clockPin?.getNumber("SYMBOL_INNEREDGE")).toBe(3)
+  expect(clockPin?.getNumber("SYMBOL_INNEREDGE")).toBeUndefined()
   expect(invertedPin?.getNumber("SYMBOL_OUTEREDGE")).toBe(1)
-  expect(invertedClockPin?.getNumber("SYMBOL_INNEREDGE")).toBe(3)
+  expect(invertedClockPin?.getNumber("SYMBOL_INNEREDGE")).toBeUndefined()
   expect(invertedClockPin?.getNumber("SYMBOL_OUTEREDGE")).toBe(1)
+  const arrows = altiumSchematic.getRecordsByKind("7")
+  expect(arrows).toHaveLength(2)
+  expect(arrows[0]?.getNumber("X1")).toBe(clockPin?.getNumber("LOCATION.X"))
+  expect(arrows[0]?.getNumber("X2")).toBeLessThan(arrows[0]!.getNumber("X1")!)
+  for (const arrow of arrows) {
+    expect(arrow.getNumber("OWNERINDEX")).toBe(
+      clockPin?.getNumber("OWNERINDEX"),
+    )
+    expect(arrow.getNumber("LINEWIDTH")).toBe(0)
+  }
 
   const sourceSvg = await convertCircuitJsonToSchematicSvg(circuitJson)
   const altiumSvg = serializeAltiumSheetToSvg(altiumSchematic)

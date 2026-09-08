@@ -65,6 +65,11 @@ test("exports native custom fonts for both visible pin names and numbers", async
   for (const kind of ["NAME", "DESIGNATOR"]) {
     expect(pin.getNumber(`PIN${kind}_POSITIONCONGLOMERATE`)! & 16).toBe(16)
     expect(pin.getNumber(`${kind}_CUSTOMFONTID`)).toBe(2)
+    expect(pin.getNumber(`PIN${kind}_POSITIONCONGLOMERATE`)! & 1).toBe(1)
+    expect(pin.getNumber(`${kind}_CUSTOMPOSITION_MARGIN`)).toBe(
+      kind === "NAME" ? -2 : 2,
+    )
+    expect(pin.getNumber(`${kind}_CUSTOMCOLOR`)).toBe(pin.getNumber("COLOR"))
   }
   expect(pin.getCaseInsensitive("FONTID")).toBeUndefined()
   const texts = serializeAltiumSheetToSvg(doc)

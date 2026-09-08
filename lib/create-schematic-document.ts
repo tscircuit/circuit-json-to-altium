@@ -7,6 +7,7 @@ import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-t
 import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
 import { createAltiumSchematicOffSheetPortRecordFields } from "./create-altium-schematic-off-sheet-port-record-fields"
+import { createAltiumSchematicPinArrowFields } from "./create-altium-schematic-pin-arrow-fields"
 import { createAltiumSchematicSheetAnnotationRecordFields } from "./create-altium-schematic-sheet-annotation-record-fields"
 import {
   type AltiumSchematicChildSheet,
@@ -98,9 +99,8 @@ type SchematicSymbolPrimitiveMaps = {
 const ALTIUM_PIN_STANDARD_FLAGS = 0x20
 const ALTIUM_PIN_NAME_VISIBLE_FLAG = 0x08
 const ALTIUM_PIN_DESIGNATOR_VISIBLE_FLAG = 0x10
-const ALTIUM_PIN_CLOCK_SYMBOL = 3
 const ALTIUM_PIN_INVERSION_SYMBOL = 1
-const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
+const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0
 const ALTIUM_SCHEMATIC_FALLBACK_BODY_COLOR = 0xc2_ffff
 const ALTIUM_PIN_ORIENTATION_BY_FACING_DIRECTION: Record<string, number> = {
   left: 2,
@@ -689,7 +689,7 @@ export function createSchematicDocument({
           `LOCATION.Y=${fallbackSchematicBoxBounds.bottom}`,
           `CORNER.X=${fallbackSchematicBoxBounds.right}`,
           `CORNER.Y=${fallbackSchematicBoxBounds.top}`,
-          "LINEWIDTH=1",
+          "LINEWIDTH=0",
           "COLOR=136",
           `AREACOLOR=${ALTIUM_SCHEMATIC_FALLBACK_BODY_COLOR}`,
           "ISSOLID=T",
@@ -875,20 +875,36 @@ export function createSchematicDocument({
           `LOCATION.X=${altiumPinLocation.x}`,
           `LOCATION.Y=${altiumPinLocation.y}`,
           `PINLENGTH=${altiumPinLength}`,
-          ...(schematicPort.has_input_arrow === true
-            ? [`SYMBOL_INNEREDGE=${ALTIUM_PIN_CLOCK_SYMBOL}`]
-            : []),
           ...(schematicPort.is_drawn_with_inversion_circle === true
             ? [`SYMBOL_OUTEREDGE=${ALTIUM_PIN_INVERSION_SYMBOL}`]
             : []),
           `COLOR=${pinColor}`,
-          "PINNAME_POSITIONCONGLOMERATE=16",
+          // Enable both custom position (bit 0) and custom font/color (bit 4).
+          // Native defaults put the name 7 units inside narrow chip bodies.
+          "PINNAME_POSITIONCONGLOMERATE=17",
+          "NAME_CUSTOMPOSITION_MARGIN=-2",
           "NAME_CUSTOMFONTID=2",
-          "PINDESIGNATOR_POSITIONCONGLOMERATE=16",
+          `NAME_CUSTOMCOLOR=${pinColor}`,
+          "PINDESIGNATOR_POSITIONCONGLOMERATE=17",
+          "DESIGNATOR_CUSTOMPOSITION_MARGIN=2",
           "DESIGNATOR_CUSTOMFONTID=2",
+          `DESIGNATOR_CUSTOMCOLOR=${pinColor}`,
         ],
         schematicRecordContext,
       )
+      if (schematicPort.has_input_arrow === true) {
+        addSchematicRecord(
+          createAltiumSchematicPinArrowFields({
+            body: altiumPinLocation,
+            color: pinColor,
+            hasInversionCircle:
+              schematicPort.is_drawn_with_inversion_circle === true,
+            orientation: altiumPinConglomerate & 3,
+            ownerIndex: altiumComponentRecordIndex,
+          }),
+          schematicRecordContext,
+        )
+      }
     }
     for (const componentGraphicText of componentGraphicTexts) {
       const recordFields = createAltiumSchematicTextRecordFields({
@@ -941,7 +957,7 @@ export function createSchematicDocument({
       addSchematicRecord(
         [
           "RECORD=27",
-          "LINEWIDTH=1",
+          "LINEWIDTH=0",
           "LOCATIONCOUNT=2",
           `X1=${altiumStartPoint.x}`,
           `Y1=${altiumStartPoint.y}`,
@@ -979,9 +995,9 @@ export function createSchematicDocument({
     }
   }
 
-  for (const [netLabelIndex, schematicNetLabel] of schematicElements
-    .filter((element) => element.type === "schematic_net_label")
-    .entries()) {
+  for (const schematicNetLabel of schematicElements.filter(
+    (element) => element.type === "schematic_net_label",
+  )) {
     const labelText = sanitizeField(schematicNetLabel.text)
     if (!labelText) continue
     const circuitLabelPosition = asPoint(schematicNetLabel.anchor_position) ??
@@ -995,13 +1011,10 @@ export function createSchematicDocument({
     if (textPresentation) consumedSheetTexts.add(textPresentation)
     const netLabelRecordFields = createAltiumSchematicNetLabelRecordFields({
       anchorSide: asString(schematicNetLabel.anchor_side),
-      altiumLabelCenter: circuitToAltiumSchematicPoint(
-        asPoint(schematicNetLabel.center) ?? circuitLabelPosition,
-      ),
       altiumLabelPosition: circuitToAltiumSchematicPoint(circuitLabelPosition),
-      decorationIndex: netLabelIndex,
       fontTable: altiumSchematicFontTable,
       labelText,
+      showNetName: schematicNetLabel.altium_show_net_name !== false,
       symbolName: asString(schematicNetLabel.symbol_name),
       textPresentation,
     })

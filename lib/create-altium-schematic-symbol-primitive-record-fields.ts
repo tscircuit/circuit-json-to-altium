@@ -7,6 +7,7 @@ import type { AltiumSchematicFontTable } from "./create-altium-schematic-font-ta
 import { createOwnedSchematicRecordFields } from "./create-altium-schematic-graphic-record-fields"
 import { createAltiumSchematicTextRecordFields } from "./create-altium-schematic-text-record-fields"
 import { asNumber, asPoint, asString, formatNumber } from "./format"
+import { getAltiumSchematicLineWidth } from "./get-altium-schematic-line-width"
 import { isSchematicSymbolPrimitive } from "./is-schematic-symbol-primitive"
 import type { CircuitElement, LengthTransform, PointTransform } from "./types"
 
@@ -26,8 +27,7 @@ function getAltiumLineWidth({
   graphic: CircuitElement
 }): string {
   return formatNumber(
-    Math.max(
-      1,
+    getAltiumSchematicLineWidth(
       circuitToAltiumSchematicLength(
         Math.max(asNumber(graphic.stroke_width), 0),
       ),

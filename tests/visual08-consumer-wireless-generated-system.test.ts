@@ -1,10 +1,6 @@
 import { expect, test } from "bun:test"
 import { readFile } from "node:fs/promises"
-import {
-  getSchematicRecordPoints,
-  parseAltiumSchDoc,
-  serializeAltiumSheetToSvg,
-} from "altiumts"
+import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
 import type { AnyCircuitElement } from "circuit-json"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { CircuitJsonToAltiumConverter } from "../lib"
@@ -65,34 +61,26 @@ test("reproduces the Consumer Wireless Module generated system", async () => {
   // These labels sit on adjacent sensor pins only 0.2 circuit units apart.
   const sensors = parsedSchematics[7]!
   const adjacentLabelBounds = ["L3P3_pin2", "U3P3_GND"].map((text) => {
-    const label = sensors
-      .getRecordsByKind("4")
-      .find(
-        (record) =>
-          record.getDecoded("TEXT") === text &&
-          record.getDecoded("UNIQUEID")?.startsWith("CJNT"),
-      )!
-    const outlineId = label.getDecoded("UNIQUEID")!.replace("CJNT", "CJNP")
-    const outline = sensors
-      .getRecordsByKind("7")
-      .find((record) => record.getDecoded("UNIQUEID") === outlineId)!
-    const points = getSchematicRecordPoints(outline)
-    const minY = Math.min(...points.map((point) => point.y))
-    const maxY = Math.max(...points.map((point) => point.y))
-    const width =
-      Math.max(...points.map((point) => point.x)) -
-      Math.min(...points.map((point) => point.x))
-    expect(maxY - minY).toBeCloseTo(4)
+    const label = sensors.netLabels.find(
+      (record) => record.getDecoded("TEXT") === text,
+    )!
+    expect(label.getBoolean("ISHIDDEN")).not.toBe(true)
+    expect(
+      sensors
+        .getRecordsByKind("4")
+        .some((record) => record.getDecoded("TEXT") === text),
+    ).toBe(false)
     const sheet = sensors.getRecordsByKind("31")[0]!
     const fontId = label.getNumber("FONTID")!
     expect(sheet.getNumber(`SIZE${fontId}`)).toBe(4)
     expect(sheet.getNumber(`SIZE${fontId}_FRAC`)).toBeUndefined()
-    return { minY, maxY, width }
+    const y =
+      label.getNumber("LOCATION.Y")! +
+      (label.getNumber("LOCATION.Y_FRAC") ?? 0) / 100000
+    return { minY: y - 1.8, maxY: y + 1.8 }
   })
   const [upperLabel, lowerLabel] = adjacentLabelBounds
   expect(upperLabel!.minY - lowerLabel!.maxY).toBeGreaterThanOrEqual(-0.0001)
-  expect(upperLabel!.width).toBeLessThanOrEqual(24.001)
-  expect(lowerLabel!.width).toBeLessThanOrEqual(22.001)
 
   const rootSchematic = parsedSchematics[0]
   if (!rootSchematic) throw new Error("Converter did not create a root sheet")

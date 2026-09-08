@@ -74,7 +74,7 @@ function createAltiumPathRecordFields({
     ...createOwnedSchematicRecordFields(
       symbolMapping.altiumComponentRecordIndex,
     ),
-    "LINEWIDTH=1",
+    "LINEWIDTH=0",
     `LOCATIONCOUNT=${altiumPathPoints.length}`,
     ...altiumPathPoints.flatMap((altiumPoint, pointIndex) => [
       ...createAltiumSchematicCoordinateRecordFields(
@@ -153,7 +153,7 @@ function createAltiumCircleRecordFields({
     `LOCATION.Y=${altiumCenter.y}`,
     `RADIUS=${altiumRadius}`,
     `SECONDARYRADIUS=${altiumRadius}`,
-    "LINEWIDTH=1",
+    "LINEWIDTH=0",
     `COLOR=${ALTIUM_SCHEMATIC_GRAPHIC_COLOR}`,
     `AREACOLOR=${circlePrimitive.fill ? ALTIUM_SCHEMATIC_GRAPHIC_COLOR : ALTIUM_SCHEMATIC_WHITE}`,
     `ISSOLID=${circlePrimitive.fill ? "T" : "F"}`,
@@ -192,7 +192,7 @@ function createAltiumBoxRecordFields({
     `LOCATION.Y=${altiumFirstCorner.y}`,
     `CORNER.X=${altiumSecondCorner.x}`,
     `CORNER.Y=${altiumSecondCorner.y}`,
-    "LINEWIDTH=1",
+    "LINEWIDTH=0",
     `COLOR=${ALTIUM_SCHEMATIC_GRAPHIC_COLOR}`,
     `AREACOLOR=${ALTIUM_SCHEMATIC_WHITE}`,
     "ISSOLID=F",
