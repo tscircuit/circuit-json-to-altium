@@ -27,6 +27,8 @@ type OpenSourceSchematicRoundTripOptions = {
   filename: string
   projectName: string
   sourceProject?: {
+    currentDate?: string
+    currentTime?: string
     documentName: string
     filename: string
     projectName: string
@@ -106,6 +108,8 @@ export async function createOpenSourceSchematicRoundTrip({
   const sourceDocument = parseSchematicDocument(sourceBytes)
   const sourceProjectContext = sourceProject
     ? {
+        currentDate: sourceProject.currentDate,
+        currentTime: sourceProject.currentTime,
         documentName: sourceProject.documentName,
         project: parseProjectDocument(
           await readReference(sourceProject.filename),
@@ -154,7 +158,10 @@ export async function createOpenSourceSchematicRoundTrip({
       getTemplateOwnedRecordCount(roundTripDocument),
     roundTripTemplateRecordCount:
       roundTripDocument.getRecordsByKind("39").length,
-    roundTripSvg: serializeAltiumSheetToSvg(roundTripDocument),
+    roundTripSvg: serializeAltiumSheetToSvg(
+      roundTripDocument,
+      sourceProjectContext,
+    ),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
     sourceSheetSize: {

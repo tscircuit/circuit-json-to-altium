@@ -142,6 +142,13 @@ const references: ReferenceSpec[] = [
     url: "https://media.githubusercontent.com/media/sstallion/PCB-PiDP11IOExpander/d97b81645091da8404661b37f75e4872c1788f79/PiDP11IOExpander.SchDoc",
   },
   {
+    filename: "pidp11-io-expander.PrjPcb",
+    sha256: "ede24d715cf83b91bb0d0e86a0f747d315de0f036bb9309a6e7e29c451e6a359",
+    source:
+      "sstallion/PCB-PiDP11IOExpander@d97b81645091da8404661b37f75e4872c1788f79 (BSD-2-Clause)",
+    url: "https://raw.githubusercontent.com/sstallion/PCB-PiDP11IOExpander/d97b81645091da8404661b37f75e4872c1788f79/PCB-PiDP11IOExpander.PrjPcb",
+  },
+  {
     filename: "cobra-ch341.SchDoc",
     sha256: "45ec889000b819c2c98e3cb99fb734ffd131c2eaf8ce1798cee4cd34eaf8d0da",
     source: "pengwon/cobra@1347008d7985d8c3dbecc3d81e4bf4e1ace2c33d (MIT)",

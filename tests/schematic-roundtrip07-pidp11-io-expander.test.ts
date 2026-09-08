@@ -7,9 +7,24 @@ test("round-trips the open-source PiDP-11 I/O Expander Altium schematic", async 
   const result = await createOpenSourceSchematicRoundTrip({
     filename: "pidp11-io-expander.SchDoc",
     projectName: "PiDP-11 I/O Expander schematic",
+    sourceProject: {
+      currentDate: "2026-09-08",
+      currentTime: "14:30",
+      documentName: "PiDP11IOExpander.SchDoc",
+      filename: "pidp11-io-expander.PrjPcb",
+      projectName: "PCB-PiDP11IOExpander.PrjPcb",
+    },
   })
 
   expectOpenSourceSchematicRoundTrip(result)
+  for (const svg of [result.sourceSvg, result.roundTripSvg]) {
+    expect(svg).toContain(">PiDP-11 I/O Expander</text>")
+    expect(svg).toContain(">2026-09-08</text>")
+    expect(svg).toContain(">14:30</text>")
+    expect(svg).not.toContain(">=ProjectTitle</text>")
+    expect(svg).not.toContain(">=CurrentDate</text>")
+    expect(svg).not.toContain(">=CurrentTime</text>")
+  }
   expect(
     result.sourceAnnotationSignatures.some(
       (annotation) =>
