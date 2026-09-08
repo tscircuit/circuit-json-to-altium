@@ -4,7 +4,7 @@ import {
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS,
 } from "./create-altium-schematic-off-sheet-port-record-fields"
 import type { AltiumSchematicTemplateFontFields } from "./extract-altium-schematic-template"
-import { asNumber, formatNumber } from "./format"
+import { asNumber } from "./format"
 import type { CircuitElement } from "./types"
 
 type AltiumSchematicFontId = number
@@ -78,12 +78,15 @@ export function createAltiumSchematicFontTable({
     if (fontIdBySizeCircuitUnits.has(fontSizeCircuitUnits)) continue
     const fontId = nextFontId++
     fontIdBySizeCircuitUnits.set(fontSizeCircuitUnits, fontId)
-    fontSizePointsById.set(
-      fontId,
-      fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+    // Native font table SIZE entries are integers, not fixed-point coordinates.
+    // Round up so small labels do not shrink when Altium ignores SIZE*_FRAC.
+    const nativeFontSize = Math.max(
+      1,
+      Math.ceil(fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT),
     )
+    fontSizePointsById.set(fontId, nativeFontSize)
     schematicFontRecordFields.push(
-      `SIZE${fontId}=${formatNumber(fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT)}`,
+      `SIZE${fontId}=${nativeFontSize}`,
       `FONTNAME${fontId}=${ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME}`,
     )
   }
