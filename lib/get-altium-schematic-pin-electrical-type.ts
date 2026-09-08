@@ -23,7 +23,7 @@ export function getAltiumSchematicPinElectricalType({
 }: {
   sourceComponent: CircuitElement | undefined
   sourcePort: CircuitElement | undefined
-}): number | undefined {
+}): number {
   if (
     typeof sourceComponent?.ftype === "string" &&
     PASSIVE_COMPONENT_TYPES.has(sourceComponent.ftype)
@@ -38,7 +38,8 @@ export function getAltiumSchematicPinElectricalType({
   ) {
     return 7
   }
-  // Circuit JSON does not always provide a signal direction. Keep Altium's
-  // default for unknown pins; names and IEEE clock symbols do not establish it.
-  return undefined
+  // Omission means Input in Altium, not Unknown. Use the non-directional
+  // passive fallback when Circuit JSON supplies no electrical role. Names
+  // and visual arrows must not be used to invent a device pin direction.
+  return 4
 }

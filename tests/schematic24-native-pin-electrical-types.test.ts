@@ -53,7 +53,7 @@ test("passive terminals retain their electrical type instead of defaulting to in
   }
 })
 
-test("declared power/ground pins use power type while unknown signals retain native defaults", async () => {
+test("declared power/ground pins use power type while unknown signals default to passive", async () => {
   for (const key of [
     "provides_power",
     "requires_power",
@@ -68,7 +68,8 @@ test("declared power/ground pins use power type while unknown signals retain nat
   }
   const unknown = await schematic("simple_chip")
   const pin = unknown.getRecordsByKind("2")[0]!
-  expect(pin.getCaseInsensitive("ELECTRICAL")).toBeUndefined()
-  expect(pin.getNumber("SYMBOL_INNEREDGE")).toBeDefined()
-  expect(serializeAltiumSheetToSvg(unknown)).toContain('data-electrical="0"')
+  expect(pin.getNumber("ELECTRICAL")).toBe(4)
+  expect(serializeAltiumSheetToSvg(unknown)).not.toContain(
+    'data-electrical="0"',
+  )
 })
