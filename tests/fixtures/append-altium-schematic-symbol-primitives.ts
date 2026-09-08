@@ -17,6 +17,7 @@ import {
   toCircuitPoint,
 } from "./altium-schematic-coordinate-utils"
 import { getCssColorFromAltiumRecord } from "./get-css-color-from-altium-record"
+import { getSchematicLineWidth } from "./get-schematic-line-width"
 import { isAltiumSchematicComponentRecordVisible } from "./is-altium-schematic-component-record-visible"
 
 type AppendAltiumSchematicSymbolPrimitivesInput = {
@@ -44,9 +45,7 @@ function getGraphicStroke(record: AltiumRecord): {
 } {
   return {
     is_dashed: (record.getNumber("LINESTYLE") ?? 0) !== 0,
-    stroke_width: toCircuitLength(
-      getSchematicCoordinate({ fallback: 1, key: "LINEWIDTH", record }),
-    ),
+    stroke_width: toCircuitLength(getSchematicLineWidth(record)),
   }
 }
 

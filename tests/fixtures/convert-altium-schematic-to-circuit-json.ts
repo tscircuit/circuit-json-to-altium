@@ -654,6 +654,7 @@ function appendNetLabelElements(
     elements.push({
       type: "schematic_net_label",
       schematic_net_label_id: `schematic_net_label_power_port_${powerPortIndex}`,
+      altium_show_net_name: powerPort.getBoolean("SHOWNETNAME") !== false,
       source_net_id: sourceNetId,
       center: position,
       anchor_position: position,

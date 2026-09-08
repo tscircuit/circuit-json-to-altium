@@ -1014,6 +1014,7 @@ export function createSchematicDocument({
       altiumLabelPosition: circuitToAltiumSchematicPoint(circuitLabelPosition),
       fontTable: altiumSchematicFontTable,
       labelText,
+      showNetName: schematicNetLabel.altium_show_net_name !== false,
       symbolName: asString(schematicNetLabel.symbol_name),
       textPresentation,
     })

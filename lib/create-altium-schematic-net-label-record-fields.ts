@@ -25,6 +25,7 @@ type SchematicNetLabelRecordFieldsInput = {
   altiumLabelPosition: Point
   fontTable: AltiumSchematicFontTable
   labelText: string
+  showNetName?: boolean
   symbolName: string
   textPresentation: CircuitElement | undefined
 }
@@ -93,6 +94,7 @@ export function createAltiumSchematicNetLabelRecordFields({
   altiumLabelPosition,
   fontTable,
   labelText,
+  showNetName = true,
   symbolName,
   textPresentation,
 }: SchematicNetLabelRecordFieldsInput): string[][] {
@@ -142,10 +144,10 @@ export function createAltiumSchematicNetLabelRecordFields({
         // Unlike net-label ISHIDDEN, power-port SHOWNETNAME is supported.
         // Keep the electrical identity here and draw its single caption in
         // the source text color independently of the red power symbol.
-        `SHOWNETNAME=${textPresentation ? "T" : "F"}`,
+        `SHOWNETNAME=${showNetName && textPresentation ? "T" : "F"}`,
         `TEXT=${labelText}`,
       ],
-      ...(textPresentation
+      ...(textPresentation || !showNetName
         ? []
         : [
             [

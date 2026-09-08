@@ -15,6 +15,7 @@ import type { AltiumSchematicProjectContext } from "./altium-schematic-project-c
 import { getAltiumSchematicTextFrameLines } from "./get-altium-schematic-text-frame-lines"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import { getCssColorFromAltiumRecord } from "./get-css-color-from-altium-record"
+import { getSchematicLineWidth } from "./get-schematic-line-width"
 
 const GENERATED_NET_LABEL_DECORATION_PREFIXES = ["CJNP", "CJNT"]
 
@@ -84,7 +85,7 @@ function appendPathAnnotation({
     type: "schematic_path",
     schematic_path_id: `schematic_path_${annotationIndex}`,
     points,
-    stroke_width: toCircuitLength(record.getNumber("LINEWIDTH") ?? 1),
+    stroke_width: toCircuitLength(getSchematicLineWidth(record)),
     stroke_color: getCssColorFromAltiumRecord({
       fallbackCssColor: "#1f2937",
       fieldNames: ["COLOR"],
@@ -126,7 +127,7 @@ function appendRectAnnotation({
     width: toCircuitLength(Math.abs(corner.x - location.x)),
     height: toCircuitLength(Math.abs(corner.y - location.y)),
     rotation: 0,
-    stroke_width: toCircuitLength(record.getNumber("LINEWIDTH") ?? 1),
+    stroke_width: toCircuitLength(getSchematicLineWidth(record)),
     color: getCssColorFromAltiumRecord({
       fallbackCssColor: "#1f2937",
       fieldNames: ["COLOR"],
