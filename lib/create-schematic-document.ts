@@ -908,6 +908,7 @@ export function createSchematicDocument({
     addSchematicRecord(
       createAltiumSchematicOffSheetPortRecordFields({
         altiumPortPosition: circuitToAltiumSchematicPoint(circuitPortPosition),
+        facingDirection: asString(schematicPort.facing_direction),
         hasInputArrow: schematicPort.has_input_arrow === true,
         hasOutputArrow: schematicPort.has_output_arrow === true,
         portName,
