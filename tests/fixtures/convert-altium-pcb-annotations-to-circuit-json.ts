@@ -124,22 +124,59 @@ function convertDocumentationPaths({
   })
 }
 
-function haveEquivalentAltiumPathPoints({
+const ALTIUM_PATH_POINT_TOLERANCE = 0.01
+
+function areEquivalentAltiumPoints(left: AltiumPoint, right: AltiumPoint) {
+  return (
+    Math.abs(left.x - right.x) <= ALTIUM_PATH_POINT_TOLERANCE &&
+    Math.abs(left.y - right.y) <= ALTIUM_PATH_POINT_TOLERANCE
+  )
+}
+
+export function haveEquivalentAltiumPathPoints({
   left,
   right,
 }: {
-  left: AltiumPoint[]
-  right: AltiumPoint[]
+  left: readonly AltiumPoint[]
+  right: readonly AltiumPoint[]
 }): boolean {
-  return (
-    left.length === right.length &&
-    left.every((leftPoint) =>
-      right.some(
-        (rightPoint) =>
-          Math.abs(leftPoint.x - rightPoint.x) <= 0.01 &&
-          Math.abs(leftPoint.y - rightPoint.y) <= 0.01,
-      ),
+  const leftIsClosed =
+    left.length > 1 &&
+    areEquivalentAltiumPoints(left[0]!, left[left.length - 1]!)
+  const rightIsClosed =
+    right.length > 1 &&
+    areEquivalentAltiumPoints(right[0]!, right[right.length - 1]!)
+  if (leftIsClosed !== rightIsClosed) return false
+
+  const leftPoints = leftIsClosed ? left.slice(0, -1) : left
+  const rightPoints = rightIsClosed ? right.slice(0, -1) : right
+  if (leftPoints.length !== rightPoints.length) return false
+
+  if (!leftIsClosed) {
+    return (
+      leftPoints.every((point, index) =>
+        areEquivalentAltiumPoints(point, rightPoints[index]!),
+      ) ||
+      leftPoints.every((point, index) =>
+        areEquivalentAltiumPoints(
+          point,
+          rightPoints[rightPoints.length - index - 1]!,
+        ),
+      )
     )
+  }
+
+  return rightPoints.some(
+    (rightPoint, startIndex) =>
+      areEquivalentAltiumPoints(leftPoints[0]!, rightPoint) &&
+      [1, -1].some((direction) =>
+        leftPoints.every((leftPoint, index) => {
+          const rightIndex =
+            (startIndex + direction * index + rightPoints.length) %
+            rightPoints.length
+          return areEquivalentAltiumPoints(leftPoint, rightPoints[rightIndex]!)
+        }),
+      ),
   )
 }
 
