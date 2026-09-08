@@ -40,9 +40,11 @@ bun test tests/visual09-generated-system-repros.test.ts
 The renderer tests exercise native documents directly, including correct fractional values, malformed fields, independent pin fonts and preserved serialized data. To intentionally update baselines after reviewing a renderer change:
 
 ```sh
-BUN_UPDATE_SNAPSHOTS=1 bun test tests/visual09-generated-system-repros.test.ts
+BUN_UPDATE_SNAPSHOTS=1 FORCE_BUN_UPDATE_SNAPSHOTS=1 bun test tests/visual09-generated-system-repros.test.ts
 ```
+
+Both flags are needed to save text-only SVG changes even if raster comparison reports equal images.
 
 Review renderer behavior and baselines first. Fix exporter coordinates, fonts, net-label representation and pin electrical types in subsequent changes, using independent Altium renders as the reference.
 
-Validation for this change: 58 schematic tests across 36 files passed with snapshot updates disabled; the nine native-rendering tests also passed in an isolated clean dependency install. Typecheck and format check passed. All eight automotive `.SchDoc` files and 32 generated-system Circuit JSON source panels were byte-for-byte unchanged. The full repository test run was interrupted during the heavy EBAZ4205 PCB round trip; the full PCB suite is not claimed as passing.
+Validation: the full [baseline CI test run](https://github.com/tscircuit/circuit-json-to-altium/actions/runs/34267437467) passed 98 tests across 71 files. A local schematic run passed 58 tests across 36 files. Typecheck and format check passed. Earlier artifact verification confirmed all eight automotive `.SchDoc` files and 32 generated-system Circuit JSON source panels were byte-for-byte unchanged by the rendering switch.
