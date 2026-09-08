@@ -92,23 +92,54 @@ function convertDocumentationPaths({
     document,
     includeRecord: isDocumentationGraphicRecord,
   })
-  return paths.map((path, pathIndex) =>
-    path.componentId
-      ? {
-          type: "pcb_fabrication_note_path",
-          pcb_fabrication_note_path_id: `pcb_fabrication_note_path_${pathIndex}`,
-          pcb_component_id: path.componentId,
-          layer: toCircuitVisibleLayer(path.layer),
-          route: path.points.map(toCircuitPoint),
-          stroke_width: toCircuitLength(path.strokeWidthMils),
-        }
-      : {
-          type: "pcb_note_path",
-          pcb_note_path_id: `pcb_note_path_${pathIndex}`,
-          layer: toCircuitVisibleLayer(path.layer),
-          route: path.points.map(toCircuitPoint),
-          stroke_width: toCircuitLength(path.strokeWidthMils),
-        },
+  return paths.flatMap((path, pathIndex) => {
+    const isDuplicateOfBoardCutout =
+      !path.componentId &&
+      document.boardGeometry.cutouts.some((cutout) =>
+        haveEquivalentAltiumPathPoints({
+          left: path.points,
+          right: cutout.outline.points,
+        }),
+      )
+    if (isDuplicateOfBoardCutout) return []
+
+    return [
+      path.componentId
+        ? {
+            type: "pcb_fabrication_note_path",
+            pcb_fabrication_note_path_id: `pcb_fabrication_note_path_${pathIndex}`,
+            pcb_component_id: path.componentId,
+            layer: toCircuitVisibleLayer(path.layer),
+            route: path.points.map(toCircuitPoint),
+            stroke_width: toCircuitLength(path.strokeWidthMils),
+          }
+        : {
+            type: "pcb_note_path",
+            pcb_note_path_id: `pcb_note_path_${pathIndex}`,
+            layer: toCircuitVisibleLayer(path.layer),
+            route: path.points.map(toCircuitPoint),
+            stroke_width: toCircuitLength(path.strokeWidthMils),
+          },
+    ]
+  })
+}
+
+function haveEquivalentAltiumPathPoints({
+  left,
+  right,
+}: {
+  left: AltiumPoint[]
+  right: AltiumPoint[]
+}): boolean {
+  return (
+    left.length === right.length &&
+    left.every((leftPoint) =>
+      right.some(
+        (rightPoint) =>
+          Math.abs(leftPoint.x - rightPoint.x) <= 0.01 &&
+          Math.abs(leftPoint.y - rightPoint.y) <= 0.01,
+      ),
+    )
   )
 }
 
