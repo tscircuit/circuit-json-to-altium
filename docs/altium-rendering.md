@@ -27,7 +27,7 @@ This is a local renderer, not the Altium 365 rendering engine or a captured rend
 
 Default pin margins and enabled custom margins/colors are handled. Exact glyph metrics, custom pin text rotation/vertical margins, sheet clipping/border behavior, inferred junction dots and all electrical symbol types are not fully matched. The renderer implements input/output/bidirectional indicators; the other non-passive types retain the existing renderer limitation. Do not describe these snapshots as pixel-identical official Altium output, or tune exporter values just to compensate for those remaining renderer differences.
 
-Review the SVGs in a browser when checking text. During inspection, Resvg rasterization of the comparison's nested SVG images omitted embedded text, while rendering the standalone schematic retained it. The direct renderer tests therefore also assert font selection, sizes and text visibility; a pixel comparison alone is insufficient evidence for text behavior.
+Review the SVGs in a browser when checking text. During inspection, Resvg rasterization of the comparison's nested SVG images omitted embedded text, while rendering the standalone schematic retained it. Detailed renderer tests in altiumts therefore also assert font selection, sizes and text visibility; a pixel comparison alone is insufficient evidence for text behavior.
 
 ## Reproduce and review
 
@@ -37,7 +37,7 @@ bun test tests/schematic21-native-rendering.test.ts
 bun test tests/visual09-generated-system-repros.test.ts
 ```
 
-The renderer tests exercise native documents directly, including correct fractional values, malformed fields, independent pin fonts and preserved serialized data. To intentionally update baselines after reviewing a renderer change:
+The converter integration test exports a small Circuit JSON component to a binary SchDoc, parses that exported file, and snapshots its SVG using the installed renderer. Detailed native-coordinate, font, visibility and field-preservation cases live only in [altiumts's renderer tests](https://github.com/tscircuit/altiumts/tree/fix/native-schematic-rendering/tests/svg), with one test per file. To intentionally update baselines after reviewing a renderer change:
 
 ```sh
 BUN_UPDATE_SNAPSHOTS=1 FORCE_BUN_UPDATE_SNAPSHOTS=1 bun test tests/visual09-generated-system-repros.test.ts
