@@ -24,28 +24,24 @@ function document(records: string[][]) {
   )
 }
 
-test("serializes the microcontroller label's fractional outline and text positions natively", () => {
+test("serializes fractional native label anchors without decimal base fields", () => {
   const doc = document(
     createAltiumSchematicNetLabelRecordFields({
       anchorSide: "left",
-      altiumLabelCenter: { x: 267, y: 100 },
-      altiumLabelPosition: { x: 257, y: 100 },
-      decorationIndex: 0,
+      altiumLabelPosition: { x: 258.08, y: 100.25 },
       fontTable,
       labelText: "U1_VCORE",
       symbolName: "",
       textPresentation: undefined,
     }),
   )
-  const outline = doc.getRecordsByKind("7")[0]!
-  const label = doc.getRecordsByKind("4")[0]!
-  expect(outline.getCaseInsensitive("X2")).toBe("258")
-  expect(outline.getCaseInsensitive("X2_FRAC")).toBe("8000")
+  const label = doc.netLabels[0]!
   expect(label.getCaseInsensitive("LOCATION.X")).toBe("258")
-  expect(label.getCaseInsensitive("LOCATION.X_FRAC")).toBe("80000")
+  expect(label.getCaseInsensitive("LOCATION.X_FRAC")).toBe("8000")
+  expect(label.getCaseInsensitive("LOCATION.Y_FRAC")).toBe("25000")
+  expect(doc.getRecordsByKind("4")).toHaveLength(0)
   const svg = serializeAltiumSheetToSvg(doc, { margin: 0 })
-  expect(svg).toContain("258.08,198")
-  expect(svg).toContain("translate(258.8 200)")
+  expect(svg).toContain("translate(258.08 199.75)")
 })
 
 test("exports only integer coordinate tokens for every label direction and power ports", () => {
@@ -54,9 +50,7 @@ test("exports only integer coordinate tokens for every label direction and power
       const doc = document(
         createAltiumSchematicNetLabelRecordFields({
           anchorSide,
-          altiumLabelCenter: { x: -2.08, y: 8.25 },
           altiumLabelPosition: { x: -12.08, y: -0.00005 },
-          decorationIndex: 0,
           fontTable,
           labelText: "SIGNAL",
           symbolName,
