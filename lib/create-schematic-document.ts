@@ -874,7 +874,10 @@ export function createSchematicDocument({
             ? [`SYMBOL_OUTEREDGE=${ALTIUM_PIN_INVERSION_SYMBOL}`]
             : []),
           `COLOR=${pinColor}`,
-          "FONTID=2",
+          "PINNAME_POSITIONCONGLOMERATE=16",
+          "NAME_CUSTOMFONTID=2",
+          "PINDESIGNATOR_POSITIONCONGLOMERATE=16",
+          "DESIGNATOR_CUSTOMFONTID=2",
         ],
         schematicRecordContext,
       )

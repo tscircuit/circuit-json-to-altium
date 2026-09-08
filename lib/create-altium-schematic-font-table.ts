@@ -1,10 +1,11 @@
+import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import {
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID,
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_NAME,
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS,
 } from "./create-altium-schematic-off-sheet-port-record-fields"
 import type { AltiumSchematicTemplateFontFields } from "./extract-altium-schematic-template"
-import { asNumber, formatNumber } from "./format"
+import { asNumber } from "./format"
 import type { CircuitElement } from "./types"
 
 type AltiumSchematicFontId = number
@@ -83,7 +84,10 @@ export function createAltiumSchematicFontTable({
       fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
     )
     schematicFontRecordFields.push(
-      `SIZE${fontId}=${formatNumber(fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT)}`,
+      ...createAltiumSchematicCoordinateFields(
+        `SIZE${fontId}`,
+        fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
+      ),
       `FONTNAME${fontId}=${ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME}`,
     )
   }
