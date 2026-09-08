@@ -25,7 +25,7 @@ This is a local renderer, not the Altium 365 rendering engine or a captured rend
 - [Altium pin documentation](https://www.altium.com/documentation/altium-designer/components-libraries/creating-schematic-symbol) explains the system font and independent pin name/designator custom settings.
 - [python-altium format notes](https://github.com/vadmium/python-altium/blob/master/format.md) document native pin custom-font fields, electrical types and `SYSTEMFONT`.
 
-Exact glyph metrics, pin text margins/custom placement, sheet clipping/border behavior, inferred junction dots and all electrical symbol types are not fully matched. The renderer implements input/output/bidirectional indicators; the other non-passive types retain the existing renderer limitation. Do not describe these snapshots as pixel-identical official Altium output, or tune exporter values just to compensate for those remaining renderer differences.
+Default pin margins and enabled custom margins/colors are handled. Exact glyph metrics, custom pin text rotation/vertical margins, sheet clipping/border behavior, inferred junction dots and all electrical symbol types are not fully matched. The renderer implements input/output/bidirectional indicators; the other non-passive types retain the existing renderer limitation. Do not describe these snapshots as pixel-identical official Altium output, or tune exporter values just to compensate for those remaining renderer differences.
 
 Review the SVGs in a browser when checking text. During inspection, Resvg rasterization of the comparison's nested SVG images omitted embedded text, while rendering the standalone schematic retained it. The direct renderer tests therefore also assert font selection, sizes and text visibility; a pixel comparison alone is insufficient evidence for text behavior.
 
@@ -48,3 +48,13 @@ Both flags are needed to save text-only SVG changes even if raster comparison re
 Review renderer behavior and baselines first. Fix exporter coordinates, fonts, net-label representation and pin electrical types in subsequent changes, using independent Altium renders as the reference.
 
 Validation: the full [baseline CI test run](https://github.com/tscircuit/circuit-json-to-altium/actions/runs/34267437467) passed 98 tests across 71 files. A local schematic run passed 58 tests across 36 files. Typecheck and format check passed. Earlier artifact verification confirmed all eight automotive `.SchDoc` files and 32 generated-system Circuit JSON source panels were byte-for-byte unchanged by the rendering switch.
+
+
+The updated renderer also honors native pin custom-color fields and position bit
+0 (default name/designator margins -7/+9), places IEEE clock symbols inside the
+body, and interprets the native line-width enum, including screen hairlines.
+Font-table `SIZE` is an integer; `SIZE*_FRAC` is not supported by Altium and is
+ignored. KiCad accepting that field does not establish native Altium support.
+See the independent [native field reference](https://github.com/akiselev/altium-cli/blob/master/docs/reference/ad26/file-format-constants.md).
+Exporter corrections remain in the stacked PRs. Final font metrics and viewer
+preferences still require a fresh Altium 365 capture of the corrected export.

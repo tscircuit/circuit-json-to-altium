@@ -92,12 +92,12 @@ test("pins use SYSTEMFONT and independent enabled custom name/designator fonts",
   expect(textElement(designatorOverride, "SIGNAL")).toContain('font-size="4"')
 })
 
-test("zero font ID inherits SYSTEMFONT and separate fractional size is supported", () => {
+test("zero font ID inherits SYSTEMFONT and unsupported font fractions are ignored", () => {
   const svg = render(
     ["|RECORD=4|FONTID=0|TEXT=system"],
     "|SYSTEMFONT=1|FONTIDCOUNT=1|SIZE1=4|SIZE1_FRAC=50000|FONTNAME1=Arial",
   )
-  expect(textElement(svg, "system")).toContain('font-size="4.5"')
+  expect(textElement(svg, "system")).toContain('font-size="4"')
 })
 
 test("net labels remain visible alongside graphics while hidden parameters stay hidden", () => {
