@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test"
-import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
+import {
+  getSchematicRecordPoints,
+  parseAltiumSchDoc,
+  serializeAltiumSheetToSvg,
+} from "altiumts"
 import type { CircuitJson } from "circuit-json"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { CircuitJsonToAltiumConverter } from "../lib"
@@ -95,10 +99,37 @@ test("renders a schematic pin edge symbol round trip", async () => {
     (pin) => pin.name === "INVERTED CLOCK",
   )
 
-  expect(clockPin?.getNumber("SYMBOL_INNEREDGE")).toBe(3)
-  expect(invertedPin?.getNumber("SYMBOL_OUTEREDGE")).toBe(1)
-  expect(invertedClockPin?.getNumber("SYMBOL_INNEREDGE")).toBe(3)
-  expect(invertedClockPin?.getNumber("SYMBOL_OUTEREDGE")).toBe(1)
+  expect(clockPin?.get("SYMBOL_INNEREDGE")).toBeUndefined()
+  expect(invertedPin?.get("SYMBOL_OUTEREDGE")).toBeUndefined()
+  expect(invertedClockPin?.get("SYMBOL_INNEREDGE")).toBeUndefined()
+  expect(invertedClockPin?.get("SYMBOL_OUTEREDGE")).toBeUndefined()
+
+  const ownedRecords = altiumSchematic.getOwnedRecords(
+    altiumSchematic.components[0]!,
+  )
+  const arrowRecords = ownedRecords.filter(
+    (record) => record.recordKind === "7",
+  )
+  const inversionCircleRecords = ownedRecords.filter(
+    (record) => record.recordKind === "8",
+  )
+  expect(arrowRecords).toHaveLength(2)
+  expect(inversionCircleRecords).toHaveLength(2)
+
+  for (const arrowRecord of arrowRecords) {
+    expect(arrowRecord.getNumber("LINEWIDTH")).toBe(0)
+    const arrowPoints = getSchematicRecordPoints(arrowRecord)
+    const xs = arrowPoints.map((point) => point.x)
+    const ys = arrowPoints.map((point) => point.y)
+    const width = Math.max(...xs) - Math.min(...xs)
+    const height = Math.max(...ys) - Math.min(...ys)
+    expect(Math.max(width, height)).toBeCloseTo(2, 4)
+    expect(Math.min(width, height)).toBeCloseTo(1.73205, 4)
+  }
+  for (const circleRecord of inversionCircleRecords) {
+    expect(circleRecord.getNumber("RADIUS")).toBe(1)
+    expect(circleRecord.get("RADIUS_FRAC")).toBe("20000")
+  }
 
   const sourceSvg = await convertCircuitJsonToSchematicSvg(circuitJson)
   const altiumSvg = serializeAltiumSheetToSvg(altiumSchematic)

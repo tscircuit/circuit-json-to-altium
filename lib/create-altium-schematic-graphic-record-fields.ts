@@ -96,7 +96,7 @@ function createAltiumPathRecordFields({
 const ALTIUM_SCHEMATIC_FRACTION_DIGITS = 5
 const ALTIUM_SCHEMATIC_FRACTION_SCALE = 10 ** ALTIUM_SCHEMATIC_FRACTION_DIGITS
 
-function createAltiumSchematicCoordinateRecordFields(
+export function createAltiumSchematicCoordinateRecordFields(
   fieldName: string,
   coordinate: number,
 ): string[] {
