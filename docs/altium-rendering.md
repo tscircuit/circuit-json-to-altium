@@ -1,0 +1,48 @@
+# Altium format previews
+
+The schematic snapshots use a pinned `altiumts` renderer so native-format mistakes in the current exporter remain visible. This change deliberately leaves the exporter output as it is. A passing visual regression means the output matches the recorded baseline; it does **not** mean the conversion is correct.
+
+The renderer commit is pinned in `package.json` and installed by `bun install`. It changes `altiumts`'s schematic rendering, so all callers of `serializeAltiumSheetToSvg` use the same interpretation. It does not modify the parser's preserved fields or the binary serializer. The renderer is reviewed in [altiumts PR #153](https://github.com/tscircuit/altiumts/pull/153); this repository records the resulting converter baselines.
+
+## Behavior exposed by the new baselines
+
+| Exported data | Previous local preview | Updated local preview |
+| --- | --- | --- |
+| `X2=258.08` | Accepts decimal coordinates | Invalid integer base field falls back to zero; stretched polygons expose the error |
+| `X2=258` and `X2_FRAC=8000` | Treats the fraction like decimal digits (`0.8`) | Adds the signed fraction divided by 100,000 (`0.08`) |
+| `SIZE5=3.6000` | Uses font size 3.6 | Invalid integer size uses fallback 10; oversized labels expose the error |
+| `FONTID=2` on a pin | Uses font 2 for both name and number | Resolves `SYSTEMFONT`, or each enabled `NAME_CUSTOMFONTID` / `DESIGNATOR_CUSTOMFONTID`; missing system font uses Times New Roman 10 |
+| `ISHIDDEN=T` on a net label, plus separate graphic text | Hides the native net label | Draws both labels, exposing duplicate text |
+| Pin without `ELECTRICAL` | No electrical-type indicator | Uses input type; passive/power pins need their explicit native types |
+
+The automotive microcontroller comparison now exposes the same **classes of failure** visible in the user's Altium 365 capture: large pin/annotation text, leftward polygon stretching, duplicate net labels and extra terminal indicators. Open [its snapshot](../tests/__snapshots__/visual09-generated-system-repros-automotive-mirror-system-04-microcontroller.snap.svg). Left is Circuit JSON; right is the local Altium format preview.
+
+## Evidence and limits
+
+This is a local renderer, not the Altium 365 rendering engine or a captured render from Altium Designer. The independent format references establish the integer/fraction encoding and pin settings. Invalid-coordinate fallback, invalid-size fallback and net-label visibility are modeled from the supplied Altium 365 screenshot; they still need isolated fixtures rendered by Altium to establish exact behavior across versions.
+
+- [KiCad's Altium importer](https://github.com/KiCad/kicad-source-mirror/blob/master/eeschema/sch_io/altium/altium_parser_sch.cpp) reads coordinate and font-size base/fraction fields as integers and defaults an unspecified pin electrical type to input.
+- [Altium pin documentation](https://www.altium.com/documentation/altium-designer/components-libraries/creating-schematic-symbol) explains the system font and independent pin name/designator custom settings.
+- [python-altium format notes](https://github.com/vadmium/python-altium/blob/master/format.md) document native pin custom-font fields, electrical types and `SYSTEMFONT`.
+
+Exact glyph metrics, pin text margins/custom placement, sheet clipping/border behavior, inferred junction dots and all electrical symbol types are not fully matched. The renderer implements input/output/bidirectional indicators; the other non-passive types retain the existing renderer limitation. Do not describe these snapshots as pixel-identical official Altium output, or tune exporter values just to compensate for those remaining renderer differences.
+
+Review the SVGs in a browser when checking text. During inspection, Resvg rasterization of the comparison's nested SVG images omitted embedded text, while rendering the standalone schematic retained it. The direct renderer tests therefore also assert font selection, sizes and text visibility; a pixel comparison alone is insufficient evidence for text behavior.
+
+## Reproduce and review
+
+```sh
+bun install
+bun test tests/schematic21-native-rendering.test.ts
+bun test tests/visual09-generated-system-repros.test.ts
+```
+
+The renderer tests exercise native documents directly, including correct fractional values, malformed fields, independent pin fonts and preserved serialized data. To intentionally update baselines after reviewing a renderer change:
+
+```sh
+BUN_UPDATE_SNAPSHOTS=1 bun test tests/visual09-generated-system-repros.test.ts
+```
+
+Review renderer behavior and baselines first. Fix exporter coordinates, fonts, net-label representation and pin electrical types in subsequent changes, using independent Altium renders as the reference.
+
+Validation for this change: 58 schematic tests across 36 files passed with snapshot updates disabled; the nine native-rendering tests also passed in an isolated clean dependency install. Typecheck and format check passed. All eight automotive `.SchDoc` files and 32 generated-system Circuit JSON source panels were byte-for-byte unchanged. The full repository test run was interrupted during the heavy EBAZ4205 PCB round trip; the full PCB suite is not claimed as passing.

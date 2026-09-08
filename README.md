@@ -81,6 +81,12 @@ Every visual comparison embeds the unchanged source and generated SVGs side by
 side in one snapshot. Visual baselines live in `tests/__snapshots__` so mapping
 regressions can be reviewed directly in a pull request.
 
+Schematic previews use a pinned `altiumts` renderer commit to expose native-format
+errors in the current export. These are local previews, not official Altium
+captures, and a passing snapshot does not establish correct conversion. See
+[Altium rendering](docs/altium-rendering.md) for the modeled rules, known gaps,
+and the microcontroller example with intentionally visible conversion issues.
+
 ```bash
 # Update visual snapshots after reviewing an intentional rendering change
 BUN_UPDATE_SNAPSHOTS=1 bun test tests/visual01-pcb-comparison.test.tsx
