@@ -30,6 +30,7 @@ import {
   isCircuitElement,
   sanitizeField,
 } from "./format"
+import { getAltiumSchematicPinElectricalType } from "./get-altium-schematic-pin-electrical-type"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import { getSchematicTransform } from "./get-schematic-transform"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
@@ -856,9 +857,16 @@ export function createSchematicDocument({
         cssColor: asString(explicitPinText?.color),
         fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
       })
+      const electricalType = getAltiumSchematicPinElectricalType({
+        sourceComponent,
+        sourcePort,
+      })
       addSchematicRecord(
         [
           "RECORD=2",
+          ...(electricalType === undefined
+            ? []
+            : [`ELECTRICAL=${electricalType}`]),
           `OWNERINDEX=${altiumComponentRecordIndex}`,
           "OWNERPARTID=1",
           `DESIGNATOR=${pinDesignator}`,
