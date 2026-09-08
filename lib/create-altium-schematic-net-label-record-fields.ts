@@ -3,6 +3,7 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
+import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import {
   type AltiumSchematicFontTable,
   SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS,
@@ -225,8 +226,14 @@ export function createAltiumSchematicNetLabelRecordFields({
     return [
       [
         "RECORD=17",
-        `LOCATION.X=${altiumLabelPosition.x}`,
-        `LOCATION.Y=${altiumLabelPosition.y}`,
+        ...createAltiumSchematicCoordinateFields(
+          "LOCATION.X",
+          altiumLabelPosition.x,
+        ),
+        ...createAltiumSchematicCoordinateFields(
+          "LOCATION.Y",
+          altiumLabelPosition.y,
+        ),
         `FONTID=${fontId}`,
         `ORIENTATION=${powerPortStyle.orientationIndex}`,
         `STYLE=${powerPortStyle.styleIndex}`,
@@ -239,8 +246,14 @@ export function createAltiumSchematicNetLabelRecordFields({
 
   const nativeNetLabelFields = [
     "RECORD=25",
-    `LOCATION.X=${altiumLabelPosition.x}`,
-    `LOCATION.Y=${altiumLabelPosition.y}`,
+    ...createAltiumSchematicCoordinateFields(
+      "LOCATION.X",
+      altiumLabelPosition.x,
+    ),
+    ...createAltiumSchematicCoordinateFields(
+      "LOCATION.Y",
+      altiumLabelPosition.y,
+    ),
     `FONTID=${fontId}`,
     `ORIENTATION=${getAltiumSchematicTextOrientation(asNumber(textPresentation?.rotation))}`,
     `JUSTIFICATION=${
@@ -277,8 +290,8 @@ export function createAltiumSchematicNetLabelRecordFields({
       "LINEWIDTH=0",
       `LOCATIONCOUNT=${displayGeometry.outlinePoints.length}`,
       ...displayGeometry.outlinePoints.flatMap((point, pointIndex) => [
-        `X${pointIndex + 1}=${point.x}`,
-        `Y${pointIndex + 1}=${point.y}`,
+        ...createAltiumSchematicCoordinateFields(`X${pointIndex + 1}`, point.x),
+        ...createAltiumSchematicCoordinateFields(`Y${pointIndex + 1}`, point.y),
       ]),
       `COLOR=${color}`,
       `AREACOLOR=${ALTIUM_SCHEMATIC_SHEET_AREA_COLOR}`,
@@ -288,8 +301,14 @@ export function createAltiumSchematicNetLabelRecordFields({
     [
       "RECORD=4",
       "OWNERPARTID=-1",
-      `LOCATION.X=${displayGeometry.textPosition.x}`,
-      `LOCATION.Y=${displayGeometry.textPosition.y}`,
+      ...createAltiumSchematicCoordinateFields(
+        "LOCATION.X",
+        displayGeometry.textPosition.x,
+      ),
+      ...createAltiumSchematicCoordinateFields(
+        "LOCATION.Y",
+        displayGeometry.textPosition.y,
+      ),
       `FONTID=${fontId}`,
       `ORIENTATION=${displayGeometry.orientation}`,
       `JUSTIFICATION=${displayGeometry.textJustification}`,
