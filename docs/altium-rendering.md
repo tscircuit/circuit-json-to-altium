@@ -2,7 +2,7 @@
 
 The schematic snapshots use a pinned `altiumts` renderer so native-format mistakes in the current exporter remain visible. This change deliberately leaves the exporter output as it is. A passing visual regression means the output matches the recorded baseline; it does **not** mean the conversion is correct.
 
-The renderer commit is pinned in `package.json` and installed by `bun install`. It changes `altiumts`'s schematic rendering, so all callers of `serializeAltiumSheetToSvg` use the same interpretation. It does not modify the parser's preserved fields or the binary serializer. The renderer is reviewed in [altiumts PR #153](https://github.com/tscircuit/altiumts/pull/153); this repository records the resulting converter baselines.
+The merged renderer commit `6c8af3de0e50c7d918f7f2bf43cca5af604cf9cc` is pinned in `package.json` and installed by `bun install`. It includes the native renderer merged in [altiumts PR #153](https://github.com/tscircuit/altiumts/pull/153), so all callers of `serializeAltiumSheetToSvg` use the same interpretation. It does not modify the parser's preserved fields or the binary serializer. This repository records the resulting converter baselines.
 
 ## Behavior exposed by the new baselines
 
@@ -37,7 +37,7 @@ bun test tests/schematic21-native-rendering.test.ts
 bun test tests/visual09-generated-system-repros.test.ts
 ```
 
-The converter integration test exports a small Circuit JSON component to a binary SchDoc, parses that exported file, and snapshots its SVG using the installed renderer. Detailed native-coordinate, font, visibility and field-preservation cases live only in [altiumts's renderer tests](https://github.com/tscircuit/altiumts/tree/fix/native-schematic-rendering/tests/svg), with one test per file. To intentionally update baselines after reviewing a renderer change:
+The converter integration test exports a small Circuit JSON component to a binary SchDoc, parses that exported file, and snapshots its SVG using the installed renderer. Detailed native-coordinate, font, visibility and field-preservation cases live only in [altiumts's renderer tests](https://github.com/tscircuit/altiumts/tree/main/tests/svg), with one test per file. To intentionally update baselines after reviewing a renderer change:
 
 ```sh
 BUN_UPDATE_SNAPSHOTS=1 FORCE_BUN_UPDATE_SNAPSHOTS=1 bun test tests/visual09-generated-system-repros.test.ts
