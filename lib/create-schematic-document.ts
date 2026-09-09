@@ -6,7 +6,8 @@ import {
 import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import {
   createAltiumSchematicFontTable,
-  SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS,
+  SCHEMATIC_PIN_NAME_FONT_SIZE_CIRCUIT_UNITS,
+  SCHEMATIC_PIN_NUMBER_FONT_SIZE_CIRCUIT_UNITS,
 } from "./create-altium-schematic-font-table"
 import {
   createAltiumSchematicNetLabelRecordFields,
@@ -905,11 +906,11 @@ export function createSchematicDocument({
       const pinNameFontId = nativeTextFontTable.fontIdBySizeCircuitUnits.get(
         asPositiveNumber(
           schematicPort.display_pin_label_font_size,
-          SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS,
+          SCHEMATIC_PIN_NAME_FONT_SIZE_CIRCUIT_UNITS,
         ),
       )!
       const pinNumberFontId = nativeTextFontTable.fontIdBySizeCircuitUnits.get(
-        SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS,
+        SCHEMATIC_PIN_NUMBER_FONT_SIZE_CIRCUIT_UNITS,
       )!
       addSchematicRecord(
         [

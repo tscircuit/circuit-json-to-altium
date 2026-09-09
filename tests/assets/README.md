@@ -50,10 +50,9 @@ Coordinates use integer fields plus `_FRAC / 100000` for sub-grid positions.
 
 ## Pin name and number fonts
 
-[Microcontroller](./automotive-mirror-microcontroller-pin-name-position.SchDoc)
-uses Arial **4 pt** for native pin names and numbers, matching component
-references and values (`0.2 × 20 = 4 pt`). This export default is larger than
-Circuit JSON's 0.15-unit default. An explicit
+[Microcontroller](./automotive-mirror-microcontroller-pin-names-3pt-numbers-4pt.SchDoc)
+uses Arial **3 pt** for native pin names, matching Circuit JSON's default
+(`0.15 × 20 = 3 pt`). Pin numbers use **4 pt** (`0.2 × 20 = 4 pt`). An explicit
 `schematic_port.display_pin_label_font_size` changes only the name font, using
 `font_size × 20` rounded up (minimum 1 pt).
 
@@ -64,5 +63,4 @@ The custom settings preserve the existing pin text color.
 Pin names sit **0.1 circuit units inside the body edge**, matching Circuit JSON:
 `NAME_CUSTOMPOSITION_MARGIN = -(0.1 × 20) = -2`. Custom position and font are
 enabled together (`PINNAME_POSITIONCONGLOMERATE=17`); numbers retain their native
-position. The local SVG preview still shows overlap in the two longest opposing
-GPIO pairs at 4 pt; the updated margin needs a fresh Altium viewer check.
+position.

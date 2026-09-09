@@ -37,10 +37,13 @@ test("renders an exported Circuit JSON schematic with the installed native rende
   const svg = serializeAltiumSheetToSvg(schematic)
   expect(svg).toContain(">U1</text>")
   expect(svg).toContain(">SIGNAL</text>")
-  for (const text of ["SIGNAL", "1"]) {
+  for (const [text, size] of [
+    ["SIGNAL", 3],
+    ["1", 4],
+  ]) {
     const element = svg.match(new RegExp(`<text[^>]*>${text}</text>`))?.[0]
     expect(element).toContain('font-family="Arial"')
-    expect(element).toContain('font-size="4"')
+    expect(element).toContain(`font-size="${size}"`)
   }
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })

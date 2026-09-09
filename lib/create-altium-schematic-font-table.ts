@@ -38,8 +38,9 @@ const ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS = 4
 const ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME = "Arial"
 // Circuit JSON renders ordinary net labels at 0.18 circuit units.
 export const SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS = 0.18
-// Native pin text defaults to 4 pt, matching component reference/value text.
-export const SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS = 0.2
+// Match Circuit JSON's default pin-name size; numbers remain at 4 pt.
+export const SCHEMATIC_PIN_NAME_FONT_SIZE_CIRCUIT_UNITS = 0.15
+export const SCHEMATIC_PIN_NUMBER_FONT_SIZE_CIRCUIT_UNITS = 0.2
 
 export function createAltiumSchematicFontTable({
   netLabelTextPresentations = [],
@@ -134,10 +135,10 @@ export function createAltiumSchematicFontTable({
     ...schematicElements.flatMap((port) =>
       port.type === "schematic_port" && asString(port.schematic_component_id)
         ? [
-            SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS,
+            SCHEMATIC_PIN_NUMBER_FONT_SIZE_CIRCUIT_UNITS,
             asPositiveNumber(
               port.display_pin_label_font_size,
-              SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS,
+              SCHEMATIC_PIN_NAME_FONT_SIZE_CIRCUIT_UNITS,
             ),
           ]
         : [],

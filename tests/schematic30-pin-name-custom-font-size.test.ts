@@ -9,13 +9,13 @@ import {
 
 test("uses an independent integer font for custom pin names while keeping numbers at 4 pt", async () => {
   const samples = [
-    { size: undefined, points: "4" },
+    { size: undefined, points: "3" },
     { size: 0.15, points: "3" },
     { size: 0.155, points: "4" },
     { size: 0.4, points: "8" },
     { size: 0.01, points: "1" },
-    { size: 0, points: "4" },
-    { size: -1, points: "4" },
+    { size: 0, points: "3" },
+    { size: -1, points: "3" },
   ]
   const { schematics } = await extractArchive([
     board(),

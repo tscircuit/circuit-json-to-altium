@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { parseAltiumSchDoc } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 
-test("exports native Arial 4 pin text with inset names and unchanged number placement", async () => {
+test("exports native Arial 3 pin names and Arial 4 numbers with the correct name inset", async () => {
   const circuitJson = await Bun.file(
     new URL(
       "./assets/generated-system-automotive-mirror.circuit.json",
@@ -47,7 +47,9 @@ test("exports native Arial 4 pin text with inset names and unchanged number plac
     expect(record.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBeUndefined()
     for (const kind of ["NAME", "DESIGNATOR"]) {
       const fontId = record.getNumber(`${kind}_CUSTOMFONTID`)
-      expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("4")
+      expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe(
+        kind === "NAME" ? "3" : "4",
+      )
       expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
       expect(record.getNumber(`${kind}_CUSTOMCOLOR`)).toBe(
         previous.getNumber("COLOR"),
