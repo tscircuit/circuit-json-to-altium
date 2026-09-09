@@ -1,11 +1,13 @@
 /** SchDoc coordinates use signed integer base and hundred-thousandth fields. */
 export function createAltiumSchematicCoordinateFields(
   fieldName: string,
-  value: number,
+  coordinateValue: number,
 ): string[] {
-  const ticks = Math.round(value * 100_000)
+  const ticks = Math.round(coordinateValue * 100_000)
   if (!Number.isSafeInteger(ticks)) {
-    throw new RangeError(`Invalid schematic coordinate ${fieldName}: ${value}`)
+    throw new RangeError(
+      `Invalid schematic coordinate ${fieldName}: ${coordinateValue}`,
+    )
   }
   const integer = Math.trunc(ticks / 100_000)
   const fraction = ticks - integer * 100_000
