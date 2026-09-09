@@ -58,7 +58,7 @@ test("uses an independent integer font for custom pin names while keeping number
     )
     expect(sheet.getCaseInsensitive(`SIZE${numberFontId}`)).toBe("4")
     expect(sheet.getDecoded(`FONTNAME${nameFontId}`)).toBe("Arial")
-    expect(pin.getNumber("PINNAME_POSITIONCONGLOMERATE")).toBe(16)
+    expect(pin.getNumber("PINNAME_POSITIONCONGLOMERATE")! & 16).toBe(16)
     expect(pin.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(16)
   }
   expectValidSchematic(doc)

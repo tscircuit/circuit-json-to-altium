@@ -3,6 +3,7 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
+import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import {
   createAltiumSchematicFontTable,
   SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS,
@@ -104,6 +105,9 @@ const ALTIUM_PIN_STANDARD_FLAGS = 0x20
 const ALTIUM_PIN_NAME_VISIBLE_FLAG = 0x08
 const ALTIUM_PIN_DESIGNATOR_VISIBLE_FLAG = 0x10
 const ALTIUM_PIN_CUSTOM_FONT_FLAG = 0x10
+const ALTIUM_PIN_CUSTOM_POSITION_FLAG = 0x01
+// Match Circuit JSON's pin-name inset from the body edge, independently of font size.
+const SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS = 0.1
 const ALTIUM_PIN_CLOCK_SYMBOL = 3
 const ALTIUM_PIN_INVERSION_SYMBOL = 1
 const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
@@ -927,7 +931,13 @@ export function createSchematicDocument({
           `COLOR=${pinColor}`,
           // Native pins require independently enabled name/designator fonts.
           // Custom settings also select text color, so retain the pin color.
-          `PINNAME_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG}`,
+          `PINNAME_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG | ALTIUM_PIN_CUSTOM_POSITION_FLAG}`,
+          ...createAltiumSchematicCoordinateFields(
+            "NAME_CUSTOMPOSITION_MARGIN",
+            -circuitToAltiumSchematicLength(
+              SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS,
+            ),
+          ),
           `NAME_CUSTOMFONTID=${pinNameFontId}`,
           `NAME_CUSTOMCOLOR=${pinColor}`,
           `PINDESIGNATOR_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG}`,

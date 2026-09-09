@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { parseAltiumSchDoc } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 
-test("exports native Arial 4 pin names and numbers without changing other microcontroller records", async () => {
+test("exports native Arial 4 pin text with inset names and unchanged number placement", async () => {
   const circuitJson = await Bun.file(
     new URL(
       "./assets/generated-system-automotive-mirror.circuit.json",
@@ -39,8 +39,13 @@ test("exports native Arial 4 pin names and numbers without changing other microc
       continue
     }
     expect(record.getNumber("FONTID")).toBeUndefined()
+    // Only names opt into custom position: 0.1 circuit units inside the body.
+    expect(record.getNumber("PINNAME_POSITIONCONGLOMERATE")).toBe(17)
+    expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(-2)
+    expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN_FRAC")).toBeUndefined()
+    expect(record.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(16)
+    expect(record.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBeUndefined()
     for (const kind of ["NAME", "DESIGNATOR"]) {
-      expect(record.getNumber(`PIN${kind}_POSITIONCONGLOMERATE`)).toBe(16)
       const fontId = record.getNumber(`${kind}_CUSTOMFONTID`)
       expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("4")
       expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
