@@ -39,3 +39,11 @@ uses Arial **4 pt** for ordinary net labels such as U6_TXD, U1_VCORE and GND.
 Size depends on the matching `schematic_text.font_size`, or the default
 **0.18 circuit units**, multiplied by **20** and rounded up (minimum 1 pt):
 `0.18 × 20 = 3.6 → 4 pt`. Inline trace labels remain at 3 pt.
+
+## Pointed net-label boxes
+
+[Microcontroller](./automotive-mirror-microcontroller-pointed-net-labels.SchDoc)
+and [VIN_DC_DC / EN_3P3 detail](./pointed-net-label-detail.SchDoc) use one native
+4 pt label inside each pointed box, connected to the original wire anchor.
+Box width fits the text; default height is `0.2 × 20 = 4` schematic units.
+Coordinates use integer fields plus `_FRAC / 100000` for sub-grid positions.

@@ -52,7 +52,7 @@ test("uses native integer net-label sizes without resizing other sheet text", as
     const records = schematic.records.filter(
       (record) => record.getDecoded("TEXT") === text,
     )
-    expect(records.map((record) => record.recordKind)).toEqual(["25", "4"])
+    expect(records.map((record) => record.recordKind)).toEqual(["25"])
     for (const record of records) {
       const fontId = record.getNumber("FONTID")
       expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe(points)
