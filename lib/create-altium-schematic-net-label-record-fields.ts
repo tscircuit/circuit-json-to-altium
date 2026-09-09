@@ -3,6 +3,7 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
+import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import {
   type AltiumSchematicFontTable,
   SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS,
@@ -110,7 +111,7 @@ function isNetLabelAnchorSide(value: string): value is NetLabelAnchorSide {
 
 function getNetLabelDecorationUniqueId(
   decorationIndex: number,
-  decorationKind: "P" | "T",
+  decorationKind: "P" | "T" | "W",
 ): string {
   const alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXY"
   let remainingIndex = Math.max(Math.floor(decorationIndex), 0)
@@ -127,11 +128,14 @@ function getNetLabelDisplayGeometry({
   altiumLabelPosition,
   anchorSide,
   fontSize,
+  textFontSize,
   labelText,
 }: Pick<
   SchematicNetLabelRecordFieldsInput,
   "altiumLabelCenter" | "altiumLabelPosition" | "anchorSide" | "labelText"
-> & { fontSize: number }): NetLabelDisplayGeometry | undefined {
+> & { fontSize: number; textFontSize: number }):
+  | NetLabelDisplayGeometry
+  | undefined {
   if (!isNetLabelAnchorSide(anchorSide)) return undefined
 
   const direction = NET_LABEL_GROWTH_DIRECTION_BY_ANCHOR_SIDE[anchorSide]
@@ -144,7 +148,10 @@ function getNetLabelDisplayGeometry({
   const pointDepth = fontSize * 0.3
   const textInset = fontSize * 0.5
   const endPadding = fontSize * 0.2
-  const textWidth = estimateAltiumSchematicLabelTextWidth(labelText, fontSize)
+  const textWidth = estimateAltiumSchematicLabelTextWidth(
+    labelText,
+    textFontSize,
+  )
   const width = Math.max(
     projectedHalfWidth * 2,
     textInset + textWidth + endPadding,
@@ -270,25 +277,42 @@ export function createAltiumSchematicNetLabelRecordFields({
     altiumLabelCenter,
     altiumLabelPosition,
     anchorSide,
-    // Preserve the source-sized outline and text inset when rounding the font.
+    // Keep the source height and inset; fit the width to the native font.
     fontSize: fontTable.fontSizePointsById.get(sourceFontId) ?? 4,
+    textFontSize: fontTable.fontSizePointsById.get(fontId) ?? 4,
     labelText,
   })
   if (!displayGeometry) return [nativeNetLabelFields]
 
-  // A native Altium net label only paints text. Keep it hidden at the wire
-  // anchor for net identity, then reproduce Circuit JSON's pointed label body
-  // with ordinary schematic graphics.
+  // Net labels stay visible in native Altium, even with ISHIDDEN. Place one
+  // label inside the outline and connect its hotspot to the original anchor.
+  // The filled outline covers this short internal wire segment.
   return [
-    [...nativeNetLabelFields, "ISHIDDEN=T"],
+    [
+      "RECORD=27",
+      "LINEWIDTH=0",
+      "LOCATIONCOUNT=2",
+      ...createAltiumSchematicCoordinateFields("X1", altiumLabelPosition.x),
+      ...createAltiumSchematicCoordinateFields("Y1", altiumLabelPosition.y),
+      ...createAltiumSchematicCoordinateFields(
+        "X2",
+        displayGeometry.textPosition.x,
+      ),
+      ...createAltiumSchematicCoordinateFields(
+        "Y2",
+        displayGeometry.textPosition.y,
+      ),
+      "COLOR=34816",
+      `UNIQUEID=${getNetLabelDecorationUniqueId(decorationIndex, "W")}`,
+    ],
     [
       "RECORD=7",
       "OWNERPARTID=-1",
       "LINEWIDTH=0",
       `LOCATIONCOUNT=${displayGeometry.outlinePoints.length}`,
       ...displayGeometry.outlinePoints.flatMap((point, pointIndex) => [
-        `X${pointIndex + 1}=${point.x}`,
-        `Y${pointIndex + 1}=${point.y}`,
+        ...createAltiumSchematicCoordinateFields(`X${pointIndex + 1}`, point.x),
+        ...createAltiumSchematicCoordinateFields(`Y${pointIndex + 1}`, point.y),
       ]),
       `COLOR=${color}`,
       `AREACOLOR=${ALTIUM_SCHEMATIC_SHEET_AREA_COLOR}`,
@@ -296,10 +320,15 @@ export function createAltiumSchematicNetLabelRecordFields({
       `UNIQUEID=${getNetLabelDecorationUniqueId(decorationIndex, "P")}`,
     ],
     [
-      "RECORD=4",
-      "OWNERPARTID=-1",
-      `LOCATION.X=${displayGeometry.textPosition.x}`,
-      `LOCATION.Y=${displayGeometry.textPosition.y}`,
+      "RECORD=25",
+      ...createAltiumSchematicCoordinateFields(
+        "LOCATION.X",
+        displayGeometry.textPosition.x,
+      ),
+      ...createAltiumSchematicCoordinateFields(
+        "LOCATION.Y",
+        displayGeometry.textPosition.y,
+      ),
       `FONTID=${fontId}`,
       `ORIENTATION=${displayGeometry.orientation}`,
       `JUSTIFICATION=${displayGeometry.textJustification}`,

@@ -66,7 +66,7 @@ test("reproduces the Consumer Wireless Module generated system", async () => {
   const sensors = parsedSchematics[7]!
   const adjacentLabelBounds = ["L3P3_pin2", "U3P3_GND"].map((text) => {
     const label = sensors
-      .getRecordsByKind("4")
+      .getRecordsByKind("25")
       .find(
         (record) =>
           record.getDecoded("TEXT") === text &&
@@ -93,7 +93,8 @@ test("reproduces the Consumer Wireless Module generated system", async () => {
   const [upperLabel, lowerLabel] = adjacentLabelBounds
   expect(upperLabel!.minY - lowerLabel!.maxY).toBeGreaterThanOrEqual(-0.0001)
   expect(upperLabel!.width).toBeLessThanOrEqual(24.001)
-  expect(lowerLabel!.width).toBeLessThanOrEqual(22.001)
+  // Integer 4 pt text needs slightly more width than the old 3.6 pt estimate.
+  expect(lowerLabel!.width).toBeLessThanOrEqual(24.001)
 
   const rootSchematic = parsedSchematics[0]
   if (!rootSchematic) throw new Error("Converter did not create a root sheet")
