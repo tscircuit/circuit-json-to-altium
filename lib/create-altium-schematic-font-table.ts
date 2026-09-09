@@ -4,7 +4,7 @@ import {
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS,
 } from "./create-altium-schematic-off-sheet-port-record-fields"
 import type { AltiumSchematicTemplateFontFields } from "./extract-altium-schematic-template"
-import { asNumber, asString, formatNumber } from "./format"
+import { asNumber, asPositiveNumber, asString, formatNumber } from "./format"
 import type { CircuitElement } from "./types"
 
 type AltiumSchematicFontId = number
@@ -38,6 +38,7 @@ const ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS = 4
 const ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME = "Arial"
 // Circuit JSON renders ordinary net labels at 0.18 circuit units.
 export const SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS = 0.18
+export const SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS = 0.15
 
 export function createAltiumSchematicFontTable({
   netLabelTextPresentations = [],
@@ -129,6 +130,17 @@ export function createAltiumSchematicFontTable({
     ),
     ...(hasNetLabels ? [SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS] : []),
     ...netLabelTextPresentations.map((text) => asNumber(text.font_size)),
+    ...schematicElements.flatMap((port) =>
+      port.type === "schematic_port" && asString(port.schematic_component_id)
+        ? [
+            SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS,
+            asPositiveNumber(
+              port.display_pin_label_font_size,
+              SCHEMATIC_PIN_TEXT_FONT_SIZE_CIRCUIT_UNITS,
+            ),
+          ]
+        : [],
+    ),
   ]
   for (const size of nativeTextSizesCircuitUnits) {
     if (size <= 0) continue
@@ -139,7 +151,7 @@ export function createAltiumSchematicFontTable({
     ) {
       continue
     }
-    // Component, inline trace and ordinary net-label text use integer points.
+    // Component, trace, net-label and pin text use integer points.
     // For example, 0.18 becomes Arial 4, and inline labels at 0.12 become Arial 3.
     const points = Math.max(
       1,
