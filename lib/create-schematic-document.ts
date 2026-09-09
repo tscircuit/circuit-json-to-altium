@@ -409,10 +409,10 @@ export function createSchematicDocument({
     schematicElements,
     templateFontFields: template?.fontFields,
   })
-  const componentTextFontTable = {
+  const nativeTextFontTable = {
     ...altiumSchematicFontTable,
     fontIdBySizeCircuitUnits:
-      altiumSchematicFontTable.componentFontIdBySizeCircuitUnits,
+      altiumSchematicFontTable.nativeTextFontIdBySizeCircuitUnits,
   }
   const schematicRecordContext: SchematicRecordContext = {
     lines: [
@@ -712,7 +712,7 @@ export function createSchematicDocument({
       },
       fallbackFontId: 1,
       fallbackJustification: designatorPlacement?.justification ?? 0,
-      fontTable: componentTextFontTable,
+      fontTable: nativeTextFontTable,
       schematicText: designatorText,
     })
     const commentPresentation = getAltiumSchematicTextPresentation({
@@ -724,7 +724,7 @@ export function createSchematicDocument({
       },
       fallbackFontId: 2,
       fallbackJustification: commentPlacement?.justification ?? 0,
-      fontTable: componentTextFontTable,
+      fontTable: nativeTextFontTable,
       schematicText: commentText,
     })
     addSchematicRecord(
@@ -888,7 +888,7 @@ export function createSchematicDocument({
       const recordFields = createAltiumSchematicTextRecordFields({
         altiumComponentRecordIndex,
         circuitToAltiumSchematicPoint,
-        fontTable: componentTextFontTable,
+        fontTable: nativeTextFontTable,
         schematicText: componentGraphicText,
       })
       if (recordFields) addSchematicRecord(recordFields, schematicRecordContext)
@@ -994,7 +994,9 @@ export function createSchematicDocument({
       ),
       altiumLabelPosition: circuitToAltiumSchematicPoint(circuitLabelPosition),
       decorationIndex: netLabelIndex,
-      fontTable: altiumSchematicFontTable,
+      fontTable: asString(textPresentation?.source_trace_id)
+        ? nativeTextFontTable
+        : altiumSchematicFontTable,
       labelText,
       symbolName: asString(schematicNetLabel.symbol_name),
       textPresentation,
@@ -1031,7 +1033,9 @@ export function createSchematicDocument({
       createAltiumSchematicSheetAnnotationRecordFields({
         annotation,
         circuitToAltiumSchematicPoint,
-        fontTable: altiumSchematicFontTable,
+        fontTable: asString(annotation.source_trace_id)
+          ? nativeTextFontTable
+          : altiumSchematicFontTable,
       })
     if (!annotationRecordFields) continue
     addSchematicRecord(annotationRecordFields, schematicRecordContext)
