@@ -409,6 +409,11 @@ export function createSchematicDocument({
     schematicElements,
     templateFontFields: template?.fontFields,
   })
+  const componentTextFontTable = {
+    ...altiumSchematicFontTable,
+    fontIdBySizeCircuitUnits:
+      altiumSchematicFontTable.componentFontIdBySizeCircuitUnits,
+  }
   const schematicRecordContext: SchematicRecordContext = {
     lines: [
       "|HEADER=Protel for Windows - Schematic Capture Ascii File Version 5.0",
@@ -707,7 +712,7 @@ export function createSchematicDocument({
       },
       fallbackFontId: 1,
       fallbackJustification: designatorPlacement?.justification ?? 0,
-      fontTable: altiumSchematicFontTable,
+      fontTable: componentTextFontTable,
       schematicText: designatorText,
     })
     const commentPresentation = getAltiumSchematicTextPresentation({
@@ -719,7 +724,7 @@ export function createSchematicDocument({
       },
       fallbackFontId: 2,
       fallbackJustification: commentPlacement?.justification ?? 0,
-      fontTable: altiumSchematicFontTable,
+      fontTable: componentTextFontTable,
       schematicText: commentText,
     })
     addSchematicRecord(
@@ -883,7 +888,7 @@ export function createSchematicDocument({
       const recordFields = createAltiumSchematicTextRecordFields({
         altiumComponentRecordIndex,
         circuitToAltiumSchematicPoint,
-        fontTable: altiumSchematicFontTable,
+        fontTable: componentTextFontTable,
         schematicText: componentGraphicText,
       })
       if (recordFields) addSchematicRecord(recordFields, schematicRecordContext)

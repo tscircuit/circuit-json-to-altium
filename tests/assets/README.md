@@ -12,3 +12,12 @@ content.
 - License: MIT
 - Generator: `tsci export --format circuit-json --disable-parts-engine`
 - SHA-256: `d9ab75fafe38672dcd77a0a8e8ea9acadac210b72b25ea716df99fa8ff48225d`
+
+## Component text sizes
+
+[`automotive-mirror-microcontroller-component-text-4pt.SchDoc`](./automotive-mirror-microcontroller-component-text-4pt.SchDoc)
+uses Arial **4 pt** for U1, its MPN, C1/C2 and their values.
+
+Component text size depends on Circuit JSON's `schematic_text.font_size`:
+multiply by **20** and round up to an integer (minimum 1 pt). U1/MPN use
+`0.18 × 20 = 3.6 → 4 pt`, matching the default 4 pt used by C1/C2 and their values.
