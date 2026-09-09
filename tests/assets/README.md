@@ -50,10 +50,12 @@ Coordinates use integer fields plus `_FRAC / 100000` for sub-grid positions.
 
 ## Pin name and number fonts
 
-[Microcontroller](./automotive-mirror-microcontroller-pin-text-3pt.SchDoc)
-uses Arial **3 pt** for native pin names and numbers: Circuit JSON's default
-`0.15 × 20 = 3 pt`. An explicit `schematic_port.display_pin_label_font_size`
-changes only the name font, using `font_size × 20` rounded up (minimum 1 pt).
+[Microcontroller](./automotive-mirror-microcontroller-pin-text-4pt.SchDoc)
+uses Arial **4 pt** for native pin names and numbers, matching component
+references and values (`0.2 × 20 = 4 pt`). This export default is larger than
+Circuit JSON's 0.15-unit default. An explicit
+`schematic_port.display_pin_label_font_size` changes only the name font, using
+`font_size × 20` rounded up (minimum 1 pt).
 
 Altium pins use independently enabled `NAME_CUSTOMFONTID` and
 `DESIGNATOR_CUSTOMFONTID` settings. Generic pin `FONTID` does not control them.

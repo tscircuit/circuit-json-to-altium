@@ -40,7 +40,7 @@ test("renders an exported Circuit JSON schematic with the installed native rende
   for (const text of ["SIGNAL", "1"]) {
     const element = svg.match(new RegExp(`<text[^>]*>${text}</text>`))?.[0]
     expect(element).toContain('font-family="Arial"')
-    expect(element).toContain('font-size="3"')
+    expect(element).toContain('font-size="4"')
   }
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })
