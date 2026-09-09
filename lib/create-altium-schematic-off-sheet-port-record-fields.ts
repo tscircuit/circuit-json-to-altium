@@ -2,6 +2,7 @@ import type { Point } from "./types"
 
 type SchematicOffSheetPortRecordFieldsInput = {
   altiumPortPosition: Point
+  facingDirection: string
   hasInputArrow: boolean
   hasOutputArrow: boolean
   portName: string
@@ -31,6 +32,7 @@ function getAltiumSchematicPortIoType({
 
 export function createAltiumSchematicOffSheetPortRecordFields({
   altiumPortPosition,
+  facingDirection,
   hasInputArrow,
   hasOutputArrow,
   portName,
@@ -45,6 +47,9 @@ export function createAltiumSchematicOffSheetPortRecordFields({
     `LOCATION.Y=${altiumPortPosition.y}`,
     `WIDTH=${altiumPortWidth}`,
     `IOTYPE=${getAltiumSchematicPortIoType({ hasInputArrow, hasOutputArrow })}`,
+    ...(facingDirection === "up" || facingDirection === "down"
+      ? ["STYLE=4"]
+      : []),
     `NAME=${portName}`,
     `FONTID=${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID}`,
     `COLOR=${ALTIUM_SCHEMATIC_PORT_COLOR}`,

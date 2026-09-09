@@ -9,6 +9,7 @@ import {
 
 type SchematicOffSheetPortDefinition = {
   center: { x: number; y: number }
+  facing_direction?: "up"
   has_input_arrow?: boolean
   has_output_arrow?: boolean
   name: string
@@ -35,6 +36,12 @@ const portDefinitions: SchematicOffSheetPortDefinition[] = [
     has_output_arrow: true,
     name: "BIDIRECTIONAL",
   },
+  {
+    center: { x: 8, y: 0 },
+    facing_direction: "up",
+    has_output_arrow: true,
+    name: "VERTICAL_OUTPUT",
+  },
 ]
 
 const elements: CircuitElement[] = [
@@ -53,6 +60,9 @@ const elements: CircuitElement[] = [
         source_port_id: sourcePortId,
         center: portDefinition.center,
         display_pin_label: portDefinition.name,
+        ...(portDefinition.facing_direction
+          ? { facing_direction: portDefinition.facing_direction }
+          : {}),
         ...(portDefinition.has_input_arrow ? { has_input_arrow: true } : {}),
         ...(portDefinition.has_output_arrow ? { has_output_arrow: true } : {}),
       },
@@ -96,27 +106,44 @@ test("writes visible componentless schematic ports as native off-sheet ports", a
       ioType: port.getNumber("IOTYPE"),
       name: port.name,
       position: port.position,
+      style: port.getNumber("STYLE") ?? 0,
       width: port.getNumber("WIDTH"),
     })),
   ).toEqual([
     {
       ioType: 0,
       name: "UNSPECIFIED",
-      position: { x: 140, y: 150 },
+      position: { x: 120, y: 150 },
+      style: 0,
       width: 88,
     },
-    { ioType: 1, name: "INPUT", position: { x: 180, y: 150 }, width: 40 },
+    {
+      ioType: 1,
+      name: "INPUT",
+      position: { x: 160, y: 150 },
+      style: 0,
+      width: 40,
+    },
     {
       ioType: 2,
       name: "OUTPUT_SIGNAL",
-      position: { x: 220, y: 150 },
+      position: { x: 200, y: 150 },
+      style: 0,
       width: 104,
     },
     {
       ioType: 3,
       name: "BIDIRECTIONAL",
-      position: { x: 260, y: 150 },
+      position: { x: 240, y: 150 },
+      style: 0,
       width: 104,
+    },
+    {
+      ioType: 2,
+      name: "VERTICAL_OUTPUT",
+      position: { x: 280, y: 150 },
+      style: 4,
+      width: 120,
     },
   ])
   expectValidSchematic(schematic)
