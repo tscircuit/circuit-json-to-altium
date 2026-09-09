@@ -18,6 +18,7 @@ export type AltiumSchematicTemplate = {
 }
 
 const TEMPLATE_RECORD_KIND = "39"
+const IMAGE_RECORD_KIND = "30"
 const GENERATED_SHEET_FIELD_NAMES = new Set([
   "AREACOLOR",
   "CUSTOMX",
@@ -123,13 +124,19 @@ export function extractAltiumSchematicTemplate({
     getReferencedTemplateParameterNames(templateRecords)
   const preservedRecords = sourceRecords.filter((record) => {
     if (templateRecords.includes(record)) return true
+    if (
+      record.recordKind === IMAGE_RECORD_KIND &&
+      document.getParent(record) === undefined
+    ) {
+      return true
+    }
     return (
       record.recordKind === "41" &&
       document.getParent(record) === undefined &&
       referencedParameterNames.has(record.getDecoded("NAME") ?? "")
     )
   })
-  const templateRecordSet = new Set(templateRecords)
+  const preservedRecordSet = new Set(preservedRecords)
   const generatedRecordIndexBySourceRecord = new Map(
     preservedRecords.map((record, index) => [record, index + 1]),
   )
@@ -154,7 +161,7 @@ export function extractAltiumSchematicTemplate({
 
   return {
     embeddedImages: document.embeddedImages.flatMap((image) =>
-      templateRecordSet.has(image.record)
+      preservedRecordSet.has(image.record)
         ? [
             {
               compressedBytes: image.getCompressedBytes(),

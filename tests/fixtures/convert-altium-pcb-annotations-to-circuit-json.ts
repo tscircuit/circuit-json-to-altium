@@ -92,23 +92,91 @@ function convertDocumentationPaths({
     document,
     includeRecord: isDocumentationGraphicRecord,
   })
-  return paths.map((path, pathIndex) =>
-    path.componentId
-      ? {
-          type: "pcb_fabrication_note_path",
-          pcb_fabrication_note_path_id: `pcb_fabrication_note_path_${pathIndex}`,
-          pcb_component_id: path.componentId,
-          layer: toCircuitVisibleLayer(path.layer),
-          route: path.points.map(toCircuitPoint),
-          stroke_width: toCircuitLength(path.strokeWidthMils),
-        }
-      : {
-          type: "pcb_note_path",
-          pcb_note_path_id: `pcb_note_path_${pathIndex}`,
-          layer: toCircuitVisibleLayer(path.layer),
-          route: path.points.map(toCircuitPoint),
-          stroke_width: toCircuitLength(path.strokeWidthMils),
-        },
+  return paths.flatMap((path, pathIndex) => {
+    const isDuplicateOfBoardCutout =
+      !path.componentId &&
+      document.boardGeometry.cutouts.some((cutout) =>
+        haveEquivalentAltiumPathPoints({
+          left: path.points,
+          right: cutout.outline.points,
+        }),
+      )
+    if (isDuplicateOfBoardCutout) return []
+
+    return [
+      path.componentId
+        ? {
+            type: "pcb_fabrication_note_path",
+            pcb_fabrication_note_path_id: `pcb_fabrication_note_path_${pathIndex}`,
+            pcb_component_id: path.componentId,
+            layer: toCircuitVisibleLayer(path.layer),
+            route: path.points.map(toCircuitPoint),
+            stroke_width: toCircuitLength(path.strokeWidthMils),
+          }
+        : {
+            type: "pcb_note_path",
+            pcb_note_path_id: `pcb_note_path_${pathIndex}`,
+            layer: toCircuitVisibleLayer(path.layer),
+            route: path.points.map(toCircuitPoint),
+            stroke_width: toCircuitLength(path.strokeWidthMils),
+          },
+    ]
+  })
+}
+
+const ALTIUM_PATH_POINT_TOLERANCE = 0.01
+
+function areEquivalentAltiumPoints(left: AltiumPoint, right: AltiumPoint) {
+  return (
+    Math.abs(left.x - right.x) <= ALTIUM_PATH_POINT_TOLERANCE &&
+    Math.abs(left.y - right.y) <= ALTIUM_PATH_POINT_TOLERANCE
+  )
+}
+
+export function haveEquivalentAltiumPathPoints({
+  left,
+  right,
+}: {
+  left: readonly AltiumPoint[]
+  right: readonly AltiumPoint[]
+}): boolean {
+  const leftIsClosed =
+    left.length > 1 &&
+    areEquivalentAltiumPoints(left[0]!, left[left.length - 1]!)
+  const rightIsClosed =
+    right.length > 1 &&
+    areEquivalentAltiumPoints(right[0]!, right[right.length - 1]!)
+  if (leftIsClosed !== rightIsClosed) return false
+
+  const leftPoints = leftIsClosed ? left.slice(0, -1) : left
+  const rightPoints = rightIsClosed ? right.slice(0, -1) : right
+  if (leftPoints.length !== rightPoints.length) return false
+
+  if (!leftIsClosed) {
+    return (
+      leftPoints.every((point, index) =>
+        areEquivalentAltiumPoints(point, rightPoints[index]!),
+      ) ||
+      leftPoints.every((point, index) =>
+        areEquivalentAltiumPoints(
+          point,
+          rightPoints[rightPoints.length - index - 1]!,
+        ),
+      )
+    )
+  }
+
+  return rightPoints.some(
+    (rightPoint, startIndex) =>
+      areEquivalentAltiumPoints(leftPoints[0]!, rightPoint) &&
+      [1, -1].some((direction) =>
+        leftPoints.every((leftPoint, index) => {
+          const rightIndex =
+            (startIndex + direction * index + rightPoints.length) %
+            rightPoints.length
+          return areEquivalentAltiumPoints(leftPoint, rightPoints[rightIndex]!)
+        }),
+      ),
   )
 }
 

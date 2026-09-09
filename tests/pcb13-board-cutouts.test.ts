@@ -8,7 +8,49 @@ import {
   expectValidPcb,
   extractArchive,
 } from "./fixtures"
+import { haveEquivalentAltiumPathPoints } from "./fixtures/convert-altium-pcb-annotations-to-circuit-json"
 import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
+
+test("compares duplicate Altium paths without discarding their connectivity", () => {
+  const outline = [
+    { x: 0, y: 0 },
+    { x: 2, y: 0 },
+    { x: 2, y: 2 },
+    { x: 0, y: 2 },
+    { x: 0, y: 0 },
+  ]
+
+  expect(
+    haveEquivalentAltiumPathPoints({
+      left: outline,
+      right: [
+        { x: 2, y: 2 },
+        { x: 0, y: 2 },
+        { x: 0, y: 0 },
+        { x: 2, y: 0 },
+        { x: 2, y: 2 },
+      ],
+    }),
+  ).toBe(true)
+  expect(
+    haveEquivalentAltiumPathPoints({
+      left: outline,
+      right: [...outline].reverse(),
+    }),
+  ).toBe(true)
+  expect(
+    haveEquivalentAltiumPathPoints({
+      left: outline,
+      right: [
+        { x: 0, y: 0 },
+        { x: 2, y: 2 },
+        { x: 2, y: 0 },
+        { x: 0, y: 2 },
+        { x: 0, y: 0 },
+      ],
+    }),
+  ).toBe(false)
+})
 
 test("exports rectangular, circular, and polygon board cutouts as native Altium regions", async () => {
   const elements: CircuitElement[] = [
