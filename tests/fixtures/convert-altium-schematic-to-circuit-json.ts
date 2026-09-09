@@ -584,6 +584,8 @@ function appendOffSheetPortElements(
     const portName = port.name ?? ""
     if (!portName) continue
     const ioType = port.getNumber("IOTYPE") ?? 0
+    const style = port.getNumber("STYLE") ?? 0
+    const isVertical = style >= 4 && style <= 7
     const sourcePortId = `source_port_off_sheet_${portIndex}`
     elements.push(
       {
@@ -597,7 +599,7 @@ function appendOffSheetPortElements(
         source_port_id: sourcePortId,
         center: toCircuitPoint(port.position ?? { x: 0, y: 0 }),
         display_pin_label: portName,
-        facing_direction: ioType === 1 ? "left" : "right",
+        facing_direction: isVertical ? "up" : ioType === 1 ? "left" : "right",
         is_internal_circuit_port: true,
         ...(ioType === 1 || ioType === 3 ? { has_input_arrow: true } : {}),
         ...(ioType === 2 || ioType === 3 ? { has_output_arrow: true } : {}),
