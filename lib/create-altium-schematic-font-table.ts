@@ -4,13 +4,17 @@ import {
   ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS,
 } from "./create-altium-schematic-off-sheet-port-record-fields"
 import type { AltiumSchematicTemplateFontFields } from "./extract-altium-schematic-template"
-import { asNumber, formatNumber } from "./format"
+import { asNumber, asString, formatNumber } from "./format"
 import type { CircuitElement } from "./types"
 
 type AltiumSchematicFontId = number
 type SchematicFontSizeCircuitUnits = number
 
 export type AltiumSchematicFontTable = {
+  componentFontIdBySizeCircuitUnits: Map<
+    SchematicFontSizeCircuitUnits,
+    AltiumSchematicFontId
+  >
   fontIdBySizeCircuitUnits: Map<
     SchematicFontSizeCircuitUnits,
     AltiumSchematicFontId
@@ -102,7 +106,56 @@ export function createAltiumSchematicFontTable({
     )
   }
 
+  const componentFontIdBySizeCircuitUnits = new Map(fontIdBySizeCircuitUnits)
+  const componentFontIdBySizePoints = new Map([
+    [ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS, 1],
+  ])
+  for (const [fontId, points] of fontSizePointsById) {
+    // Only reuse the generated Arial fonts, not the off-sheet port font.
+    if (
+      fontId > ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID &&
+      Number.isInteger(points)
+    ) {
+      componentFontIdBySizePoints.set(points, fontId)
+    }
+  }
+  for (const text of schematicElements) {
+    if (
+      text.type !== "schematic_text" ||
+      !asString(text.schematic_component_id)
+    ) {
+      continue
+    }
+    const size = asNumber(text.font_size)
+    if (size <= 0) continue
+    const existingFontId = componentFontIdBySizeCircuitUnits.get(size)
+    if (
+      existingFontId !== undefined &&
+      Number.isInteger(fontSizePointsById.get(existingFontId))
+    ) {
+      continue
+    }
+    // Component references and values use native integer point sizes.
+    // For example, 0.18 circuit units becomes Arial 4, like inferred C1 text.
+    const points = Math.max(
+      1,
+      Math.ceil(Number(formatNumber(size * ALTIUM_UNITS_PER_CIRCUIT_UNIT))),
+    )
+    let fontId = componentFontIdBySizePoints.get(points)
+    if (fontId === undefined) {
+      fontId = nextFontId++
+      componentFontIdBySizePoints.set(points, fontId)
+      fontSizePointsById.set(fontId, points)
+      schematicFontRecordFields.push(
+        `SIZE${fontId}=${points}`,
+        `FONTNAME${fontId}=${ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME}`,
+      )
+    }
+    componentFontIdBySizeCircuitUnits.set(size, fontId)
+  }
+
   return {
+    componentFontIdBySizeCircuitUnits,
     fontIdBySizeCircuitUnits,
     fontSizePointsById,
     sheetRecordFields: [
