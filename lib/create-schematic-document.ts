@@ -4,7 +4,10 @@ import {
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
 import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-table"
-import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
+import {
+  createAltiumSchematicNetLabelRecordFields,
+  getAltiumPowerPortStyle,
+} from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
 import { createAltiumSchematicOffSheetPortRecordFields } from "./create-altium-schematic-off-sheet-port-record-fields"
 import { createAltiumSchematicSheetAnnotationRecordFields } from "./create-altium-schematic-sheet-annotation-record-fields"
@@ -405,7 +408,42 @@ export function createSchematicDocument({
       ? sheetSymbolLayoutHeight + 120
       : 0,
   )
+  const sheetTexts = schematicElements.filter(
+    (element) =>
+      element.type === "schematic_text" && isSchematicSheetAnnotation(element),
+  )
+  const consumedSheetTexts = new Set<CircuitElement>()
+  const netLabelPlans = []
+  for (const [netLabelIndex, schematicNetLabel] of schematicElements
+    .filter((element) => element.type === "schematic_net_label")
+    .entries()) {
+    const labelText = sanitizeField(schematicNetLabel.text)
+    if (!labelText) continue
+    const circuitLabelPosition = asPoint(schematicNetLabel.anchor_position) ??
+      asPoint(schematicNetLabel.center) ?? { x: 0, y: 0 }
+    const textPresentation = findSchematicTextPresentation({
+      excludedTexts: consumedSheetTexts,
+      renderedText: labelText,
+      schematicTexts: sheetTexts,
+      targetPosition: circuitLabelPosition,
+    })
+    if (textPresentation) consumedSheetTexts.add(textPresentation)
+    netLabelPlans.push({
+      circuitLabelPosition,
+      labelText,
+      netLabelIndex,
+      schematicNetLabel,
+      textPresentation,
+    })
+  }
   const altiumSchematicFontTable = createAltiumSchematicFontTable({
+    netLabelTextPresentations: netLabelPlans.flatMap(
+      ({ schematicNetLabel, textPresentation }) =>
+        textPresentation &&
+        !getAltiumPowerPortStyle(asString(schematicNetLabel.symbol_name))
+          ? [textPresentation]
+          : [],
+    ),
     schematicElements,
     templateFontFields: template?.fontFields,
   })
@@ -546,11 +584,6 @@ export function createSchematicDocument({
     SchematicComponentId,
     CircuitElement[]
   >()
-  const sheetTexts = schematicElements.filter(
-    (element) =>
-      element.type === "schematic_text" && isSchematicSheetAnnotation(element),
-  )
-  const consumedSheetTexts = new Set<CircuitElement>()
   const schematicSymbolPrimitiveMaps =
     createSchematicSymbolPrimitiveMaps(schematicElements)
   for (const schematicPort of schematicElements.filter(
@@ -973,20 +1006,13 @@ export function createSchematicDocument({
     }
   }
 
-  for (const [netLabelIndex, schematicNetLabel] of schematicElements
-    .filter((element) => element.type === "schematic_net_label")
-    .entries()) {
-    const labelText = sanitizeField(schematicNetLabel.text)
-    if (!labelText) continue
-    const circuitLabelPosition = asPoint(schematicNetLabel.anchor_position) ??
-      asPoint(schematicNetLabel.center) ?? { x: 0, y: 0 }
-    const textPresentation = findSchematicTextPresentation({
-      excludedTexts: consumedSheetTexts,
-      renderedText: labelText,
-      schematicTexts: sheetTexts,
-      targetPosition: circuitLabelPosition,
-    })
-    if (textPresentation) consumedSheetTexts.add(textPresentation)
+  for (const {
+    circuitLabelPosition,
+    labelText,
+    netLabelIndex,
+    schematicNetLabel,
+    textPresentation,
+  } of netLabelPlans) {
     const netLabelRecordFields = createAltiumSchematicNetLabelRecordFields({
       anchorSide: asString(schematicNetLabel.anchor_side),
       altiumLabelCenter: circuitToAltiumSchematicPoint(
