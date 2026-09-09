@@ -3,8 +3,16 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
-import { createAltiumSchematicFontTable } from "./create-altium-schematic-font-table"
-import { createAltiumSchematicNetLabelRecordFields } from "./create-altium-schematic-net-label-record-fields"
+import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
+import {
+  createAltiumSchematicFontTable,
+  SCHEMATIC_PIN_NAME_FONT_SIZE_CIRCUIT_UNITS,
+  SCHEMATIC_PIN_NUMBER_FONT_SIZE_CIRCUIT_UNITS,
+} from "./create-altium-schematic-font-table"
+import {
+  createAltiumSchematicNetLabelRecordFields,
+  getAltiumPowerPortStyle,
+} from "./create-altium-schematic-net-label-record-fields"
 import { createAltiumSchematicNoConnectRecordFields } from "./create-altium-schematic-no-connect-record-fields"
 import { createAltiumSchematicOffSheetPortRecordFields } from "./create-altium-schematic-off-sheet-port-record-fields"
 import { createAltiumSchematicSheetAnnotationRecordFields } from "./create-altium-schematic-sheet-annotation-record-fields"
@@ -97,6 +105,10 @@ type SchematicSymbolPrimitiveMaps = {
 const ALTIUM_PIN_STANDARD_FLAGS = 0x20
 const ALTIUM_PIN_NAME_VISIBLE_FLAG = 0x08
 const ALTIUM_PIN_DESIGNATOR_VISIBLE_FLAG = 0x10
+const ALTIUM_PIN_CUSTOM_FONT_FLAG = 0x10
+const ALTIUM_PIN_CUSTOM_POSITION_FLAG = 0x01
+// Match Circuit JSON's pin-name inset from the body edge, independently of font size.
+const SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS = 0.1
 const ALTIUM_PIN_CLOCK_SYMBOL = 3
 const ALTIUM_PIN_INVERSION_SYMBOL = 1
 const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
@@ -405,10 +417,50 @@ export function createSchematicDocument({
       ? sheetSymbolLayoutHeight + 120
       : 0,
   )
+  const sheetTexts = schematicElements.filter(
+    (element) =>
+      element.type === "schematic_text" && isSchematicSheetAnnotation(element),
+  )
+  const consumedSheetTexts = new Set<CircuitElement>()
+  const netLabelPlans = []
+  for (const [netLabelIndex, schematicNetLabel] of schematicElements
+    .filter((element) => element.type === "schematic_net_label")
+    .entries()) {
+    const labelText = sanitizeField(schematicNetLabel.text)
+    if (!labelText) continue
+    const circuitLabelPosition = asPoint(schematicNetLabel.anchor_position) ??
+      asPoint(schematicNetLabel.center) ?? { x: 0, y: 0 }
+    const textPresentation = findSchematicTextPresentation({
+      excludedTexts: consumedSheetTexts,
+      renderedText: labelText,
+      schematicTexts: sheetTexts,
+      targetPosition: circuitLabelPosition,
+    })
+    if (textPresentation) consumedSheetTexts.add(textPresentation)
+    netLabelPlans.push({
+      circuitLabelPosition,
+      labelText,
+      netLabelIndex,
+      schematicNetLabel,
+      textPresentation,
+    })
+  }
   const altiumSchematicFontTable = createAltiumSchematicFontTable({
+    netLabelTextPresentations: netLabelPlans.flatMap(
+      ({ schematicNetLabel, textPresentation }) =>
+        textPresentation &&
+        !getAltiumPowerPortStyle(asString(schematicNetLabel.symbol_name))
+          ? [textPresentation]
+          : [],
+    ),
     schematicElements,
     templateFontFields: template?.fontFields,
   })
+  const nativeTextFontTable = {
+    ...altiumSchematicFontTable,
+    fontIdBySizeCircuitUnits:
+      altiumSchematicFontTable.nativeTextFontIdBySizeCircuitUnits,
+  }
   const schematicRecordContext: SchematicRecordContext = {
     lines: [
       "|HEADER=Protel for Windows - Schematic Capture Ascii File Version 5.0",
@@ -541,11 +593,6 @@ export function createSchematicDocument({
     SchematicComponentId,
     CircuitElement[]
   >()
-  const sheetTexts = schematicElements.filter(
-    (element) =>
-      element.type === "schematic_text" && isSchematicSheetAnnotation(element),
-  )
-  const consumedSheetTexts = new Set<CircuitElement>()
   const schematicSymbolPrimitiveMaps =
     createSchematicSymbolPrimitiveMaps(schematicElements)
   for (const schematicPort of schematicElements.filter(
@@ -707,7 +754,7 @@ export function createSchematicDocument({
       },
       fallbackFontId: 1,
       fallbackJustification: designatorPlacement?.justification ?? 0,
-      fontTable: altiumSchematicFontTable,
+      fontTable: nativeTextFontTable,
       schematicText: designatorText,
     })
     const commentPresentation = getAltiumSchematicTextPresentation({
@@ -719,7 +766,7 @@ export function createSchematicDocument({
       },
       fallbackFontId: 2,
       fallbackJustification: commentPlacement?.justification ?? 0,
-      fontTable: altiumSchematicFontTable,
+      fontTable: nativeTextFontTable,
       schematicText: commentText,
     })
     addSchematicRecord(
@@ -856,6 +903,15 @@ export function createSchematicDocument({
         cssColor: asString(explicitPinText?.color),
         fallbackAltiumColor: ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
       })
+      const pinNameFontId = nativeTextFontTable.fontIdBySizeCircuitUnits.get(
+        asPositiveNumber(
+          schematicPort.display_pin_label_font_size,
+          SCHEMATIC_PIN_NAME_FONT_SIZE_CIRCUIT_UNITS,
+        ),
+      )!
+      const pinNumberFontId = nativeTextFontTable.fontIdBySizeCircuitUnits.get(
+        SCHEMATIC_PIN_NUMBER_FONT_SIZE_CIRCUIT_UNITS,
+      )!
       addSchematicRecord(
         [
           "RECORD=2",
@@ -874,7 +930,20 @@ export function createSchematicDocument({
             ? [`SYMBOL_OUTEREDGE=${ALTIUM_PIN_INVERSION_SYMBOL}`]
             : []),
           `COLOR=${pinColor}`,
-          "FONTID=2",
+          // Native pins require independently enabled name/designator fonts.
+          // Custom settings also select text color, so retain the pin color.
+          `PINNAME_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG | ALTIUM_PIN_CUSTOM_POSITION_FLAG}`,
+          ...createAltiumSchematicCoordinateFields(
+            "NAME_CUSTOMPOSITION_MARGIN",
+            -circuitToAltiumSchematicLength(
+              SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS,
+            ),
+          ),
+          `NAME_CUSTOMFONTID=${pinNameFontId}`,
+          `NAME_CUSTOMCOLOR=${pinColor}`,
+          `PINDESIGNATOR_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG}`,
+          `DESIGNATOR_CUSTOMFONTID=${pinNumberFontId}`,
+          `DESIGNATOR_CUSTOMCOLOR=${pinColor}`,
         ],
         schematicRecordContext,
       )
@@ -883,7 +952,7 @@ export function createSchematicDocument({
       const recordFields = createAltiumSchematicTextRecordFields({
         altiumComponentRecordIndex,
         circuitToAltiumSchematicPoint,
-        fontTable: altiumSchematicFontTable,
+        fontTable: nativeTextFontTable,
         schematicText: componentGraphicText,
       })
       if (recordFields) addSchematicRecord(recordFields, schematicRecordContext)
@@ -968,20 +1037,13 @@ export function createSchematicDocument({
     }
   }
 
-  for (const [netLabelIndex, schematicNetLabel] of schematicElements
-    .filter((element) => element.type === "schematic_net_label")
-    .entries()) {
-    const labelText = sanitizeField(schematicNetLabel.text)
-    if (!labelText) continue
-    const circuitLabelPosition = asPoint(schematicNetLabel.anchor_position) ??
-      asPoint(schematicNetLabel.center) ?? { x: 0, y: 0 }
-    const textPresentation = findSchematicTextPresentation({
-      excludedTexts: consumedSheetTexts,
-      renderedText: labelText,
-      schematicTexts: sheetTexts,
-      targetPosition: circuitLabelPosition,
-    })
-    if (textPresentation) consumedSheetTexts.add(textPresentation)
+  for (const {
+    circuitLabelPosition,
+    labelText,
+    netLabelIndex,
+    schematicNetLabel,
+    textPresentation,
+  } of netLabelPlans) {
     const netLabelRecordFields = createAltiumSchematicNetLabelRecordFields({
       anchorSide: asString(schematicNetLabel.anchor_side),
       altiumLabelCenter: circuitToAltiumSchematicPoint(
@@ -989,7 +1051,9 @@ export function createSchematicDocument({
       ),
       altiumLabelPosition: circuitToAltiumSchematicPoint(circuitLabelPosition),
       decorationIndex: netLabelIndex,
-      fontTable: altiumSchematicFontTable,
+      fontTable: asString(textPresentation?.source_trace_id)
+        ? nativeTextFontTable
+        : altiumSchematicFontTable,
       labelText,
       symbolName: asString(schematicNetLabel.symbol_name),
       textPresentation,
@@ -1026,7 +1090,9 @@ export function createSchematicDocument({
       createAltiumSchematicSheetAnnotationRecordFields({
         annotation,
         circuitToAltiumSchematicPoint,
-        fontTable: altiumSchematicFontTable,
+        fontTable: asString(annotation.source_trace_id)
+          ? nativeTextFontTable
+          : altiumSchematicFontTable,
       })
     if (!annotationRecordFields) continue
     addSchematicRecord(annotationRecordFields, schematicRecordContext)

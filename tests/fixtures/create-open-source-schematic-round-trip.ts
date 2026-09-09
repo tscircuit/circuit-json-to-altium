@@ -14,11 +14,13 @@ export type OpenSourceSchematicRoundTrip = ReturnType<
 > & {
   roundTripOffSheetPortFontSizePoints: number[]
   roundTripEmbeddedImageCount: number
+  roundTripImageRecordCount: number
   roundTripSchematicFilenames: string[]
   roundTripTemplateOwnedRecordCount: number
   roundTripTemplateRecordCount: number
   roundTripSvg: string
   sourceOffSheetPortFontSizePoints: number[]
+  sourceImageRecordCount: number
   sourceSheetSize: { height: number; width: number }
   sourceSvg: string
 }
@@ -151,6 +153,7 @@ export async function createOpenSourceSchematicRoundTrip({
     roundTripOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(roundTripDocument),
     roundTripEmbeddedImageCount: roundTripDocument.embeddedImages.length,
+    roundTripImageRecordCount: roundTripDocument.getRecordsByKind("30").length,
     roundTripSchematicFilenames: generatedOutput.schematics.map(
       (schematic) => schematic.filename,
     ),
@@ -164,6 +167,7 @@ export async function createOpenSourceSchematicRoundTrip({
     ),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
+    sourceImageRecordCount: sourceDocument.getRecordsByKind("30").length,
     sourceSheetSize: {
       height: sourceSheetSettings.height,
       width: sourceSheetSettings.width,

@@ -42,7 +42,9 @@ test("round-trips the open-source PiDP-11 I/O Expander Altium schematic", async 
   ).toBe(true)
   expect(result.roundTripTemplateRecordCount).toBe(1)
   expect(result.roundTripTemplateOwnedRecordCount).toBe(28)
-  expect(result.roundTripEmbeddedImageCount).toBe(2)
+  expect(result.roundTripEmbeddedImageCount).toBe(3)
+  expect(result.sourceImageRecordCount).toBe(4)
+  expect(result.roundTripImageRecordCount).toBe(result.sourceImageRecordCount)
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
   ).toMatchSvgSnapshot(import.meta.path)
