@@ -87,7 +87,7 @@ test("reproduces the Consumer Wireless Module generated system", async () => {
       sensors
         .getRecordsByKind("31")[0]
         ?.getNumber(`SIZE${label.getNumber("FONTID")}`),
-    ).toBe(3.6)
+    ).toBe(4)
     return { minY, maxY, width }
   })
   const [upperLabel, lowerLabel] = adjacentLabelBounds

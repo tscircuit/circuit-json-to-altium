@@ -30,3 +30,12 @@ uses Arial **3 pt** for SWDIO, SWCLK, NRST and PA0 inline trace labels.
 Inline labels are `schematic_text` with a `source_trace_id`. Their size depends
 on `font_size × 20`, rounded up to an integer (minimum 1 pt):
 `0.12 × 20 = 2.4 → 3 pt`. U1/MPN and capacitor text remain at 4 pt.
+
+## Ordinary net-label text sizes
+
+[`automotive-mirror-microcontroller-net-label-text-4pt.SchDoc`](./automotive-mirror-microcontroller-net-label-text-4pt.SchDoc)
+uses Arial **4 pt** for ordinary net labels such as U6_TXD, U1_VCORE and GND.
+
+Size depends on the matching `schematic_text.font_size`, or the default
+**0.18 circuit units**, multiplied by **20** and rounded up (minimum 1 pt):
+`0.18 × 20 = 3.6 → 4 pt`. Inline trace labels remain at 3 pt.

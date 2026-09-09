@@ -175,7 +175,7 @@ function getNetLabelDisplayGeometry({
   }
 }
 
-function getAltiumPowerPortStyle(
+export function getAltiumPowerPortStyle(
   symbolName: string,
 ): AltiumPowerPortStyle | undefined {
   const directionSeparatorIndex = symbolName.lastIndexOf("_")
@@ -206,7 +206,7 @@ export function createAltiumSchematicNetLabelRecordFields({
   textPresentation,
 }: SchematicNetLabelRecordFieldsInput): string[][] {
   const powerPortStyle = getAltiumPowerPortStyle(symbolName)
-  const fontId =
+  const sourceFontId =
     fontTable.fontIdBySizeCircuitUnits.get(
       asNumber(textPresentation?.font_size),
     ) ??
@@ -215,6 +215,15 @@ export function createAltiumSchematicNetLabelRecordFields({
       : (fontTable.fontIdBySizeCircuitUnits.get(
           SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS,
         ) ?? ALTIUM_SCHEMATIC_POWER_PORT_FONT_ID))
+  const fontId = powerPortStyle
+    ? sourceFontId
+    : (fontTable.nativeTextFontIdBySizeCircuitUnits.get(
+        asNumber(textPresentation?.font_size),
+      ) ??
+      fontTable.nativeTextFontIdBySizeCircuitUnits.get(
+        SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS,
+      ) ??
+      sourceFontId)
   const color = getAltiumColorFromCss({
     cssColor: asString(textPresentation?.color),
     fallbackAltiumColor: powerPortStyle
@@ -261,7 +270,8 @@ export function createAltiumSchematicNetLabelRecordFields({
     altiumLabelCenter,
     altiumLabelPosition,
     anchorSide,
-    fontSize: fontTable.fontSizePointsById.get(fontId) ?? 4,
+    // Preserve the source-sized outline and text inset when rounding the font.
+    fontSize: fontTable.fontSizePointsById.get(sourceFontId) ?? 4,
     labelText,
   })
   if (!displayGeometry) return [nativeNetLabelFields]
