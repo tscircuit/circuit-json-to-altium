@@ -9,6 +9,7 @@ test("round-trips the open-source EBAZ4205 Altium board", async () => {
   })
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  expect(result.semanticMismatches).toEqual([])
   expect(result.roundTripSourceNetNames).toEqual(result.sourceNetNames)
   expect(result.geometryMaxDeltaMm).toBeLessThan(0.03)
   expect(result.rotationMismatchCount).toBe(0)
