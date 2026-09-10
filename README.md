@@ -109,3 +109,23 @@ tests/
 references/                               # Downloaded test inputs and provenance
 scripts/                                  # Reference download and integrity checks
 ```
+
+## Native keepout exclusion rules (pending Altium Designer verification)
+
+Keepouts with `excluded_pcb_component_ids` are assigned separate native union
+indices. Their clearance rules use `IsKeepOut And InUnion(n)` against the
+excluded components and traces on their connected nets. Geometry, layers,
+other keepouts, and unrelated copper are retained. Component designators that
+would make membership queries ambiguous are rejected.
+
+The binary writer bridge adds `Rules6` records and union membership omitted
+by the pinned serializer. This approach follows Altium's documented local
+zero-clearance treatment for footprint keepout conflicts:
+https://www.altium.com/documentation/knowledge-base/altium-designer/keepout-region-error-within-the-same-footprint-primitives
+
+Automated tests verify the native rule scope and binary fields, not Altium's
+DRC or routing behavior. Before merging, verify in Altium Designer that an
+exempt component's pads and connected traces can overlap the keepout while
+unrelated copper remains blocked, including another keepout at the same
+location. In particular, confirm that `GAP=0mil` permits the required overlap;
+a zero gap alone must not be assumed to disable a collision check.
