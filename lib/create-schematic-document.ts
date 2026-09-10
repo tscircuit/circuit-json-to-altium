@@ -923,6 +923,11 @@ export function createSchematicDocument({
           `LOCATION.X=${altiumPinLocation.x}`,
           `LOCATION.Y=${altiumPinLocation.y}`,
           `PINLENGTH=${altiumPinLength}`,
+          // Altium defaults a missing electrical type to Input, which renders
+          // direction arrows and gives capacitor terminals incorrect ERC semantics.
+          ...(sourceComponent?.ftype === "simple_capacitor"
+            ? ["ELECTRICAL=4"] // Passive
+            : []),
           ...(schematicPort.has_input_arrow === true
             ? [`SYMBOL_INNEREDGE=${ALTIUM_PIN_CLOCK_SYMBOL}`]
             : []),
