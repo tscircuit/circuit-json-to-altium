@@ -653,6 +653,7 @@ function appendNetLabelElements(
     const position = toCircuitPoint(powerPort.position ?? { x: 0, y: 0 })
     const powerPortDirection = getPowerPortDirection(powerPort)
     const symbolName = getPowerPortSymbolName(powerPort)
+    const showNetName = powerPort.getBoolean("SHOWNETNAME") !== false
     elements.push({
       type: "schematic_net_label",
       schematic_net_label_id: `schematic_net_label_power_port_${powerPortIndex}`,
@@ -663,16 +664,18 @@ function appendNetLabelElements(
         SCHEMATIC_NET_LABEL_ANCHOR_SIDE_BY_POWER_PORT_DIRECTION[
           powerPortDirection
         ],
-      text,
+      text: showNetName ? text : "",
       ...(symbolName ? { symbol_name: symbolName } : {}),
     })
-    appendNativeTextPresentation({
-      document,
-      elements,
-      record: powerPort,
-      schematicTextId: `schematic_text_power_port_${powerPortIndex}`,
-      text,
-    })
+    if (showNetName) {
+      appendNativeTextPresentation({
+        document,
+        elements,
+        record: powerPort,
+        schematicTextId: `schematic_text_power_port_${powerPortIndex}`,
+        text,
+      })
+    }
   }
 }
 
