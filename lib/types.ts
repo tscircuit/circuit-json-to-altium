@@ -24,6 +24,7 @@ export type AltiumProjectFile = {
 }
 
 export type CircuitJsonToAltiumOutput = {
+  warnings: string[]
   pcb: AltiumPcbFile
   project: AltiumProjectFile
   schematics: AltiumSchematicFile[]
@@ -53,6 +54,7 @@ export type CircuitJsonToAltiumConverterContext = {
   safeProjectName: string
   schematicSheets: AltiumSchematicSheetOptions[]
   schematics?: AltiumSchematicFile[]
+  warnings: string[]
   validated: boolean
 }
 

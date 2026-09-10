@@ -9,12 +9,14 @@ import type { CircuitElement, PointTransform } from "./types"
 
 type CreatePcbKeepoutRecordsOptions = {
   circuitJson: CircuitElement[]
+  warnings?: string[]
   circuitToAltiumPcbPoint: PointTransform
 }
 
 export function createPcbKeepoutRecords({
   circuitJson,
   circuitToAltiumPcbPoint,
+  warnings,
 }: CreatePcbKeepoutRecordsOptions): string[] {
   const records: string[] = []
 
@@ -22,9 +24,25 @@ export function createPcbKeepoutRecords({
     if (element.type !== "pcb_keepout") continue
     const keepout = pcb_keepout.parse(element)
     if (keepout.excluded_pcb_component_ids?.length) {
-      throw new Error(
-        `PCB keepout ${keepout.pcb_keepout_id} excludes components, which Altium primitive keepouts cannot preserve`,
+      const excludedComponents = keepout.excluded_pcb_component_ids.map(
+        (id) => {
+          const component = circuitJson.find(
+            (item) =>
+              item.type === "pcb_component" && item.pcb_component_id === id,
+          )
+          const source =
+            component &&
+            circuitJson.find(
+              (item) =>
+                item.type === "source_component" &&
+                item.source_component_id === component.source_component_id,
+            )
+          return source?.name ? `${source.name} (${id})` : id
+        },
       )
+      const warning = `PCB keepout ${keepout.pcb_keepout_id}: Altium primitive keepouts cannot preserve component exclusions for ${excludedComponents.join(", ")}. The keepout geometry and layers are retained, but apply to these components too. Review the keepout clearance rules in Altium before editing or manufacturing.`
+      if (warnings) warnings.push(warning)
+      else console.warn(warning)
     }
     if (keepout.shape === "outline" && keepout.stroke_width <= 0) {
       throw new Error(

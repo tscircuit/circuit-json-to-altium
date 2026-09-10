@@ -49,6 +49,7 @@ export class CircuitJsonToAltiumConverter {
       safeProjectName: sanitizeFilename(projectName),
       schematicSheets: options.schematicSheets ?? [],
       validated: false,
+      warnings: [],
     }
     this.pipeline = [
       new BuildPcbDocumentStage(normalizedCircuitJson, this.context),
@@ -86,11 +87,11 @@ export class CircuitJsonToAltiumConverter {
     if (!this.finished || !validated || !pcb || !project || !schematics) {
       throw new Error("Converter must finish before its output is read")
     }
-    return { pcb, project, schematics }
+    return { pcb, project, schematics, warnings: [...this.context.warnings] }
   }
 
   async getOutputZip(): Promise<Uint8Array> {
-    const { pcb, project, schematics } = this.getOutput()
+    const { pcb, project, schematics, warnings } = this.getOutput()
     const zip = new JSZip()
     zip.file(project.filename, project.content)
     zip.file(pcb.filename, pcb.content)
@@ -104,6 +105,7 @@ export class CircuitJsonToAltiumConverter {
         "",
         "Generated in Altium's native binary document format from the board's routed Circuit JSON.",
         `Open ${project.filename} in Altium Designer.`,
+        ...(warnings.length ? ["", "Conversion warnings:", ...warnings] : []),
       ].join("\r\n"),
     )
     return zip.generateAsync({ type: "uint8array" })

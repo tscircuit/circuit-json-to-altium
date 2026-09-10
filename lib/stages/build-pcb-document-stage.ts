@@ -8,7 +8,7 @@ export class BuildPcbDocumentStage extends ConverterStage<
   AltiumPcbFile
 > {
   _step(): void {
-    const asciiContent = createPcbDocument(this.input)
+    const asciiContent = createPcbDocument(this.input, this.context.warnings)
     this.context.pcb = {
       asciiContent,
       content: serializeAltiumPcbDocWithBoardCutouts(asciiContent),

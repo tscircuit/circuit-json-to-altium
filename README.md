@@ -52,6 +52,16 @@ The returned ZIP archive contains:
 
 The converter validates its generated PCB and schematic documents before returning the archive. Invalid geometry is rejected with a descriptive error instead of producing a corrupt project.
 
+### Keepouts with component exclusions
+
+Keepout geometry and layers are retained when `excluded_pcb_component_ids`
+is present. Native Altium primitive keepouts cannot represent this exception,
+so the exported keepout also applies to the listed components. Conversion
+continues with warnings in `converter.getOutput().warnings` and the archive's
+`README.txt`, including the affected keepout and component names/IDs. Review
+these keepout clearance rules in Altium before editing or manufacturing.
+Consumers displaying an export preview should surface the returned warnings.
+
 ## Supported content
 
 The current converter handles board outlines, components, pads, plated and non-plated holes, routed copper with vias, nets, PCB silkscreen, schematic components, custom component symbol graphics, component pins, intentionally unconnected source ports, off-sheet ports, labels, native power ports, junctions, traces, and free-standing schematic sheet text and graphics. It also preserves multiple schematic sheets and sanitizes Altium field and filename text.

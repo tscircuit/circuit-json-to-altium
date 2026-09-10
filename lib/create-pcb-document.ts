@@ -57,7 +57,10 @@ function getPadName(pad: CircuitElement, context: PadLookupContext): string {
   )
 }
 
-export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
+export const createPcbDocument = (
+  circuitJson: CircuitElement[],
+  warnings?: string[],
+): string => {
   const board = byType(circuitJson, "pcb_board")[0]
   const outline = getBoardOutline(board)
   const circuitToAltiumPcbPoint =
@@ -181,6 +184,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
   lines.push(
     ...createPcbKeepoutRecords({
       circuitJson,
+      warnings,
       circuitToAltiumPcbPoint,
     }),
     ...createPcbCourtyardRecords({
