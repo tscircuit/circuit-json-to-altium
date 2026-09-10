@@ -55,11 +55,13 @@ test("exports native Arial 3 pin names and Arial 4 numbers with the correct name
         previous.getNumber("COLOR"),
       )
     }
-    // Capacitors now explicitly encode Passive instead of the old implicit Input.
+    // Capacitors and resistors now explicitly encode Passive instead of the old implicit Input.
     if (record.getNumber("ELECTRICAL") !== undefined) {
       expect(record.getNumber("ELECTRICAL")).toBe(4)
       const owner = doc.records[record.getNumber("OWNERINDEX")!]!
-      expect(owner.get("LIBREFERENCE")).toMatch(/^capacitor/u)
+      expect(owner.get("LIBREFERENCE")).toMatch(
+        /^(capacitor|(?:box)?resistor)/u,
+      )
     }
     // Geometry, labels, visibility and explicit edge symbols retain their fields.
     expect(
