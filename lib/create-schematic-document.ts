@@ -51,6 +51,7 @@ import type {
   SchematicSheetId,
   SchematicSymbolId,
   SourceComponentId,
+  SourceNetId,
   SourcePortId,
 } from "./types"
 
@@ -339,6 +340,12 @@ export function createSchematicDocument({
       sourcePort,
     ]),
   )
+  const sourceNets = new Map<SourceNetId, CircuitElement>(
+    byType(circuitJson, "source_net").map((sourceNet) => [
+      asString(sourceNet.source_net_id),
+      sourceNet,
+    ]),
+  )
   const schematicElements = circuitJson.filter(
     (element) =>
       element.type?.startsWith("schematic_") === true &&
@@ -426,22 +433,35 @@ export function createSchematicDocument({
   for (const [netLabelIndex, schematicNetLabel] of schematicElements
     .filter((element) => element.type === "schematic_net_label")
     .entries()) {
-    const labelText = sanitizeField(schematicNetLabel.text)
+    const visibleLabelText = sanitizeField(schematicNetLabel.text)
+    const powerPortStyle = getAltiumPowerPortStyle(
+      asString(schematicNetLabel.symbol_name),
+    )
+    const labelText =
+      visibleLabelText ||
+      (powerPortStyle
+        ? sanitizeField(
+            sourceNets.get(asString(schematicNetLabel.source_net_id))?.name,
+          )
+        : "")
     if (!labelText) continue
     const circuitLabelPosition = asPoint(schematicNetLabel.anchor_position) ??
       asPoint(schematicNetLabel.center) ?? { x: 0, y: 0 }
-    const textPresentation = findSchematicTextPresentation({
-      excludedTexts: consumedSheetTexts,
-      renderedText: labelText,
-      schematicTexts: sheetTexts,
-      targetPosition: circuitLabelPosition,
-    })
+    const textPresentation = visibleLabelText
+      ? findSchematicTextPresentation({
+          excludedTexts: consumedSheetTexts,
+          renderedText: visibleLabelText,
+          schematicTexts: sheetTexts,
+          targetPosition: circuitLabelPosition,
+        })
+      : undefined
     if (textPresentation) consumedSheetTexts.add(textPresentation)
     netLabelPlans.push({
       circuitLabelPosition,
       labelText,
       netLabelIndex,
       schematicNetLabel,
+      showNetName: Boolean(visibleLabelText),
       textPresentation,
     })
   }
@@ -1043,6 +1063,7 @@ export function createSchematicDocument({
     labelText,
     netLabelIndex,
     schematicNetLabel,
+    showNetName,
     textPresentation,
   } of netLabelPlans) {
     const netLabelRecordFields = createAltiumSchematicNetLabelRecordFields({
@@ -1056,6 +1077,7 @@ export function createSchematicDocument({
         ? nativeTextFontTable
         : altiumSchematicFontTable,
       labelText,
+      showNetName,
       symbolName: asString(schematicNetLabel.symbol_name),
       textPresentation,
     })

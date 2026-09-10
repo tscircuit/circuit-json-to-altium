@@ -31,6 +31,7 @@ type SchematicNetLabelRecordFieldsInput = {
   decorationIndex: number
   fontTable: AltiumSchematicFontTable
   labelText: string
+  showNetName: boolean
   symbolName: string
   textPresentation: CircuitElement | undefined
 }
@@ -209,6 +210,7 @@ export function createAltiumSchematicNetLabelRecordFields({
   decorationIndex,
   fontTable,
   labelText,
+  showNetName,
   symbolName,
   textPresentation,
 }: SchematicNetLabelRecordFieldsInput): string[][] {
@@ -247,7 +249,7 @@ export function createAltiumSchematicNetLabelRecordFields({
         `ORIENTATION=${powerPortStyle.orientationIndex}`,
         `STYLE=${powerPortStyle.styleIndex}`,
         `COLOR=${color}`,
-        "SHOWNETNAME=T",
+        `SHOWNETNAME=${showNetName ? "T" : "F"}`,
         `TEXT=${labelText}`,
       ],
     ]
