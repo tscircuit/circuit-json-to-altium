@@ -115,6 +115,8 @@ const ALTIUM_PIN_CLOCK_SYMBOL = 3
 const ALTIUM_PIN_INVERSION_SYMBOL = 1
 const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
 const ALTIUM_SCHEMATIC_FALLBACK_BODY_COLOR = 0xc2_ffff
+// Junction SIZE is a native preset: 0 = Smallest, not a coordinate length.
+const ALTIUM_SCHEMATIC_JUNCTION_SIZE = 0
 const ALTIUM_PIN_ORIENTATION_BY_FACING_DIRECTION: Record<string, number> = {
   left: 2,
   right: 0,
@@ -1077,6 +1079,7 @@ export function createSchematicDocument({
       addSchematicRecord(
         [
           "RECORD=29",
+          `SIZE=${ALTIUM_SCHEMATIC_JUNCTION_SIZE}`,
           `LOCATION.X=${altiumJunctionPoint.x}`,
           `LOCATION.Y=${altiumJunctionPoint.y}`,
           "COLOR=34816",

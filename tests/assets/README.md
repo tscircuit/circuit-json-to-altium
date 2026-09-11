@@ -118,3 +118,13 @@ uses Arial **4 pt** for custom-symbol U3 (`0.18 × 20 = 3.6 → 4 pt`),
 **3 pt** for its MPN (`0.14 × 20 = 2.8 → 3 pt`) and **3 pt** for its drawn
 pin numbers (`0.13 × 20 = 2.6 → 3 pt`). Text linked by `schematic_symbol_id`
 uses the same native font-size mapping as standalone notes.
+
+## Junction dots
+
+[Light motor control power supply](./light-motor-control-power-supply-smallest-junctions.SchDoc)
+explicitly selects Altium's **Smallest** junction preset (`RECORD=29`, `SIZE=0`).
+Junctions remain native electrical objects at their original connection points.
+The installed local renderer draws this preset with radius **1.5** instead of
+the omitted-size fallback of **1.8** schematic units. Circuit JSON's radius is
+**0.03 circuit units** (**0.6** after conversion), so this is not an exact radius
+match; the native preset and the local renderer's size approximation are distinct.
