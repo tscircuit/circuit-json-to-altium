@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { board, expectValidSchematic, extractArchive } from "./fixtures"
 
-test("uses native integer net-label sizes without resizing other sheet text", async () => {
+test("uses native integer fonts for net labels and standalone notes", async () => {
   const samples = [
     { text: "DEFAULT", size: undefined, points: "4" },
     { text: "FRACTIONAL", size: 0.22, points: "5" },
@@ -59,12 +59,11 @@ test("uses native integer net-label sizes without resizing other sheet text", as
       expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
     }
   }
-  // A sheet note with the same source size keeps its existing font mapping.
+  // A standalone note uses the same native size without becoming a net label.
   const note = schematic.records.find(
     (record) => record.getDecoded("TEXT") === "NOTE",
   )!
-  expect(sheet.getCaseInsensitive(`SIZE${note.getNumber("FONTID")}`)).toBe(
-    "4.4000",
-  )
+  expect(note.recordKind).toBe("4")
+  expect(sheet.getCaseInsensitive(`SIZE${note.getNumber("FONTID")}`)).toBe("5")
   expectValidSchematic(schematic)
 })

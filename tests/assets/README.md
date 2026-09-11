@@ -103,3 +103,12 @@ uses **Smallest** (`LINEWIDTH=0`) for custom lines, paths, polygons, circles,
 arcs and rectangles, matching built-in symbols. `LINEWIDTH` is an Altium width
 preset; Circuit JSON's `stroke_width` is not converted as a coordinate length.
 Text fonts, geometry, fills and dashed styles are unchanged.
+
+## Standalone annotation text sizes
+
+[Light motor control power supply](./light-motor-control-power-supply-annotation-text-5pt.SchDoc)
+uses Arial **5 pt** for the Open/Close notes and voltage annotations.
+Size depends on `schematic_text.font_size × 20`, rounded up to an integer
+(minimum 1 pt): `0.22 × 20 = 4.4 → 5 pt`. Native integer font sizes prevent
+Altium Viewer from falling back to oversized text. Anchors, positions and
+colors are preserved.

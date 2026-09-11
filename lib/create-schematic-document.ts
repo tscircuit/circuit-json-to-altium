@@ -1139,9 +1139,7 @@ export function createSchematicDocument({
       createAltiumSchematicSheetAnnotationRecordFields({
         annotation,
         circuitToAltiumSchematicPoint,
-        fontTable: asString(annotation.source_trace_id)
-          ? nativeTextFontTable
-          : altiumSchematicFontTable,
+        fontTable: nativeTextFontTable,
       })
     if (!annotationRecordFields) continue
     addSchematicRecord(annotationRecordFields, schematicRecordContext)
