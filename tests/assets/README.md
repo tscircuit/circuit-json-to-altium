@@ -95,3 +95,11 @@ VDD/GND remain native power ports. Their graphics depend on custom
 `ObjectDefinitions` with `LineWidth=0` (Altium's Smallest preset).
 Names, values and pin numbers remain Arial **4 pt**; pin names remain **3 pt**.
 The pin-stem and power-symbol rendering was checked in the real Altium 365 Viewer.
+
+## Custom symbol strokes
+
+[Light motor control power supply](./light-motor-control-power-supply-custom-symbol-hairlines.SchDoc)
+uses **Smallest** (`LINEWIDTH=0`) for custom lines, paths, polygons, circles,
+arcs and rectangles, matching built-in symbols. `LINEWIDTH` is an Altium width
+preset; Circuit JSON's `stroke_width` is not converted as a coordinate length.
+Text fonts, geometry, fills and dashed styles are unchanged.
