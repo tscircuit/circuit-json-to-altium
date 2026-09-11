@@ -40,6 +40,7 @@ import {
   sanitizeField,
 } from "./format"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
+import { getHairlinePassivePinGeometry } from "./get-hairline-passive-pin-geometry"
 import { getSchematicTransform } from "./get-schematic-transform"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
 import { isSchematicSymbolPrimitive } from "./is-schematic-symbol-primitive"
@@ -913,6 +914,25 @@ export function createSchematicDocument({
       const pinNumberFontId = nativeTextFontTable.fontIdBySizeCircuitUnits.get(
         SCHEMATIC_PIN_NUMBER_FONT_SIZE_CIRCUIT_UNITS,
       )!
+      const passivePin =
+        sourceComponent?.ftype === "simple_capacitor" ||
+        sourceComponent?.ftype === "simple_resistor"
+      const nameMargin = -circuitToAltiumSchematicLength(
+        SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS,
+      )
+      const hairlinePin =
+        passivePin &&
+        altiumPinLength > 0 &&
+        schematicPort.has_input_arrow !== true &&
+        schematicPort.is_drawn_with_inversion_circle !== true
+          ? getHairlinePassivePinGeometry({
+              body: altiumPinLocation,
+              length: altiumPinLength,
+              orientation: altiumPinOrientation,
+              nameMargin,
+            })
+          : undefined
+      const nativePinLocation = hairlinePin?.connection ?? altiumPinLocation
       addSchematicRecord(
         [
           "RECORD=2",
@@ -921,15 +941,14 @@ export function createSchematicDocument({
           `DESIGNATOR=${pinDesignator}`,
           `NAME=${pinName}`,
           `PINCONGLOMERATE=${altiumPinConglomerate}`,
-          `LOCATION.X=${altiumPinLocation.x}`,
-          `LOCATION.Y=${altiumPinLocation.y}`,
-          `PINLENGTH=${altiumPinLength}`,
+          `LOCATION.X=${nativePinLocation.x}`,
+          `LOCATION.Y=${nativePinLocation.y}`,
+          `PINLENGTH=${hairlinePin ? 0 : altiumPinLength}`,
           // This preset controls native pin symbols, not the straight stem.
           `SYMBOL_LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
           // Altium defaults a missing electrical type to Input, which renders
           // direction arrows and gives passive terminals incorrect ERC semantics.
-          ...(sourceComponent?.ftype === "simple_capacitor" ||
-          sourceComponent?.ftype === "simple_resistor"
+          ...(passivePin
             ? ["ELECTRICAL=4"] // Passive
             : []),
           ...(schematicPort.has_input_arrow === true
@@ -944,18 +963,50 @@ export function createSchematicDocument({
           `PINNAME_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG | ALTIUM_PIN_CUSTOM_POSITION_FLAG}`,
           ...createAltiumSchematicCoordinateFields(
             "NAME_CUSTOMPOSITION_MARGIN",
-            -circuitToAltiumSchematicLength(
-              SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS,
-            ),
+            hairlinePin?.nameMargin ?? nameMargin,
           ),
           `NAME_CUSTOMFONTID=${pinNameFontId}`,
           `NAME_CUSTOMCOLOR=${pinColor}`,
-          `PINDESIGNATOR_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG}`,
+          `PINDESIGNATOR_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG | (hairlinePin ? ALTIUM_PIN_CUSTOM_POSITION_FLAG : 0)}`,
+          ...(hairlinePin
+            ? createAltiumSchematicCoordinateFields(
+                "DESIGNATOR_CUSTOMPOSITION_MARGIN",
+                hairlinePin.designatorMargin,
+              )
+            : []),
           `DESIGNATOR_CUSTOMFONTID=${pinNumberFontId}`,
           `DESIGNATOR_CUSTOMCOLOR=${pinColor}`,
         ],
         schematicRecordContext,
       )
+      if (hairlinePin) {
+        addSchematicRecord(
+          [
+            "RECORD=13",
+            `OWNERINDEX=${altiumComponentRecordIndex}`,
+            "OWNERPARTID=1",
+            ...createAltiumSchematicCoordinateFields(
+              "LOCATION.X",
+              altiumPinLocation.x,
+            ),
+            ...createAltiumSchematicCoordinateFields(
+              "LOCATION.Y",
+              altiumPinLocation.y,
+            ),
+            ...createAltiumSchematicCoordinateFields(
+              "CORNER.X",
+              nativePinLocation.x,
+            ),
+            ...createAltiumSchematicCoordinateFields(
+              "CORNER.Y",
+              nativePinLocation.y,
+            ),
+            `COLOR=${pinColor}`,
+            `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
+          ],
+          schematicRecordContext,
+        )
+      }
     }
     for (const componentGraphicText of componentGraphicTexts) {
       const recordFields = createAltiumSchematicTextRecordFields({

@@ -78,3 +78,12 @@ positions. Native power-port graphics and straight pin stems retain their
 native thickness; custom power-port definitions are not implemented here.
 Inspect the SVG in a browser or the SchDoc in Altium: PNG snapshot rendering
 does not preserve the SVG's non-scaling hairlines.
+
+## Passive pin stem prototype
+
+[Microcontroller](./automotive-mirror-microcontroller-passive-pin-hairlines.SchDoc)
+keeps capacitor/resistor electrical pins at their original wire endpoints with
+`PINLENGTH=0`, and draws the stem as an owned line with `LINEWIDTH=0`.
+Custom text margins subtract the original pin length to preserve text placement.
+Native power symbols and pins with electrical/edge symbols are unchanged.
+This prototype still needs verification in the real Altium viewer.

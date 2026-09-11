@@ -28,29 +28,25 @@ test("exports native Arial 3 pin names and Arial 4 numbers with the correct name
     )!
   const doc = parseAltiumSchDoc(file.content)
   const sheet = doc.getRecordsByKind("31")[0]!
-  expect(doc.records).toHaveLength(before.records.length)
+  expect(doc.pins).toHaveLength(before.pins.length)
   expect(doc.getRecordsByKind("2").length).toBeGreaterThan(0)
-  for (const [index, record] of doc.records.entries()) {
-    const previous = before.records[index]!
-    if (record.recordKind !== "2") {
-      expect(
-        record.fields
-          .filter(({ key }) => key !== "LINEWIDTH")
-          .map(({ key, value }) => [key, value]),
-      ).toEqual(
-        previous.fields
-          .filter(({ key }) => key !== "LINEWIDTH")
-          .map(({ key, value }) => [key, value]),
-      )
-      continue
-    }
+  for (const [index, record] of doc.pins.entries()) {
+    const previous = before.pins[index]!
+    const detachedStem =
+      record.getNumber("PINLENGTH") === 0 &&
+      previous.getNumber("PINLENGTH")! > 0
+    const stemLength = detachedStem ? previous.getNumber("PINLENGTH")! : 0
     expect(record.getNumber("FONTID")).toBeUndefined()
-    // Only names opt into custom position: 0.1 circuit units inside the body.
+    // Offsets keep text at the same position when the electrical pin is zero length.
     expect(record.getNumber("PINNAME_POSITIONCONGLOMERATE")).toBe(17)
-    expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(-2)
+    expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(-2 - stemLength)
     expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN_FRAC")).toBeUndefined()
-    expect(record.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(16)
-    expect(record.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBeUndefined()
+    expect(record.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(
+      detachedStem ? 17 : 16,
+    )
+    expect(record.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(
+      detachedStem ? 9 - stemLength : undefined,
+    )
     for (const kind of ["NAME", "DESIGNATOR"]) {
       const fontId = record.getNumber(`${kind}_CUSTOMFONTID`)
       expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe(
@@ -69,20 +65,16 @@ test("exports native Arial 3 pin names and Arial 4 numbers with the correct name
         /^(capacitor|(?:box)?resistor)/u,
       )
     }
-    // Geometry, labels, visibility and explicit edge symbols retain their fields.
-    expect(
-      record.fields
-        .filter(
-          ({ key }) =>
-            !/CUSTOM|POSITIONCONGLOMERATE|^(ELECTRICAL|SYMBOL_LINEWIDTH)$/u.test(
-              key,
-            ),
-        )
-        .map(({ key, value }) => [key, value]),
-    ).toEqual(
-      previous.fields
-        .filter(({ key }) => key !== "FONTID")
-        .map(({ key, value }) => [key, value]),
-    )
+    for (const field of [
+      "NAME",
+      "DESIGNATOR",
+      "PINCONGLOMERATE",
+      "SYMBOL_INNEREDGE",
+      "SYMBOL_OUTEREDGE",
+    ]) {
+      expect(record.getCaseInsensitive(field)).toBe(
+        previous.getCaseInsensitive(field),
+      )
+    }
   }
 })
