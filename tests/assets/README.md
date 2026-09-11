@@ -64,3 +64,17 @@ Pin names sit **0.1 circuit units inside the body edge**, matching Circuit JSON:
 `NAME_CUSTOMPOSITION_MARGIN = -(0.1 × 20) = -2`. Custom position and font are
 enabled together (`PINNAME_POSITIONCONGLOMERATE=17`); numbers retain their native
 position.
+
+## Schematic stroke widths
+
+[Microcontroller](./automotive-mirror-microcontroller-hairline-strokes.SchDoc)
+uses Altium's **Smallest** preset (`LINEWIDTH=0`) for wires, component outlines
+and symbol graphics, matching the existing pointed net-label outlines. This is
+a native width enum, not a font size or circuit-coordinate scale factor.
+Pin symbol markers also request Smallest (`SYMBOL_LINEWIDTH=0`).
+
+Names, values, MPNs, pin names and pin numbers retain their fonts, colors and
+positions. Native power-port graphics and straight pin stems retain their
+native thickness; custom power-port definitions are not implemented here.
+Inspect the SVG in a browser or the SchDoc in Altium: PNG snapshot rendering
+does not preserve the SVG's non-scaling hairlines.

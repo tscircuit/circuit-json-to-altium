@@ -33,8 +33,14 @@ test("exports native Arial 3 pin names and Arial 4 numbers with the correct name
   for (const [index, record] of doc.records.entries()) {
     const previous = before.records[index]!
     if (record.recordKind !== "2") {
-      expect(record.fields.map(({ key, value }) => [key, value])).toEqual(
-        previous.fields.map(({ key, value }) => [key, value]),
+      expect(
+        record.fields
+          .filter(({ key }) => key !== "LINEWIDTH")
+          .map(({ key, value }) => [key, value]),
+      ).toEqual(
+        previous.fields
+          .filter(({ key }) => key !== "LINEWIDTH")
+          .map(({ key, value }) => [key, value]),
       )
       continue
     }
@@ -67,7 +73,10 @@ test("exports native Arial 3 pin names and Arial 4 numbers with the correct name
     expect(
       record.fields
         .filter(
-          ({ key }) => !/CUSTOM|POSITIONCONGLOMERATE|^ELECTRICAL$/u.test(key),
+          ({ key }) =>
+            !/CUSTOM|POSITIONCONGLOMERATE|^(ELECTRICAL|SYMBOL_LINEWIDTH)$/u.test(
+              key,
+            ),
         )
         .map(({ key, value }) => [key, value]),
     ).toEqual(

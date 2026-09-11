@@ -3,6 +3,7 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
+import { ALTIUM_SCHEMATIC_HAIRLINE_WIDTH } from "./altium-schematic-line-width"
 import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import {
   type AltiumSchematicFontTable,
@@ -290,7 +291,7 @@ export function createAltiumSchematicNetLabelRecordFields({
   return [
     [
       "RECORD=27",
-      "LINEWIDTH=0",
+      `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
       "LOCATIONCOUNT=2",
       ...createAltiumSchematicCoordinateFields("X1", altiumLabelPosition.x),
       ...createAltiumSchematicCoordinateFields("Y1", altiumLabelPosition.y),
@@ -308,7 +309,7 @@ export function createAltiumSchematicNetLabelRecordFields({
     [
       "RECORD=7",
       "OWNERPARTID=-1",
-      "LINEWIDTH=0",
+      `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
       `LOCATIONCOUNT=${displayGeometry.outlinePoints.length}`,
       ...displayGeometry.outlinePoints.flatMap((point, pointIndex) => [
         ...createAltiumSchematicCoordinateFields(`X${pointIndex + 1}`, point.x),
