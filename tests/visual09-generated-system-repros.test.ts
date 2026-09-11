@@ -126,6 +126,14 @@ for (const repro of repros) {
     )
     for (const schematic of parsedSchematics) {
       expectValidSchematic(schematic)
+      const sheet = schematic.getRecordsByKind("31")[0]!
+      // Fractional font-table entries cause oversized fallback text in Altium,
+      // including labels drawn inside custom symbols.
+      for (const text of schematic.getRecordsByKind("4")) {
+        expect(
+          sheet.getCaseInsensitive(`SIZE${text.getNumber("FONTID")}`),
+        ).toMatch(/^[1-9]\d*$/u)
+      }
       // Raster snapshots can miss non-scaling hairlines, so also verify the
       // native preset for every built-in and custom symbol graphic.
       const componentRecords = schematic.components.flatMap((component) =>

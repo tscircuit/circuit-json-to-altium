@@ -125,10 +125,7 @@ export function createAltiumSchematicFontTable({
   }
   const nativeTextSizesCircuitUnits = [
     ...schematicElements.flatMap((text) =>
-      text.type === "schematic_text" &&
-      (asString(text.schematic_component_id) || asString(text.source_trace_id))
-        ? [asNumber(text.font_size)]
-        : [],
+      text.type === "schematic_text" ? [asNumber(text.font_size)] : [],
     ),
     ...(hasNetLabels ? [SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS] : []),
     ...netLabelTextPresentations.map((text) => asNumber(text.font_size)),
@@ -147,13 +144,15 @@ export function createAltiumSchematicFontTable({
   for (const size of nativeTextSizesCircuitUnits) {
     if (size <= 0) continue
     const existingFontId = nativeTextFontIdBySizeCircuitUnits.get(size)
+    // The reserved port font uses Times New Roman, even at an integer size.
     if (
       existingFontId !== undefined &&
+      existingFontId !== ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID &&
       Number.isInteger(fontSizePointsById.get(existingFontId))
     ) {
       continue
     }
-    // Component, trace, net-label and pin text use integer points.
+    // Generated text, including custom-symbol primitives, uses integer points.
     // For example, 0.18 becomes Arial 4, and inline labels at 0.12 become Arial 3.
     const points = Math.max(
       1,
