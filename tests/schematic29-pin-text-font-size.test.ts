@@ -32,21 +32,13 @@ test("exports native Arial 3 pin names and Arial 4 numbers with the correct name
   expect(doc.getRecordsByKind("2").length).toBeGreaterThan(0)
   for (const [index, record] of doc.pins.entries()) {
     const previous = before.pins[index]!
-    const detachedStem =
-      record.getNumber("PINLENGTH") === 0 &&
-      previous.getNumber("PINLENGTH")! > 0
-    const stemLength = detachedStem ? previous.getNumber("PINLENGTH")! : 0
     expect(record.getNumber("FONTID")).toBeUndefined()
-    // Offsets keep text at the same position when the electrical pin is zero length.
+    // Text remains anchored to the original body with independent native fonts.
     expect(record.getNumber("PINNAME_POSITIONCONGLOMERATE")).toBe(17)
-    expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(-2 - stemLength)
+    expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(-2)
     expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN_FRAC")).toBeUndefined()
-    expect(record.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(
-      detachedStem ? 17 : 16,
-    )
-    expect(record.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(
-      detachedStem ? 9 - stemLength : undefined,
-    )
+    expect(record.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(16)
+    expect(record.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(undefined)
     for (const kind of ["NAME", "DESIGNATOR"]) {
       const fontId = record.getNumber(`${kind}_CUSTOMFONTID`)
       expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe(

@@ -67,9 +67,17 @@ test("preserves boxed component body and pin geometry", async () => {
     },
   }).toEqual({
     body: { left: 196, bottom: 137, right: 228, top: 157 },
-    pin: { x: 196, y: 153, length: 8 },
+    pin: { x: 196, y: 153, length: 0 },
     text: { commentY: 125, designatorY: 169 },
   })
+  expect(
+    schematic.wires.map((wire) => [
+      wire.getNumber("X1"),
+      wire.getNumber("Y1"),
+      wire.getNumber("X2"),
+      wire.getNumber("Y2"),
+    ]),
+  ).toEqual([[196, 153, 188, 153]])
   expect(comment?.getBoolean("ISHIDDEN")).toBe(true)
   expect(comment?.getDecoded("TEXT")).toBe("")
   expectValidSchematic(schematic)

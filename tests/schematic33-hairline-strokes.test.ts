@@ -52,5 +52,5 @@ test("exports smallest schematic strokes with unchanged text fonts", async () =>
   expect(doc.getRecordsByKind("6")).toHaveLength(28)
   expect(doc.getRecordsByKind("7")).toHaveLength(16)
   expect(doc.getRecordsByKind("14")).toHaveLength(2)
-  expect(doc.getRecordsByKind("27")).toHaveLength(54)
+  expect(doc.getRecordsByKind("27")).toHaveLength(54 + doc.pins.length)
 })

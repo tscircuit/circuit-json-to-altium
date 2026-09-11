@@ -3,7 +3,7 @@ import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { expectValidSchematic } from "./fixtures"
 
-test("uses hairline passive stems without moving electrical endpoints or text", async () => {
+test("uses hairline stems for every component type with unchanged text and connected terminals", async () => {
   const source = await Bun.file(
     new URL(
       "./assets/generated-system-automotive-mirror.circuit.json",
@@ -41,7 +41,21 @@ test("uses hairline passive stems without moving electrical endpoints or text", 
   }
   for (const [index, pin] of after.pins.entries()) {
     const previous = before.pins[index]!
-    expect(endpoint(pin)).toEqual(endpoint(previous))
+    expect([pin.getNumber("LOCATION.X"), pin.getNumber("LOCATION.Y")]).toEqual([
+      previous.getNumber("LOCATION.X"),
+      previous.getNumber("LOCATION.Y"),
+    ])
+    expect(pin.getNumber("PINLENGTH")).toBe(0)
+    const stem = after.wires.find(
+      (wire) =>
+        wire.getNumber("X1") === endpoint(pin)[0] &&
+        wire.getNumber("Y1") === endpoint(pin)[1] &&
+        wire.getNumber("X2") === endpoint(previous)[0] &&
+        wire.getNumber("Y2") === endpoint(previous)[1],
+    )!
+    expect(stem).toBeDefined()
+    expect(stem.getNumber("LINEWIDTH")).toBe(0)
+    expect(stem.getNumber("COLOR")).toBe(pin.getNumber("COLOR"))
     for (const field of [
       "NAME",
       "DESIGNATOR",
@@ -56,31 +70,22 @@ test("uses hairline passive stems without moving electrical endpoints or text", 
         previous.getCaseInsensitive(field),
       )
     }
-    if (pin.getNumber("ELECTRICAL") === 4) {
-      passiveCount++
-      expect(pin.getNumber("PINLENGTH")).toBe(0)
-      const line = after
-        .getRecordsByKind("13")
-        .find(
-          (r) =>
-            r.getNumber("OWNERINDEX") === pin.getNumber("OWNERINDEX") &&
-            r.getNumber("CORNER.X") === endpoint(pin)[0] &&
-            r.getNumber("CORNER.Y") === endpoint(pin)[1],
-        )!
-      expect(line).toBeDefined()
-      expect(line.getNumber("LINEWIDTH")).toBe(0)
-      expect([
-        line.getNumber("LOCATION.X"),
-        line.getNumber("LOCATION.Y"),
-      ]).toEqual([
-        previous.getNumber("LOCATION.X"),
-        previous.getNumber("LOCATION.Y"),
-      ])
-    } else {
-      expect(pin.getNumber("PINLENGTH")).toBe(previous.getNumber("PINLENGTH"))
-    }
+    if (pin.getNumber("ELECTRICAL") === 4) passiveCount++
   }
   expect(passiveCount).toBe(16)
+  expect(after.wires.length).toBe(before.wires.length + before.pins.length)
+  expect(after.powerPorts.map((port) => port.text)).toEqual(
+    before.powerPorts.map((port) => port.text),
+  )
+  for (const port of after.powerPorts) {
+    const graphics = after.getObjectDefinitionGraphics(
+      port.getCaseInsensitive("ObjectDefinitionId")!,
+    )!
+    expect(graphics).toHaveLength(2)
+    expect(graphics.every((line) => line.getNumber("LINEWIDTH") === 0)).toBe(
+      true,
+    )
+  }
   const text = (doc: typeof before) =>
     Array.from(
       serializeAltiumSheetToSvg(doc).matchAll(/<text\b[\s\S]*?<\/text>/gu),

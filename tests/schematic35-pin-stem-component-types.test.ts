@@ -1,0 +1,87 @@
+import { expect, test } from "bun:test"
+import {
+  board,
+  type CircuitElement,
+  extractArchive,
+  sourceComponent,
+  sourcePort,
+} from "./fixtures"
+
+test("shortens pin stems independently of component ftype and preserves clock/inversion edges", async () => {
+  for (const ftype of [
+    undefined,
+    "simple_capacitor",
+    "simple_resistor",
+    "simple_chip",
+    "simple_diode",
+    "simple_inductor",
+    "simple_transistor",
+    "simple_led",
+    "simple_switch",
+  ]) {
+    const elements: CircuitElement[] = [
+      board(),
+      { ...sourceComponent("part", "U1"), ...(ftype ? { ftype } : {}) },
+      {
+        type: "schematic_component",
+        schematic_component_id: "body",
+        source_component_id: "part",
+        center: { x: 0, y: 0 },
+        size: { width: 2, height: 2 },
+      },
+    ]
+    for (const [i, facing] of ["right", "up", "left", "down"].entries()) {
+      const dx = [1, 0, -1, 0][i]!
+      const dy = [0, 1, 0, -1][i]!
+      elements.push(
+        sourcePort({
+          sourcePortId: `pin${i}`,
+          sourceComponentId: "part",
+          pinNumber: i + 1,
+        }),
+        {
+          type: "schematic_port",
+          schematic_port_id: `port${i}`,
+          schematic_component_id: "body",
+          source_port_id: `pin${i}`,
+          center: { x: 1.5 * dx, y: 1.5 * dy },
+          distance_from_component_edge: 0.5,
+          facing_direction: facing,
+          display_pin_label: `SIGNAL${i}`,
+          has_input_arrow: i === 1,
+          is_drawn_with_inversion_circle: i === 3,
+        },
+      )
+    }
+    const doc = (await extractArchive(elements)).schematics[0]!
+    expect(doc.pins).toHaveLength(4)
+    expect(doc.wires).toHaveLength(4)
+    for (const [i, pin] of doc.pins.entries()) {
+      const nativeLength = i === 3 ? 5 : 0
+      expect(pin.getNumber("PINLENGTH")).toBe(nativeLength)
+      expect(pin.getNumber("ELECTRICAL")).toBe(
+        ftype === "simple_capacitor" || ftype === "simple_resistor"
+          ? 4
+          : undefined,
+      )
+      expect(pin.getNumber("SYMBOL_INNEREDGE")).toBe(i === 1 ? 3 : undefined)
+      expect(pin.getNumber("SYMBOL_OUTEREDGE")).toBe(i === 3 ? 1 : undefined)
+      const dx = [1, 0, -1, 0][i]!
+      const dy = [0, 1, 0, -1][i]!
+      const start = {
+        x: pin.position!.x + dx * nativeLength,
+        y: pin.position!.y + dy * nativeLength,
+      }
+      const wire = doc.wires[i]!
+      expect([wire.getNumber("X1"), wire.getNumber("Y1")]).toEqual([
+        start.x,
+        start.y,
+      ])
+      expect([wire.getNumber("X2"), wire.getNumber("Y2")]).toEqual([
+        pin.position!.x + dx * 10,
+        pin.position!.y + dy * 10,
+      ])
+      expect(wire.getNumber("LINEWIDTH")).toBe(0)
+    }
+  }
+})

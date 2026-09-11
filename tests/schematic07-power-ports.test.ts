@@ -79,5 +79,12 @@ test("writes rail and ground net-label symbols as native power ports", async () 
   expect(schematic.netLabels.map((netLabel) => netLabel.text)).toEqual([
     "SIGNAL",
   ])
+  for (const port of schematic.powerPorts) {
+    const graphics = schematic.getObjectDefinitionGraphics(
+      port.getCaseInsensitive("ObjectDefinitionId")!,
+    )!
+    expect(graphics).toHaveLength(port.getNumber("STYLE") === 2 ? 2 : 4)
+    expect(graphics.every((r) => r.getNumber("LINEWIDTH") === 0)).toBe(true)
+  }
   expectValidSchematic(schematic)
 })

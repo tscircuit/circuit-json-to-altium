@@ -54,7 +54,7 @@ test("C11 decoupling capacitor exports passive pins without input arrows", async
   expect(schematic.pins).toHaveLength(2)
   expect(schematic.pins.map((pin) => pin.electricalType)).toEqual([4, 4])
   expect(altiumSvg).not.toContain("altium-schematic-pin-electrical-symbol")
-  expect(schematic.wires).toHaveLength(4)
+  expect(schematic.wires).toHaveLength(6)
   expect(schematic.powerPorts.map((port) => port.text).sort()).toEqual([
     "GND",
     "V3V3",
