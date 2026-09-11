@@ -150,7 +150,7 @@ export function createAltiumSchematicFontTable({
     ) {
       continue
     }
-    // Component, trace, net-label, pin and standalone text use integer points.
+    // Generated text, including custom-symbol primitives, uses integer points.
     // For example, 0.18 becomes Arial 4, and inline labels at 0.12 become Arial 3.
     const points = Math.max(
       1,

@@ -700,7 +700,7 @@ export function createSchematicDocument({
         altiumComponentRecordIndex,
         circuitToAltiumSchematicLength,
         circuitToAltiumSchematicPoint,
-        fontTable: altiumSchematicFontTable,
+        fontTable: nativeTextFontTable,
         graphic,
       })
       return recordFields ? [recordFields] : []

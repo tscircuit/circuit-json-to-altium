@@ -104,7 +104,7 @@ arcs and rectangles, matching built-in symbols. `LINEWIDTH` is an Altium width
 preset; Circuit JSON's `stroke_width` is not converted as a coordinate length.
 Text fonts, geometry, fills and dashed styles are unchanged.
 
-## Standalone annotation text sizes
+## Standalone and custom-symbol text sizes
 
 [Light motor control power supply](./light-motor-control-power-supply-annotation-text-5pt.SchDoc)
 uses Arial **5 pt** for the Open/Close notes and voltage annotations.
@@ -112,3 +112,9 @@ Size depends on `schematic_text.font_size × 20`, rounded up to an integer
 (minimum 1 pt): `0.22 × 20 = 4.4 → 5 pt`. Native integer font sizes prevent
 Altium Viewer from falling back to oversized text. Anchors, positions and
 colors are preserved.
+
+[Blood pressure input/reference sheet](./blood-pressure-input-reference-custom-text.SchDoc)
+uses Arial **4 pt** for custom-symbol U3 (`0.18 × 20 = 3.6 → 4 pt`),
+**3 pt** for its MPN (`0.14 × 20 = 2.8 → 3 pt`) and **3 pt** for its drawn
+pin numbers (`0.13 × 20 = 2.6 → 3 pt`). Text linked by `schematic_symbol_id`
+uses the same native font-size mapping as standalone notes.
