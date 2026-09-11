@@ -126,6 +126,20 @@ for (const repro of repros) {
     )
     for (const schematic of parsedSchematics) {
       expectValidSchematic(schematic)
+      // Raster snapshots can miss non-scaling hairlines, so also verify the
+      // native preset for every built-in and custom symbol graphic.
+      const componentRecords = schematic.components.flatMap((component) =>
+        schematic.getOwnedRecords(component),
+      )
+      for (const record of componentRecords) {
+        if (
+          ["6", "7", "8", "11", "12", "13", "14"].includes(
+            record.recordKind ?? "",
+          )
+        ) {
+          expect(record.getNumber("LINEWIDTH")).toBe(0)
+        }
+      }
     }
 
     const rootSchematic = parsedSchematics[0]

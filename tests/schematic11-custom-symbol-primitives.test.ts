@@ -84,6 +84,18 @@ const elements: CircuitElement[] = [
     is_dashed: false,
   },
   {
+    type: "schematic_path",
+    schematic_path_id: "schematic_path_open_custom",
+    schematic_symbol_id: schematicSymbolId,
+    points: [
+      { x: 1, y: 6 },
+      { x: 2, y: 7 },
+      { x: 3, y: 6 },
+    ],
+    stroke_width: 0.1,
+    is_filled: false,
+  },
+  {
     type: "schematic_circle",
     schematic_circle_id: "schematic_circle_custom",
     schematic_symbol_id: schematicSymbolId,
@@ -137,73 +149,96 @@ const elements: CircuitElement[] = [
   },
 ]
 
-test("writes custom symbol primitives as owned native Altium records", async () => {
-  const { schematics } = await extractArchive(elements)
-  const schematic = schematics[0]
-  if (!schematic) throw new Error("Expected a generated schematic")
-  const component = schematic.components[0]
-  if (!component) throw new Error("Expected a native Altium component")
-  const ownedRecords = schematic.getOwnedRecords(component)
+test.each([
+  ["omitted", undefined],
+  ["zero", 0],
+  ["thin", 0.02],
+  ["thick", 0.15],
+] as const)(
+  "writes hairline custom symbol primitives with %s source stroke width",
+  async (_label, strokeWidth) => {
+    const { schematics } = await extractArchive(
+      elements.map((element) =>
+        "stroke_width" in element
+          ? { ...element, stroke_width: strokeWidth }
+          : element,
+      ),
+    )
+    const schematic = schematics[0]
+    if (!schematic) throw new Error("Expected a generated schematic")
+    const component = schematic.components[0]
+    if (!component) throw new Error("Expected a native Altium component")
+    const ownedRecords = schematic.getOwnedRecords(component)
+    const graphicKinds = ["6", "7", "8", "11", "12", "13", "14"]
+    const graphics = ownedRecords.filter((record) =>
+      graphicKinds.includes(record.recordKind!),
+    )
+    expect(graphics.map((record) => record.recordKind).sort()).toEqual(
+      [...graphicKinds].sort(),
+    )
+    for (const graphic of graphics) {
+      expect(graphic.getNumber("LINEWIDTH")).toBe(0)
+    }
 
-  const line = ownedRecords.find(
-    (record): record is AltiumSchLineRecord =>
-      record instanceof AltiumSchLineRecord,
-  )
-  const polygon = ownedRecords.find(
-    (record): record is AltiumSchPolygonRecord =>
-      record instanceof AltiumSchPolygonRecord,
-  )
-  const circle = ownedRecords.find(
-    (record): record is AltiumSchEllipseRecord =>
-      record instanceof AltiumSchEllipseRecord,
-  )
-  const arc = ownedRecords.find(
-    (record): record is AltiumSchArcRecord =>
-      record instanceof AltiumSchArcRecord,
-  )
-  const ellipticalArc = ownedRecords.find(
-    (record): record is AltiumSchEllipticalArcRecord =>
-      record instanceof AltiumSchEllipticalArcRecord,
-  )
-  const rectangle = ownedRecords.find(
-    (record): record is AltiumSchRectangleRecord =>
-      record instanceof AltiumSchRectangleRecord,
-  )
+    const line = ownedRecords.find(
+      (record): record is AltiumSchLineRecord =>
+        record instanceof AltiumSchLineRecord,
+    )
+    const polygon = ownedRecords.find(
+      (record): record is AltiumSchPolygonRecord =>
+        record instanceof AltiumSchPolygonRecord,
+    )
+    const circle = ownedRecords.find(
+      (record): record is AltiumSchEllipseRecord =>
+        record instanceof AltiumSchEllipseRecord,
+    )
+    const arc = ownedRecords.find(
+      (record): record is AltiumSchArcRecord =>
+        record instanceof AltiumSchArcRecord,
+    )
+    const ellipticalArc = ownedRecords.find(
+      (record): record is AltiumSchEllipticalArcRecord =>
+        record instanceof AltiumSchEllipticalArcRecord,
+    )
+    const rectangle = ownedRecords.find(
+      (record): record is AltiumSchRectangleRecord =>
+        record instanceof AltiumSchRectangleRecord,
+    )
 
-  expect(line).toMatchObject({ recordKind: "13" })
-  expect(line?.getNumber("LINEWIDTH")).toBe(2)
-  expect(line?.getNumber("LINESTYLE")).toBe(1)
-  expect(line?.getNumber("COLOR")).toBe(0x56_34_12)
-  expect(polygon).toMatchObject({ recordKind: "7" })
-  expect(polygon?.getNumber("LOCATIONCOUNT")).toBe(3)
-  expect(polygon?.getNumber("COLOR")).toBe(132)
-  expect(polygon?.getNumber("AREACOLOR")).toBe(0xef_cd_ab)
-  expect(circle).toMatchObject({ recordKind: "8" })
-  expect(circle?.getNumber("RADIUS")).toBe(30)
-  expect(circle?.getNumber("SECONDARYRADIUS")).toBe(30)
-  expect(arc).toMatchObject({ recordKind: "12" })
-  expect(arc?.getNumber("STARTANGLE")).toBe(30)
-  expect(arc?.getNumber("ENDANGLE")).toBe(120)
-  expect(ellipticalArc).toMatchObject({ recordKind: "11" })
-  expect(ellipticalArc?.getNumber("RADIUS")).toBe(40)
-  expect(ellipticalArc?.getNumber("SECONDARYRADIUS")).toBe(20)
-  expect(rectangle).toMatchObject({ recordKind: "14" })
-  expect(rectangle?.getNumber("COLOR")).toBe(0x66_55_44)
-  expect(rectangle?.getNumber("AREACOLOR")).toBe(0x66_55_44)
-  expect(rectangle?.getBoolean("ISSOLID")).toBe(true)
-  expect(
-    ownedRecords.filter((record) => record.recordKind === "14"),
-  ).toHaveLength(1)
-  const designator = ownedRecords.find((record) => record.recordKind === "34")
-  const pin = ownedRecords.find((record) => record.recordKind === "2")
-  const customTexts = ownedRecords.filter(
-    (record) =>
-      record.recordKind === "4" &&
-      record.getDecoded("TEXT") === "custom function",
-  )
-  expect(designator?.getBoolean("ISHIDDEN")).toBe(true)
-  expect(pin?.getNumber("PINCONGLOMERATE")).toBe(34)
-  expect(pin?.getNumber("COLOR")).toBe(132)
-  expect(customTexts).toHaveLength(1)
-  expectValidSchematic(schematic)
-})
+    expect(line).toMatchObject({ recordKind: "13" })
+    expect(line?.getNumber("LINESTYLE")).toBe(1)
+    expect(line?.getNumber("COLOR")).toBe(0x56_34_12)
+    expect(polygon).toMatchObject({ recordKind: "7" })
+    expect(polygon?.getNumber("LOCATIONCOUNT")).toBe(3)
+    expect(polygon?.getNumber("COLOR")).toBe(132)
+    expect(polygon?.getNumber("AREACOLOR")).toBe(0xef_cd_ab)
+    expect(circle).toMatchObject({ recordKind: "8" })
+    expect(circle?.getNumber("RADIUS")).toBe(30)
+    expect(circle?.getNumber("SECONDARYRADIUS")).toBe(30)
+    expect(arc).toMatchObject({ recordKind: "12" })
+    expect(arc?.getNumber("STARTANGLE")).toBe(30)
+    expect(arc?.getNumber("ENDANGLE")).toBe(120)
+    expect(ellipticalArc).toMatchObject({ recordKind: "11" })
+    expect(ellipticalArc?.getNumber("RADIUS")).toBe(40)
+    expect(ellipticalArc?.getNumber("SECONDARYRADIUS")).toBe(20)
+    expect(rectangle).toMatchObject({ recordKind: "14" })
+    expect(rectangle?.getNumber("COLOR")).toBe(0x66_55_44)
+    expect(rectangle?.getNumber("AREACOLOR")).toBe(0x66_55_44)
+    expect(rectangle?.getBoolean("ISSOLID")).toBe(true)
+    expect(
+      ownedRecords.filter((record) => record.recordKind === "14"),
+    ).toHaveLength(1)
+    const designator = ownedRecords.find((record) => record.recordKind === "34")
+    const pin = ownedRecords.find((record) => record.recordKind === "2")
+    const customTexts = ownedRecords.filter(
+      (record) =>
+        record.recordKind === "4" &&
+        record.getDecoded("TEXT") === "custom function",
+    )
+    expect(designator?.getBoolean("ISHIDDEN")).toBe(true)
+    expect(pin?.getNumber("PINCONGLOMERATE")).toBe(34)
+    expect(pin?.getNumber("COLOR")).toBe(132)
+    expect(customTexts).toHaveLength(1)
+    expectValidSchematic(schematic)
+  },
+)
