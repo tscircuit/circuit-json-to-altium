@@ -78,7 +78,7 @@ test("preserves symbols, pins, wires, labels, and unique junctions", async () =>
 
   expect(component?.libraryReference).toBe("box resistor")
   expect(schematic.pins.map((pin) => pin.designator)).toEqual(["1", "2"])
-  expect(schematic.wires).toHaveLength(2)
+  expect(schematic.wires).toHaveLength(4)
   expect(schematic.getRecordsByKind("29")).toHaveLength(1)
   expect(schematic.netLabels.map((label) => label.text)).toEqual(["SIG NA ME"])
   expect(
@@ -90,7 +90,7 @@ test("preserves symbols, pins, wires, labels, and unique junctions", async () =>
       ?.getDecoded("TEXT"),
   ).toBe("10k Ω")
   const label = schematic.netLabels[0]
-  const wireEnd = schematic.wires[1]
+  const wireEnd = schematic.wires.at(-1)
   expect(label?.position).toEqual({ x: 180, y: 100 })
   expect(wireEnd?.getNumber("X2")).toBe(label?.position?.x)
   expect(wireEnd?.getNumber("Y2")).toBe(label?.position?.y)

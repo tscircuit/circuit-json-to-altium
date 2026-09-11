@@ -9,6 +9,7 @@ import {
   type AltiumSchematicFontTable,
   SCHEMATIC_NET_LABEL_FONT_SIZE_CIRCUIT_UNITS,
 } from "./create-altium-schematic-font-table"
+import { getHairlinePowerPortDefinitionId } from "./create-hairline-power-port-definitions"
 import { estimateAltiumSchematicLabelTextWidth } from "./estimate-altium-schematic-label-text-width"
 import { asNumber, asString, pointsEqual } from "./format"
 import {
@@ -247,6 +248,7 @@ export function createAltiumSchematicNetLabelRecordFields({
         `FONTID=${fontId}`,
         `ORIENTATION=${powerPortStyle.orientationIndex}`,
         `STYLE=${powerPortStyle.styleIndex}`,
+        `ObjectDefinitionId=${getHairlinePowerPortDefinitionId(powerPortStyle.styleIndex, color)}`,
         `COLOR=${color}`,
         "SHOWNETNAME=T",
         `TEXT=${labelText}`,

@@ -1,6 +1,7 @@
 import { serializeAltiumSchDocToBinary } from "altiumts"
 import { ConverterStage } from "../converter-stage"
 import type { AltiumSchematicChildSheet } from "../create-altium-schematic-sheet-symbol-records"
+import { createHairlinePowerPortDefinitions } from "../create-hairline-power-port-definitions"
 import { createSchematicDocument } from "../create-schematic-document"
 import { extractAltiumSchematicTemplate } from "../extract-altium-schematic-template"
 import { asNumber, asString, byType } from "../format"
@@ -128,6 +129,8 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         asciiContent,
         content: serializeAltiumSchDocToBinary(asciiContent, {
           embeddedImages: template?.embeddedImages,
+          objectDefinitionRecords:
+            createHairlinePowerPortDefinitions(asciiContent),
         }),
         filename: definition.filename,
       }

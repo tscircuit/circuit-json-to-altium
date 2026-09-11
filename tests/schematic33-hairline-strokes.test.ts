@@ -3,7 +3,7 @@ import { parseAltiumSchDoc } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { expectValidSchematic } from "./fixtures"
 
-test("exports smallest schematic strokes without changing text or geometry", async () => {
+test("exports smallest schematic strokes with unchanged text fonts", async () => {
   const source = await Bun.file(
     new URL(
       "./assets/generated-system-automotive-mirror.circuit.json",
@@ -29,30 +29,28 @@ test("exports smallest schematic strokes without changing text or geometry", asy
     )!
   const doc = parseAltiumSchDoc(file.content)
   expectValidSchematic(doc)
-  expect(doc.records).toHaveLength(previous.records.length)
-  const graphicKinds = new Set(["6", "7", "14", "27"])
-  for (const [index, record] of doc.records.entries()) {
+  const graphicKinds = new Set(["6", "7", "13", "14", "27"])
+  for (const record of doc.records) {
     if (graphicKinds.has(record.recordKind!)) {
       expect(record.getNumber("LINEWIDTH")).toBe(0)
     }
     if (record.recordKind === "2") {
       expect(record.getNumber("SYMBOL_LINEWIDTH")).toBe(0)
     }
-    // The reference predates the separate capacitor/resistor Passive fixes.
-    // Every text/font/position field and all wire/pin geometry must be identical.
-    const unchangedFields = (fields: typeof record.fields) =>
-      fields
-        .filter(
-          ({ key }) =>
-            !["LINEWIDTH", "SYMBOL_LINEWIDTH", "ELECTRICAL"].includes(key),
+  }
+  for (const kind of ["4", "25", "31", "34", "41"]) {
+    const fields = (document: typeof doc) =>
+      document
+        .getRecordsByKind(kind)
+        .map((record) =>
+          record.fields
+            .filter(({ key }) => key !== "OWNERINDEX")
+            .map(({ key, value }) => [key, value]),
         )
-        .map(({ key, value }) => [key, value])
-    expect(unchangedFields(record.fields)).toEqual(
-      unchangedFields(previous.records[index]!.fields),
-    )
+    expect(fields(doc)).toEqual(fields(previous))
   }
   expect(doc.getRecordsByKind("6")).toHaveLength(28)
   expect(doc.getRecordsByKind("7")).toHaveLength(16)
   expect(doc.getRecordsByKind("14")).toHaveLength(2)
-  expect(doc.getRecordsByKind("27")).toHaveLength(54)
+  expect(doc.getRecordsByKind("27")).toHaveLength(54 + doc.pins.length)
 })
