@@ -126,6 +126,9 @@ for (const repro of repros) {
     )
     for (const schematic of parsedSchematics) {
       expectValidSchematic(schematic)
+      for (const junction of schematic.getRecordsByKind("29")) {
+        expect(junction.getNumber("SIZE")).toBe(0)
+      }
       const sheet = schematic.getRecordsByKind("31")[0]!
       // Fractional font-table entries cause oversized fallback text in Altium,
       // including labels drawn inside custom symbols.
