@@ -48,7 +48,8 @@ test.each([undefined, ...componentFtypes])(
           distance_from_component_edge: 0.5,
           facing_direction: facing,
           display_pin_label: `SIGNAL${i}`,
-          has_input_arrow: i === 1,
+          has_input_arrow: i === 1 || i === 3,
+          has_output_arrow: i === 2 || i === 3,
           is_drawn_with_inversion_circle: i === 3,
         },
       )
@@ -59,12 +60,10 @@ test.each([undefined, ...componentFtypes])(
     for (const [i, pin] of doc.pins.entries()) {
       const nativeLength = i === 3 ? 5 : 0
       expect(pin.getNumber("PINLENGTH")).toBe(nativeLength)
-      expect(pin.getNumber("ELECTRICAL")).toBe(
-        ftype === "simple_capacitor" || ftype === "simple_resistor"
-          ? 4
-          : undefined,
+      expect(pin.getNumber("ELECTRICAL")).toBe([4, 0, 2, 1][i])
+      expect(pin.getNumber("SYMBOL_INNEREDGE")).toBe(
+        i === 1 || i === 3 ? 3 : undefined,
       )
-      expect(pin.getNumber("SYMBOL_INNEREDGE")).toBe(i === 1 ? 3 : undefined)
       expect(pin.getNumber("SYMBOL_OUTEREDGE")).toBe(i === 3 ? 1 : undefined)
       const dx = [1, 0, -1, 0][i]!
       const dy = [0, 1, 0, -1][i]!

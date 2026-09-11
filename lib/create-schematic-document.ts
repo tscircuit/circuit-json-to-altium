@@ -914,11 +914,17 @@ export function createSchematicDocument({
       const pinNumberFontId = nativeTextFontTable.fontIdBySizeCircuitUnits.get(
         SCHEMATIC_PIN_NUMBER_FONT_SIZE_CIRCUIT_UNITS,
       )!
-      // Only the electrical classification depends on ftype. The hairline
-      // geometry below applies to every component's schematic ports.
-      const hasPassiveElectricalType =
-        sourceComponent?.ftype === "simple_capacitor" ||
-        sourceComponent?.ftype === "simple_resistor"
+      const hasInputArrow = schematicPort.has_input_arrow === true
+      const hasOutputArrow = schematicPort.has_output_arrow === true
+      // Derive direction from the pin, independently of its component's ftype.
+      // Pins with no direction use Passive instead of Altium's implicit Input.
+      const electricalType = hasInputArrow
+        ? hasOutputArrow
+          ? 1 // Bidirectional
+          : 0 // Input
+        : hasOutputArrow
+          ? 2 // Output
+          : 4 // Passive
       const nameMargin = -circuitToAltiumSchematicLength(
         SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS,
       )
@@ -942,11 +948,7 @@ export function createSchematicDocument({
           `PINLENGTH=${hairlinePin.nativeLength}`,
           // This preset controls native pin symbols, not the straight stem.
           `SYMBOL_LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
-          // Altium defaults a missing electrical type to Input, which renders
-          // direction arrows and gives passive terminals incorrect ERC semantics.
-          ...(hasPassiveElectricalType
-            ? ["ELECTRICAL=4"] // Passive
-            : []),
+          `ELECTRICAL=${electricalType}`,
           ...(schematicPort.has_input_arrow === true
             ? [`SYMBOL_INNEREDGE=${ALTIUM_PIN_CLOCK_SYMBOL}`]
             : []),

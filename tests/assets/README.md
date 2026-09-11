@@ -84,13 +84,14 @@ does not preserve the SVG's non-scaling hairlines.
 [Microcontroller](./automotive-mirror-microcontroller-pin-power-hairlines.SchDoc)
 uses native wires with `LINEWIDTH=0` for pin stems across all component types.
 The component-type regression reads every `ftype` from the Circuit JSON schema.
-The capacitor/resistor check sets only the Passive electrical classification;
-it does not limit which components receive thin stems.
-Pins retain their body position, electrical type, text and clock/inversion
+Electrical type depends only on each pin's `has_input_arrow` / `has_output_arrow`:
+Input **0**, Output **2**, both Bidirectional **1**, neither Passive **4**.
+No component `ftype` receives special handling.
+Pins retain their body position, text and clock/inversion
 symbols; a wire joins each shortened terminal to its original connection.
 An inversion bubble retains five schematic units of native pin length.
 
 VDD/GND remain native power ports. Their graphics depend on custom
 `ObjectDefinitions` with `LineWidth=0` (Altium's Smallest preset).
 Names, values and pin numbers remain Arial **4 pt**; pin names remain **3 pt**.
-The microcontroller export was checked in the real Altium 365 Viewer.
+The pin-stem and power-symbol rendering was checked in the real Altium 365 Viewer.

@@ -30,7 +30,6 @@ test("uses hairline stems for every component type with unchanged text and conne
   const after = parseAltiumSchDoc(file.content)
   expectValidSchematic(after)
   expect(after.pins.length).toBe(before.pins.length)
-  let passiveCount = 0
   const endpoint = (pin: (typeof before.pins)[number]) => {
     const rotation = pin.getNumber("PINCONGLOMERATE")! & 3
     const length = pin.getNumber("PINLENGTH")!
@@ -59,7 +58,6 @@ test("uses hairline stems for every component type with unchanged text and conne
     for (const field of [
       "NAME",
       "DESIGNATOR",
-      "ELECTRICAL",
       "COLOR",
       "NAME_CUSTOMFONTID",
       "DESIGNATOR_CUSTOMFONTID",
@@ -70,9 +68,7 @@ test("uses hairline stems for every component type with unchanged text and conne
         previous.getCaseInsensitive(field),
       )
     }
-    if (pin.getNumber("ELECTRICAL") === 4) passiveCount++
   }
-  expect(passiveCount).toBe(16)
   expect(after.wires.length).toBe(before.wires.length + before.pins.length)
   expect(after.powerPorts.map((port) => port.text)).toEqual(
     before.powerPorts.map((port) => port.text),
