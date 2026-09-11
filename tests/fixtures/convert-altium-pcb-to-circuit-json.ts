@@ -889,7 +889,7 @@ export function convertAltiumPcbToCircuitJson(
     const position = getPoint(text, "X", "Y")
     if (
       !position ||
-      !isOverlayLayer(layer) ||
+      (!isOverlayLayer(layer) && !isSolderMaskLayer(layer)) ||
       !isVisibleComponentText(document, text)
     ) {
       continue
