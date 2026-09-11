@@ -691,6 +691,18 @@ export function convertAltiumPcbToCircuitJson(
   for (const [padIndex, pad] of document.getRecordsByKind("Pad").entries()) {
     const position = getPoint(pad, "X", "Y")
     if (!position) continue
+    const layer = pad.getDecoded("LAYER")
+    const holeSizeMils = getMeasurementMils(pad, "HOLESIZE") ?? 0
+    const outerWidthMils =
+      getMeasurementMils(pad, "XSIZE", "TOPXSIZE") ??
+      Math.max(holeSizeMils * 2, 1)
+    const outerHeightMils =
+      getMeasurementMils(pad, "YSIZE", "TOPYSIZE") ?? outerWidthMils
+    const holeWidthMils =
+      getMeasurementMils(pad, "HOLEWIDTH", "SLOTLENGTH") ?? holeSizeMils
+    const hasOuterArea = outerWidthMils > 0 && outerHeightMils > 0
+    const hasHoleArea = holeWidthMils > 0 && holeSizeMils > 0
+    if (!hasOuterArea && !hasHoleArea) continue
 
     const pcbComponentId = getOwnedComponentId(document, componentIds, pad)
     const sourcePortId = `source_port_${padIndex}`
@@ -731,13 +743,6 @@ export function convertAltiumPcbToCircuitJson(
       )
     }
 
-    const layer = pad.getDecoded("LAYER")
-    const holeSizeMils = getMeasurementMils(pad, "HOLESIZE") ?? 0
-    const outerWidthMils =
-      getMeasurementMils(pad, "XSIZE", "TOPXSIZE") ??
-      Math.max(holeSizeMils * 2, 1)
-    const outerHeightMils =
-      getMeasurementMils(pad, "YSIZE", "TOPYSIZE") ?? outerWidthMils
     const rotation = toCircuitRotation(pad.getNumber("ROTATION") ?? 0)
     const commonFields = {
       ...(pcbComponentId ? { pcb_component_id: pcbComponentId } : {}),
@@ -760,8 +765,6 @@ export function convertAltiumPcbToCircuitJson(
       continue
     }
 
-    const holeWidthMils =
-      getMeasurementMils(pad, "HOLEWIDTH", "SLOTLENGTH") ?? holeSizeMils
     const isSlotted = Math.abs(holeWidthMils - holeSizeMils) > 1e-9
     const holeRotation = toCircuitRotation(
       (isSlotted ? pad.getNumber("SLOTROTATION") : undefined) ??

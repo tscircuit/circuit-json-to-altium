@@ -12,8 +12,10 @@ test("round-trips the open-source quadcopter controller Altium board", async () 
   expect(result.roundTripSourceNetNames).toEqual(result.sourceNetNames)
   expect(result.cadComponentMismatchCount).toBe(0)
   expect(result.geometryMaxDeltaMm).toBeLessThan(0.03)
+  expect(result.platedHoleDimensionMismatchCount).toBe(0)
   expect(result.rotationMismatchCount).toBe(0)
   expect(result.silkscreenTextMismatchCount).toBe(0)
+  expect(result.sourceCounts.pcb_plated_hole).toBe(57)
   expect(result.sourcePrimitiveTotal).toBeGreaterThan(350)
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
