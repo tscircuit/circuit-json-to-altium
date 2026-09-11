@@ -99,7 +99,8 @@ test("creates a parseable project with a connected PCB and schematic", async () 
   expect(result.pcb.nets.map((net) => net.name)).toEqual(["SIGNAL"])
   expect(result.schematics[0]?.components).toHaveLength(1)
   expect(result.schematics[0]?.pins).toHaveLength(1)
-  expect(result.schematics[0]?.wires).toHaveLength(1)
+  // One source wire plus the native hairline pin extension.
+  expect(result.schematics[0]?.wires).toHaveLength(2)
   expect(result.schematics[0]?.components[0]?.libraryReference).toBe(
     "boxresistor",
   )
