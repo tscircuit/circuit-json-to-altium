@@ -144,8 +144,10 @@ export function createAltiumSchematicFontTable({
   for (const size of nativeTextSizesCircuitUnits) {
     if (size <= 0) continue
     const existingFontId = nativeTextFontIdBySizeCircuitUnits.get(size)
+    // The reserved port font uses Times New Roman, even at an integer size.
     if (
       existingFontId !== undefined &&
+      existingFontId !== ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID &&
       Number.isInteger(fontSizePointsById.get(existingFontId))
     ) {
       continue

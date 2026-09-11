@@ -87,3 +87,52 @@ test("exports standalone notes with native integer fonts and their source presen
   }
   expectValidSchematic(schematic)
 })
+
+test.each([
+  [0.55, 0.51],
+  [0.51, 0.55],
+])(
+  "keeps 11 pt notes in Arial when sizes arrive as %p, %p",
+  async (...sizes) => {
+    const { schematics } = await extractArchive([
+      board(),
+      ...sizes.map((fontSize, index) => ({
+        type: "schematic_text",
+        schematic_text_id: `note_${index}`,
+        text: `NOTE ${index}`,
+        font_size: fontSize,
+        position: { x: index * 4, y: 0 },
+        anchor: "left",
+      })),
+      {
+        type: "source_port",
+        source_port_id: "source_port",
+        name: "PORT",
+      },
+      {
+        type: "schematic_port",
+        schematic_port_id: "schematic_port",
+        source_port_id: "source_port",
+        center: { x: 0, y: 4 },
+        display_pin_label: "PORT",
+      },
+    ])
+    const schematic = schematics[0]!
+    const sheet = schematic.getRecordsByKind("31")[0]!
+    const notes = schematic.getRecordsByKind("4")
+    expect(notes).toHaveLength(2)
+    for (const note of notes) {
+      const fontId = note.getNumber("FONTID")
+      expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("11")
+      expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
+    }
+    // Both source sizes share an Arial font, separate from the port's font.
+    expect(new Set(notes.map((note) => note.getNumber("FONTID"))).size).toBe(1)
+    expect(schematic.ports).toHaveLength(1)
+    const portFontId = schematic.ports[0]!.getNumber("FONTID")
+    expect(portFontId).toBe(3)
+    expect(sheet.getCaseInsensitive(`SIZE${portFontId}`)).toBe("11")
+    expect(sheet.getDecoded(`FONTNAME${portFontId}`)).toBe("Times New Roman")
+    expectValidSchematic(schematic)
+  },
+)
