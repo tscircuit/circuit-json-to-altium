@@ -9,6 +9,7 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_WHITE,
 } from "./altium-schematic-colors"
+import { ALTIUM_SCHEMATIC_HAIRLINE_WIDTH } from "./altium-schematic-line-width"
 import { pointsEqual } from "./format"
 import type { Point, PointTransform } from "./types"
 
@@ -74,7 +75,7 @@ function createAltiumPathRecordFields({
     ...createOwnedSchematicRecordFields(
       symbolMapping.altiumComponentRecordIndex,
     ),
-    "LINEWIDTH=1",
+    `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
     `LOCATIONCOUNT=${altiumPathPoints.length}`,
     ...altiumPathPoints.flatMap((altiumPoint, pointIndex) => [
       ...createAltiumSchematicCoordinateRecordFields(
@@ -153,7 +154,7 @@ function createAltiumCircleRecordFields({
     `LOCATION.Y=${altiumCenter.y}`,
     `RADIUS=${altiumRadius}`,
     `SECONDARYRADIUS=${altiumRadius}`,
-    "LINEWIDTH=1",
+    `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
     `COLOR=${ALTIUM_SCHEMATIC_GRAPHIC_COLOR}`,
     `AREACOLOR=${circlePrimitive.fill ? ALTIUM_SCHEMATIC_GRAPHIC_COLOR : ALTIUM_SCHEMATIC_WHITE}`,
     `ISSOLID=${circlePrimitive.fill ? "T" : "F"}`,
@@ -192,7 +193,7 @@ function createAltiumBoxRecordFields({
     `LOCATION.Y=${altiumFirstCorner.y}`,
     `CORNER.X=${altiumSecondCorner.x}`,
     `CORNER.Y=${altiumSecondCorner.y}`,
-    "LINEWIDTH=1",
+    `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
     `COLOR=${ALTIUM_SCHEMATIC_GRAPHIC_COLOR}`,
     `AREACOLOR=${ALTIUM_SCHEMATIC_WHITE}`,
     "ISSOLID=F",

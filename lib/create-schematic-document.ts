@@ -3,6 +3,7 @@ import {
   ALTIUM_SCHEMATIC_GRAPHIC_COLOR,
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
+import { ALTIUM_SCHEMATIC_HAIRLINE_WIDTH } from "./altium-schematic-line-width"
 import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import {
   createAltiumSchematicFontTable,
@@ -735,7 +736,7 @@ export function createSchematicDocument({
           `LOCATION.Y=${fallbackSchematicBoxBounds.bottom}`,
           `CORNER.X=${fallbackSchematicBoxBounds.right}`,
           `CORNER.Y=${fallbackSchematicBoxBounds.top}`,
-          "LINEWIDTH=1",
+          `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
           "COLOR=136",
           `AREACOLOR=${ALTIUM_SCHEMATIC_FALLBACK_BODY_COLOR}`,
           "ISSOLID=T",
@@ -923,6 +924,8 @@ export function createSchematicDocument({
           `LOCATION.X=${altiumPinLocation.x}`,
           `LOCATION.Y=${altiumPinLocation.y}`,
           `PINLENGTH=${altiumPinLength}`,
+          // This preset controls native pin symbols, not the straight stem.
+          `SYMBOL_LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
           // Altium defaults a missing electrical type to Input, which renders
           // direction arrows and gives passive terminals incorrect ERC semantics.
           ...(sourceComponent?.ftype === "simple_capacitor" ||
@@ -1006,7 +1009,7 @@ export function createSchematicDocument({
       addSchematicRecord(
         [
           "RECORD=27",
-          "LINEWIDTH=1",
+          `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
           "LOCATIONCOUNT=2",
           `X1=${altiumStartPoint.x}`,
           `Y1=${altiumStartPoint.y}`,
