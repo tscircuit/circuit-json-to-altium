@@ -1,4 +1,5 @@
 import { expect, test } from "bun:test"
+import { any_source_component } from "circuit-json"
 import {
   board,
   type CircuitElement,
@@ -7,18 +8,17 @@ import {
   sourcePort,
 } from "./fixtures"
 
-test("shortens pin stems independently of component ftype and preserves clock/inversion edges", async () => {
-  for (const ftype of [
-    undefined,
-    "simple_capacitor",
-    "simple_resistor",
-    "simple_chip",
-    "simple_diode",
-    "simple_inductor",
-    "simple_transistor",
-    "simple_led",
-    "simple_switch",
-  ]) {
+// Derive coverage from Circuit JSON so newly added component types are checked
+// automatically, including types absent from the real-circuit fixtures.
+const componentFtypes = any_source_component.options.flatMap((schema) =>
+  schema.shape.type.value === "source_component" && "ftype" in schema.shape
+    ? [schema.shape.ftype.value]
+    : [],
+)
+
+test.each([undefined, ...componentFtypes])(
+  "exports connected hairline pin stems for ftype %s and preserves clock/inversion edges",
+  async (ftype) => {
     const elements: CircuitElement[] = [
       board(),
       { ...sourceComponent("part", "U1"), ...(ftype ? { ftype } : {}) },
@@ -83,5 +83,5 @@ test("shortens pin stems independently of component ftype and preserves clock/in
       ])
       expect(wire.getNumber("LINEWIDTH")).toBe(0)
     }
-  }
-})
+  },
+)

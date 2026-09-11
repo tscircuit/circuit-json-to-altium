@@ -83,6 +83,9 @@ does not preserve the SVG's non-scaling hairlines.
 
 [Microcontroller](./automotive-mirror-microcontroller-pin-power-hairlines.SchDoc)
 uses native wires with `LINEWIDTH=0` for pin stems across all component types.
+The component-type regression reads every `ftype` from the Circuit JSON schema.
+The capacitor/resistor check sets only the Passive electrical classification;
+it does not limit which components receive thin stems.
 Pins retain their body position, electrical type, text and clock/inversion
 symbols; a wire joins each shortened terminal to its original connection.
 An inversion bubble retains five schematic units of native pin length.
