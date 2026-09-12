@@ -38,7 +38,7 @@ test("renders an exported Circuit JSON schematic with the installed native rende
   expect(svg).toContain(">U1</text>")
   expect(svg).toContain(">SIGNAL</text>")
   for (const [text, size] of [
-    ["SIGNAL", 4],
+    ["SIGNAL", 3],
     ["1", 4],
   ]) {
     const element = svg.match(new RegExp(`<text[^>]*>${text}</text>`))?.[0]

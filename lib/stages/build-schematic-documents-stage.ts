@@ -126,16 +126,12 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         sheetSettings: sheetOptions,
         template,
       })
-      const hairlinePowerPortDefinitions =
-        createHairlinePowerPortDefinitions(asciiContent)
-      const schematicSource =
-        hairlinePowerPortDefinitions.length > 0
-          ? `${asciiContent}\n${hairlinePowerPortDefinitions.join("\n")}`
-          : asciiContent
       return {
         asciiContent,
-        content: serializeAltiumSchDocToBinary(schematicSource, {
+        content: serializeAltiumSchDocToBinary(asciiContent, {
           embeddedImages: template?.embeddedImages,
+          objectDefinitionRecords:
+            createHairlinePowerPortDefinitions(asciiContent),
         }),
         filename: definition.filename,
       }

@@ -12,12 +12,9 @@ export function getHairlinePowerPortDefinitionId(
 export function createHairlinePowerPortDefinitions(
   asciiContent: string,
 ): string[] {
-  const document = parseAltiumSchDoc(asciiContent)
   const definitions: string[] = []
   const seen = new Set<string>()
-  const definitionOwnerOffset = document.records.length
-  let currentDefinitionOwnerIndex = definitionOwnerOffset
-  for (const port of document.powerPorts) {
+  for (const port of parseAltiumSchDoc(asciiContent).powerPorts) {
     const id = port.getCaseInsensitive("ObjectDefinitionId")
     if (!id || seen.has(id)) continue
     const color = port.getNumber("COLOR") ?? 132
@@ -28,28 +25,24 @@ export function createHairlinePowerPortDefinitions(
     )
       continue
     seen.add(id)
-    const ownerIndex = currentDefinitionOwnerIndex
+    const owner = definitions.length
     definitions.push(
       `|RECORD=129|ObjectDefinitionId=${id}|LibReference=HairlinePower${style}|PartCount=2|CurrentPartId=1|DisplayModeCount=1|Location.X=0|Location.Y=0|OwnerPartId=-1`,
     )
     const line = (x1: number, y1: number, x2: number, y2: number) => {
       definitions.push(
-        `|RECORD=13|OwnerIndex=${ownerIndex}|OwnerPartId=-1|${[...createAltiumSchematicCoordinateFields("Location.X", x1), ...createAltiumSchematicCoordinateFields("Location.Y", y1), ...createAltiumSchematicCoordinateFields("Corner.X", x2), ...createAltiumSchematicCoordinateFields("Corner.Y", y2)].join("|")}|LineWidth=0|Color=${color}`,
+        `|RECORD=13|OwnerIndex=${owner}|OwnerPartId=-1|${[...createAltiumSchematicCoordinateFields("Location.X", x1), ...createAltiumSchematicCoordinateFields("Location.Y", y1), ...createAltiumSchematicCoordinateFields("Corner.X", x2), ...createAltiumSchematicCoordinateFields("Corner.Y", y2)].join("|")}|LineWidth=0|Color=${color}`,
       )
     }
-    let addedLines = 0
     if (style === 2) {
       line(0, 0, 10, 0)
       line(10, -5, 10, 5)
-      addedLines = 2
     } else if (style === 4) {
       line(0, 0, 4, 0)
       line(4, -7, 4, 7)
       line(8, -4.5, 8, 4.5)
       line(12, -2, 12, 2)
-      addedLines = 4
     }
-    currentDefinitionOwnerIndex += 1 + addedLines
   }
   return definitions
 }
