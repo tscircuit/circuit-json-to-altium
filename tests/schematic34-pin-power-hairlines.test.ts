@@ -1,5 +1,10 @@
 import { expect, test } from "bun:test"
-import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
+import {
+  type AltiumRecord,
+  type AltiumSchDoc,
+  parseAltiumSchDoc,
+  serializeAltiumSheetToSvg,
+} from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { expectValidSchematic } from "./fixtures"
 
@@ -74,13 +79,12 @@ test("uses hairline stems for every component type with unchanged text and conne
     before.powerPorts.map((port) => port.text),
   )
   for (const port of after.powerPorts) {
-    const graphics = after.getObjectDefinitionGraphics(
+    const graphics = getObjectDefinitionGraphics(
+      after,
       port.getCaseInsensitive("ObjectDefinitionId")!,
-    )!
-    expect(graphics).toHaveLength(2)
-    expect(graphics.every((line) => line.getNumber("LINEWIDTH") === 0)).toBe(
-      true,
     )
+    expect(graphics).toHaveLength(2)
+    expect(graphics.every((line: AltiumRecord) => line.getNumber("LINEWIDTH") === 0)).toBe(true)
   }
   const text = (doc: typeof before) =>
     Array.from(
@@ -89,3 +93,15 @@ test("uses hairline stems for every component type with unchanged text and conne
     )
   expect(text(after)).toEqual(text(before))
 })
+
+function getObjectDefinitionGraphics(
+  schematic: AltiumSchDoc,
+  objectDefinitionId: string,
+): AltiumRecord[] {
+  const definition = schematic
+    .getRecordsByKind("129")
+    .find((record) =>
+      record.getCaseInsensitive("ObjectDefinitionId") === objectDefinitionId,
+    )
+  return definition ? schematic.getOwnedRecords(definition) : []
+}

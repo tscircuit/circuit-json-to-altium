@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { AltiumSchDoc } from "altiumts"
+import { type AltiumRecord, type AltiumSchDoc } from "altiumts"
 import {
   board,
   type CircuitElement,
@@ -80,11 +80,24 @@ test("writes rail and ground net-label symbols as native power ports", async () 
     "SIGNAL",
   ])
   for (const port of schematic.powerPorts) {
-    const graphics = schematic.getObjectDefinitionGraphics(
+    const graphics = getObjectDefinitionGraphics(
+      schematic,
       port.getCaseInsensitive("ObjectDefinitionId")!,
-    )!
+    )
     expect(graphics).toHaveLength(port.getNumber("STYLE") === 2 ? 2 : 4)
     expect(graphics.every((r) => r.getNumber("LINEWIDTH") === 0)).toBe(true)
   }
   expectValidSchematic(schematic)
 })
+
+function getObjectDefinitionGraphics(
+  schematic: AltiumSchDoc,
+  objectDefinitionId: string,
+): AltiumRecord[] {
+  const definition = schematic
+    .getRecordsByKind("129")
+    .find((record) =>
+      record.getCaseInsensitive("ObjectDefinitionId") === objectDefinitionId,
+    )
+  return definition ? schematic.getOwnedRecords(definition) : []
+}
