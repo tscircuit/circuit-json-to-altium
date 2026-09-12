@@ -12,9 +12,12 @@ export function getHairlinePowerPortDefinitionId(
 export function createHairlinePowerPortDefinitions(
   asciiContent: string,
 ): string[] {
+  const document = parseAltiumSchDoc(asciiContent)
   const definitions: string[] = []
   const seen = new Set<string>()
-  for (const port of parseAltiumSchDoc(asciiContent).powerPorts) {
+  const definitionOwnerOffset = document.records.length
+  let createdDefinitionCount = 0
+  for (const port of document.powerPorts) {
     const id = port.getCaseInsensitive("ObjectDefinitionId")
     if (!id || seen.has(id)) continue
     const color = port.getNumber("COLOR") ?? 132
@@ -25,13 +28,13 @@ export function createHairlinePowerPortDefinitions(
     )
       continue
     seen.add(id)
-    const owner = definitions.length
+    const ownerIndex = definitionOwnerOffset + createdDefinitionCount
     definitions.push(
       `|RECORD=129|ObjectDefinitionId=${id}|LibReference=HairlinePower${style}|PartCount=2|CurrentPartId=1|DisplayModeCount=1|Location.X=0|Location.Y=0|OwnerPartId=-1`,
     )
     const line = (x1: number, y1: number, x2: number, y2: number) => {
       definitions.push(
-        `|RECORD=13|OwnerIndex=${owner}|OwnerPartId=-1|${[...createAltiumSchematicCoordinateFields("Location.X", x1), ...createAltiumSchematicCoordinateFields("Location.Y", y1), ...createAltiumSchematicCoordinateFields("Corner.X", x2), ...createAltiumSchematicCoordinateFields("Corner.Y", y2)].join("|")}|LineWidth=0|Color=${color}`,
+        `|RECORD=13|OwnerIndex=${ownerIndex}|OwnerPartId=-1|${[...createAltiumSchematicCoordinateFields("Location.X", x1), ...createAltiumSchematicCoordinateFields("Location.Y", y1), ...createAltiumSchematicCoordinateFields("Corner.X", x2), ...createAltiumSchematicCoordinateFields("Corner.Y", y2)].join("|")}|LineWidth=0|Color=${color}`,
       )
     }
     if (style === 2) {
@@ -43,6 +46,7 @@ export function createHairlinePowerPortDefinitions(
       line(8, -4.5, 8, 4.5)
       line(12, -2, 12, 2)
     }
+    createdDefinitionCount += 1
   }
   return definitions
 }

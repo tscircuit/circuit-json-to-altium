@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { type AltiumRecord, type AltiumSchDoc } from "altiumts"
+import type { AltiumRecord, AltiumSchDoc } from "altiumts"
 import {
   board,
   type CircuitElement,
@@ -96,8 +96,9 @@ function getObjectDefinitionGraphics(
 ): AltiumRecord[] {
   const definition = schematic
     .getRecordsByKind("129")
-    .find((record) =>
-      record.getCaseInsensitive("ObjectDefinitionId") === objectDefinitionId,
+    .find(
+      (record) =>
+        record.getCaseInsensitive("ObjectDefinitionId") === objectDefinitionId,
     )
   return definition ? schematic.getOwnedRecords(definition) : []
 }
