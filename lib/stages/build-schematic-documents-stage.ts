@@ -115,6 +115,7 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
       const template = sheetOptions?.templateContent
         ? extractAltiumSchematicTemplate({
             content: sheetOptions.templateContent,
+            projectContext: this.context.schematicProjectContext,
           })
         : undefined
       const asciiContent = createSchematicDocument({

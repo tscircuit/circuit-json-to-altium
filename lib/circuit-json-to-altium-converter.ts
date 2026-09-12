@@ -7,6 +7,7 @@ import { BuildSchematicDocumentsStage } from "./stages/build-schematic-documents
 import { ValidateAltiumDocumentsStage } from "./stages/validate-altium-documents-stage"
 import type {
   AltiumSchematicSheetOptions,
+  AltiumSchematicProjectContext,
   CircuitElement,
   CircuitJsonInput,
   CircuitJsonToAltiumConverterContext,
@@ -17,6 +18,7 @@ import type {
 export type CircuitJsonToAltiumConverterOptions = {
   projectName?: string
   schematicSheets?: AltiumSchematicSheetOptions[]
+  schematicProjectContext?: AltiumSchematicProjectContext
 }
 
 function normalizeCircuitJson(
@@ -46,6 +48,7 @@ export class CircuitJsonToAltiumConverter {
     this.context = {
       circuitJson: normalizedCircuitJson,
       projectName,
+      schematicProjectContext: options.schematicProjectContext,
       safeProjectName: sanitizeFilename(projectName),
       schematicSheets: options.schematicSheets ?? [],
       validated: false,

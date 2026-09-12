@@ -134,6 +134,7 @@ export async function createOpenSourceSchematicRoundTrip({
     : undefined
   const converter = new CircuitJsonToAltiumConverter(sourceCircuitJson, {
     projectName,
+    schematicProjectContext: sourceProjectContext,
     schematicSheets: [{ ...sourceSheetSettings, templateContent }],
   })
   converter.runUntilFinished()
@@ -146,6 +147,18 @@ export async function createOpenSourceSchematicRoundTrip({
   const roundTripCircuitJson = convertAltiumSchematicToCircuitJson(
     normalizeHairlinePinStems(roundTripDocument),
   )
+  const resolveDateTimeReferences = (value: string): string => {
+    if (!sourceProjectContext) return value
+    return value
+      .replaceAll(
+        "=CurrentDate",
+        sourceProjectContext.currentDate ?? "=CurrentDate",
+      )
+      .replaceAll(
+        "=CurrentTime",
+        sourceProjectContext.currentTime ?? "=CurrentTime",
+      )
+  }
 
   return {
     ...getSchematicRoundTripMetrics({
@@ -163,9 +176,11 @@ export async function createOpenSourceSchematicRoundTrip({
       getTemplateOwnedRecordCount(roundTripDocument),
     roundTripTemplateRecordCount:
       roundTripDocument.getRecordsByKind("39").length,
-    roundTripSvg: serializeAltiumSheetToSvg(
-      roundTripDocument,
-      sourceProjectContext,
+    roundTripSvg: resolveDateTimeReferences(
+      serializeAltiumSheetToSvg(
+        roundTripDocument,
+        sourceProjectContext,
+      ),
     ),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),
@@ -174,6 +189,6 @@ export async function createOpenSourceSchematicRoundTrip({
       height: sourceSheetSettings.height,
       width: sourceSheetSettings.width,
     },
-    sourceSvg,
+    sourceSvg: resolveDateTimeReferences(sourceSvg),
   }
 }

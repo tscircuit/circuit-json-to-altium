@@ -144,7 +144,9 @@
     <g data-record="16"><polygon points="665.98,865.98 672.98,869.98 665.98,873.98" fill="#ffffc2" stroke="#840000" stroke-width="1"/><text x="674.98" y="869.98" text-anchor="start" dominant-baseline="central" fill="#840000" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none">PUMP_CONTROL</text></g>
     <g data-record="16"><polygon points="877.98,835.98 870.98,839.98 877.98,843.98" fill="#ffffc2" stroke="#840000" stroke-width="1"/><text x="868.98" y="839.98" text-anchor="end" dominant-baseline="central" fill="#840000" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none">VALVE_OUT</text></g>
     <g data-record="16"><polygon points="877.98,845.98 870.98,849.98 877.98,853.98" fill="#ffffc2" stroke="#840000" stroke-width="1"/><text x="868.98" y="849.98" text-anchor="end" dominant-baseline="central" fill="#840000" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none">PUMP_OUT</text></g>
-    <g data-record="17"><g transform="translate(525.98 1107.98) rotate(-270)"><line data-record="13" vector-effect="non-scaling-stroke" x1="0" y1="0" x2="10" y2="0" stroke="#840000" stroke-width="1"/><line data-record="13" vector-effect="non-scaling-stroke" x1="10" y1="5" x2="10" y2="-5" stroke="#840000" stroke-width="1"/></g><text x="525.98" y="1119.98" text-anchor="middle" dominant-baseline="hanging" fill="#840000" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none">GND</text></g>
+    <g data-record="17"><path d="M 525.98 1107.98 L 525.98 1115.98 M 530.98 1115.98 L 520.98 1115.98" fill="none" stroke="#840000" stroke-width="1"/><text x="525.98" y="1119.98" text-anchor="middle" dominant-baseline="hanging" fill="#840000" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none">GND</text></g>
+    <line data-record="13" x1="49.98" y1="1209.98" x2="59.98" y2="1209.98" stroke="#840000" stroke-width="0.7"/>
+    <line data-record="13" x1="59.98" y1="1214.98" x2="59.98" y2="1204.98" stroke="#840000" stroke-width="0.7"/>
     </g>
   </g>
 </svg>
