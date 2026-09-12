@@ -1,3 +1,4 @@
+import type { AltiumPrjPcb } from "altiumts"
 import type { CircuitJson as StandardCircuitJson } from "circuit-json"
 
 export type CircuitElement = Record<string, unknown> & { type?: string }
@@ -33,7 +34,7 @@ export type AltiumSchematicProjectContext = {
   currentDate?: string
   currentTime?: string
   documentName?: string
-  project?: unknown
+  project?: AltiumPrjPcb
   projectName?: string
 }
 

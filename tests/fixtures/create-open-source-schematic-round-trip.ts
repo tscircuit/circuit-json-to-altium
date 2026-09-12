@@ -177,10 +177,7 @@ export async function createOpenSourceSchematicRoundTrip({
     roundTripTemplateRecordCount:
       roundTripDocument.getRecordsByKind("39").length,
     roundTripSvg: resolveDateTimeReferences(
-      serializeAltiumSheetToSvg(
-        roundTripDocument,
-        sourceProjectContext,
-      ),
+      serializeAltiumSheetToSvg(roundTripDocument, sourceProjectContext),
     ),
     sourceOffSheetPortFontSizePoints:
       getOffSheetPortFontSizePoints(sourceDocument),

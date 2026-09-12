@@ -3,8 +3,8 @@ import {
   type AltiumRecord,
   AltiumSchDoc,
   type AltiumSchematicEmbeddedImageInput,
-  resolveSchematicParameterReferenceWithContext,
   parseAltiumFile,
+  resolveSchematicParameterReferenceWithContext,
 } from "altiumts"
 
 export type AltiumSchematicTemplateFontFields = {

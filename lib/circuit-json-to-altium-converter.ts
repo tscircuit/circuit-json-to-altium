@@ -6,8 +6,8 @@ import { BuildProjectDocumentStage } from "./stages/build-project-document-stage
 import { BuildSchematicDocumentsStage } from "./stages/build-schematic-documents-stage"
 import { ValidateAltiumDocumentsStage } from "./stages/validate-altium-documents-stage"
 import type {
-  AltiumSchematicSheetOptions,
   AltiumSchematicProjectContext,
+  AltiumSchematicSheetOptions,
   CircuitElement,
   CircuitJsonInput,
   CircuitJsonToAltiumConverterContext,
