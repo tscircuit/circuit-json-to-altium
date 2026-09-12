@@ -1,8 +1,10 @@
 import {
+  type AltiumPrjPcb,
   type AltiumRecord,
   AltiumSchDoc,
   type AltiumSchematicEmbeddedImageInput,
   parseAltiumFile,
+  resolveSchematicParameterReferenceWithContext,
 } from "altiumts"
 
 export type AltiumSchematicTemplateFontFields = {
@@ -15,6 +17,14 @@ export type AltiumSchematicTemplate = {
   fontFields: AltiumSchematicTemplateFontFields[]
   recordFields: string[][]
   sheetRecordFields: string[]
+}
+
+type ResolveSchematicTemplateProjectContext = {
+  currentDate?: string
+  currentTime?: string
+  documentName?: string
+  project?: AltiumPrjPcb
+  projectName?: string
 }
 
 const TEMPLATE_RECORD_KIND = "39"
@@ -97,10 +107,50 @@ function getReferencedTemplateParameterNames(
   )
 }
 
+function resolveTemplateRecordText({
+  defaultText,
+  document,
+  projectContext,
+  reference,
+}: {
+  defaultText: string
+  document: AltiumSchDoc
+  projectContext?: ResolveSchematicTemplateProjectContext
+  reference: string
+}): string {
+  const parameterReferenceValue =
+    resolveSchematicParameterReferenceWithContext({
+      document,
+      reference,
+      ...projectContext,
+    }) ?? undefined
+  if (parameterReferenceValue !== undefined) return parameterReferenceValue
+
+  if (reference.startsWith("=") && projectContext) {
+    const parameterName = reference.slice(1).toLowerCase()
+    if (
+      parameterName === "currentdate" &&
+      projectContext.currentDate !== undefined
+    ) {
+      return projectContext.currentDate
+    }
+    if (
+      parameterName === "currenttime" &&
+      projectContext.currentTime !== undefined
+    ) {
+      return projectContext.currentTime
+    }
+  }
+
+  return defaultText
+}
+
 export function extractAltiumSchematicTemplate({
   content,
+  projectContext,
 }: {
   content: Uint8Array
+  projectContext?: ResolveSchematicTemplateProjectContext
 }): AltiumSchematicTemplate {
   const document = parseAltiumFile(content).document
   if (!(document instanceof AltiumSchDoc)) {
@@ -147,7 +197,16 @@ export function extractAltiumSchematicTemplate({
       : undefined
     return record.fields.map((field) => {
       if (field.key.toUpperCase() !== "OWNERINDEX") {
-        return `${field.key}=${field.value}`
+        const sourceValue = `${field.value}`
+        if (field.key.toUpperCase() !== "TEXT") {
+          return `${field.key}=${sourceValue}`
+        }
+        return `${field.key}=${resolveTemplateRecordText({
+          defaultText: sourceValue,
+          document,
+          projectContext,
+          reference: sourceValue,
+        })}`
       }
       if (generatedOwnerIndex === undefined) {
         throw new TypeError(

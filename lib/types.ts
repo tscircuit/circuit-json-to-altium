@@ -1,3 +1,4 @@
+import type { AltiumPrjPcb } from "altiumts"
 import type { CircuitJson as StandardCircuitJson } from "circuit-json"
 
 export type CircuitElement = Record<string, unknown> & { type?: string }
@@ -29,6 +30,14 @@ export type CircuitJsonToAltiumOutput = {
   schematics: AltiumSchematicFile[]
 }
 
+export type AltiumSchematicProjectContext = {
+  currentDate?: string
+  currentTime?: string
+  documentName?: string
+  project?: AltiumPrjPcb
+  projectName?: string
+}
+
 export type AltiumSchematicSheetSettings = {
   /** Position of Circuit JSON (0, 0) within the sheet, in Circuit JSON units. */
   circuitOrigin?: Point
@@ -50,6 +59,7 @@ export type CircuitJsonToAltiumConverterContext = {
   pcb?: AltiumPcbFile
   project?: AltiumProjectFile
   projectName: string
+  schematicProjectContext?: AltiumSchematicProjectContext
   safeProjectName: string
   schematicSheets: AltiumSchematicSheetOptions[]
   schematics?: AltiumSchematicFile[]

@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import type { AltiumSchDoc } from "altiumts"
+import { type AltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
 import {
   board,
   type CircuitElement,
@@ -79,12 +79,29 @@ test("writes rail and ground net-label symbols as native power ports", async () 
   expect(schematic.netLabels.map((netLabel) => netLabel.text)).toEqual([
     "SIGNAL",
   ])
+  expect(schematic.compoundFile?.getStream("/ObjectDefinitions")).toBeDefined()
+  expect(schematic.getRecordsByKind("129")).toHaveLength(0)
   for (const port of schematic.powerPorts) {
-    const graphics = schematic.getObjectDefinitionGraphics(
-      port.getCaseInsensitive("ObjectDefinitionId")!,
-    )!
+    const id = port.getCaseInsensitive("ObjectDefinitionId")!
+    const graphics = schematic.getObjectDefinitionGraphics(id)!
     expect(graphics).toHaveLength(port.getNumber("STYLE") === 2 ? 2 : 4)
     expect(graphics.every((r) => r.getNumber("LINEWIDTH") === 0)).toBe(true)
+    const ownerIndex = schematic.objectDefinitionRecords
+      .filter((record) => record.recordKind !== undefined)
+      .findIndex(
+        (record) => record.getCaseInsensitive("ObjectDefinitionId") === id,
+      )
+    expect(ownerIndex).toBeGreaterThanOrEqual(0)
+    expect(
+      graphics.every((r) => r.getNumber("OWNERINDEX") === ownerIndex),
+    ).toBe(true)
   }
+  // All four power ports must paint their custom hairline definitions,
+  // including both ground orientations, instead of built-in power symbols.
+  expect(
+    serializeAltiumSheetToSvg(schematic).match(
+      /<line data-record="13" vector-effect="non-scaling-stroke"/gu,
+    ),
+  ).toHaveLength(12)
   expectValidSchematic(schematic)
 })
