@@ -15,6 +15,7 @@ test("round-trips the open-source Cobra Altium board", async () => {
   expect(result.platedHoleDimensionMismatchCount).toBe(0)
   expect(result.rotationMismatchCount).toBe(0)
   expect(result.silkscreenTextMismatchCount).toBe(0)
+  expect(result.sourceCounts.pcb_silkscreen_text).toBe(3)
   expect(result.sourceCounts.pcb_cutout).toBe(6)
   expect(result.sourceCounts.pcb_note_path).toBe(1)
   expect(result.sourcePrimitiveTotal).toBeGreaterThan(1_000)
