@@ -8,7 +8,11 @@ test("round-trips the open-source SimpleFOC Shield V3 Altium schematic", async (
     projectName: "SimpleFOC Shield V3 schematic",
   })
 
-  expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  // The source repeats (163.071, 1293.819) -> (163.071, 1318.819).
+  expect(result.roundTripCounts).toEqual({
+    ...result.sourceCounts,
+    wire_segment: result.sourceCounts.wire_segment - 1,
+  })
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,

@@ -1034,6 +1034,9 @@ export function createSchematicDocument({
     )
   }
 
+  const emittedTraceSegments = new Set<string>()
+  // Shared routes can occur in more than one Circuit JSON trace. Repeating
+  // their native wires can create extra auto-junctions in Altium's viewer.
   for (const schematicTrace of schematicElements.filter(
     (element) => element.type === "schematic_trace",
   )) {
@@ -1045,6 +1048,12 @@ export function createSchematicDocument({
       if (!circuitStartPoint || !circuitEndPoint) continue
       const altiumStartPoint = circuitToAltiumSchematicPoint(circuitStartPoint)
       const altiumEndPoint = circuitToAltiumSchematicPoint(circuitEndPoint)
+      const startKey = `${altiumStartPoint.x}:${altiumStartPoint.y}`
+      const endKey = `${altiumEndPoint.x}:${altiumEndPoint.y}`
+      if (startKey === endKey) continue
+      const segmentKey = [startKey, endKey].sort().join(";")
+      if (emittedTraceSegments.has(segmentKey)) continue
+      emittedTraceSegments.add(segmentKey)
       addSchematicRecord(
         [
           "RECORD=27",

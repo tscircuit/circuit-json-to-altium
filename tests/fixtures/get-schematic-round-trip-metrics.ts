@@ -396,6 +396,7 @@ function getStringFields({
 
 function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
   const points: Point[] = []
+  const seenTraceSegments = new Set<string>()
   const noConnectSourcePortIds = new Set<SourcePortId>(
     circuitJson.flatMap((element) =>
       element.type === "source_port" && element.do_not_connect === true
@@ -493,6 +494,19 @@ function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
         if (!isCircuitElement(edge)) continue
         const from = asPoint(edge.from)
         const to = asPoint(edge.to)
+        // Wire cleanup changes record multiplicity, not conducting geometry.
+        // Keep comparing every distinct nonzero segment and its endpoints.
+        if (from && to) {
+          if (from.x === to.x && from.y === to.y) continue
+          const key = `${asString(element.schematic_sheet_id)}:${[
+            `${from.x},${from.y}`,
+            `${to.x},${to.y}`,
+          ]
+            .sort()
+            .join(";")}`
+          if (seenTraceSegments.has(key)) continue
+          seenTraceSegments.add(key)
+        }
         if (from) points.push(from)
         if (to) points.push(to)
       }

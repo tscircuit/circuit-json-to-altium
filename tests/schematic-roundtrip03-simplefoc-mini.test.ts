@@ -8,7 +8,11 @@ test("round-trips the open-source SimpleFOC Mini Altium schematic", async () => 
     projectName: "SimpleFOC Mini schematic",
   })
 
-  expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  // The source has a zero-length wire at (608.12, 330.9767).
+  expect(result.roundTripCounts).toEqual({
+    ...result.sourceCounts,
+    wire_segment: result.sourceCounts.wire_segment - 1,
+  })
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,
