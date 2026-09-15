@@ -45,12 +45,6 @@ test("writes do-not-connect source ports as native Altium records", async () => 
   if (!pinRecord?.position) {
     throw new Error("Expected a native Altium pin record")
   }
-  const stem = schematic.wires.find(
-    (wire) =>
-      wire.getNumber("X1") === pinRecord.position!.x &&
-      wire.getNumber("Y1") === pinRecord.position!.y,
-  )!
-  expect(stem).toBeDefined()
   expect(pinRecord.getNumber("PINLENGTH")).toBe(0)
   const noConnectRecord = schematic.getRecordsByKind("22")[0]
   if (!(noConnectRecord instanceof AltiumSchNoErcRecord)) {
@@ -70,10 +64,7 @@ test("writes do-not-connect source ports as native Altium records", async () => 
     isActive: true,
     orientation: 1,
     ownerPartId: -1,
-    position: {
-      x: stem.getNumber("X2")!,
-      y: stem.getNumber("Y2")!,
-    },
+    position: pinRecord.position,
     suppressAll: true,
     symbol: "Thin Cross",
   })

@@ -4,7 +4,11 @@ import {
   parseAltiumSchDoc,
 } from "altiumts"
 
-/** Compare logical pin geometry when a native terminal is extended by a thin wire. */
+import { createAltiumSchematicCoordinateFields } from "../../lib/create-altium-schematic-coordinate-fields"
+import { getRecordLocation } from "./altium-schematic-coordinate-utils"
+import { getHairlinePinStem } from "./get-hairline-pin-stem"
+
+/** Recover logical pin geometry from an owned stem or a historical wire stem. */
 export function normalizeHairlinePinStems(
   document: AltiumSchDoc,
 ): AltiumSchDoc {
@@ -20,6 +24,24 @@ export function normalizeHairlinePinStems(
     const direction = pin.getNumber("PINCONGLOMERATE")! & 3
     const dx = [1, 0, -1, 0][direction]!
     const dy = [0, 1, 0, -1][direction]!
+    const ownedStem = length === 0 ? getHairlinePinStem(copy, pin) : undefined
+    if (ownedStem && !consumed.has(ownedStem)) {
+      const body = getRecordLocation(ownedStem)
+      const terminal = pin.position!
+      for (const [key, value] of [
+        ["LOCATION.X", body.x],
+        ["LOCATION.Y", body.y],
+        ["PINLENGTH", (terminal.x - body.x) * dx + (terminal.y - body.y) * dy],
+      ] as const) {
+        pin.delete(`${key}_FRAC`)
+        for (const field of createAltiumSchematicCoordinateFields(key, value)) {
+          const [name, encoded] = field.split("=")
+          pin.set(name!, encoded!)
+        }
+      }
+      consumed.add(ownedStem)
+      continue
+    }
     const body = pin.position!
     const start = { x: body.x + dx * length, y: body.y + dy * length }
     const stem = copy.wires.find((wire) => {

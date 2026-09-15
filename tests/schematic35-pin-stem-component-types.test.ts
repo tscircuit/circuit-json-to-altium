@@ -7,6 +7,11 @@ import {
   sourceComponent,
   sourcePort,
 } from "./fixtures"
+import {
+  getRecordCorner,
+  getRecordLocation,
+} from "./fixtures/altium-schematic-coordinate-utils"
+import { getHairlinePinStem } from "./fixtures/get-hairline-pin-stem"
 
 // Derive coverage from Circuit JSON so newly added component types are checked
 // automatically, including types absent from the real-circuit fixtures.
@@ -56,7 +61,7 @@ test.each([undefined, ...componentFtypes])(
     }
     const doc = (await extractArchive(elements)).schematics[0]!
     expect(doc.pins).toHaveLength(4)
-    expect(doc.wires).toHaveLength(4)
+    expect(doc.wires).toHaveLength(0)
     for (const [i, pin] of doc.pins.entries()) {
       const nativeLength = 0
       const markerOffset = [0, Math.sqrt(3), 2, 2.4 + Math.sqrt(3) + 2][i]!
@@ -66,23 +71,21 @@ test.each([undefined, ...componentFtypes])(
       expect(pin.getNumber("SYMBOL_OUTEREDGE")).toBeUndefined()
       const dx = [1, 0, -1, 0][i]!
       const dy = [0, 1, 0, -1][i]!
-      const start = {
-        x: pin.position!.x + dx * nativeLength,
-        y: pin.position!.y + dy * nativeLength,
-      }
-      const wire = doc.wires[i]!
-      const coord = (key: string) =>
-        wire.getNumber(key)! + (wire.getNumber(`${key}_FRAC`) ?? 0) / 100_000
-      expect([coord("X1"), coord("Y1")]).toEqual([start.x, start.y])
-      expect(coord("X2")).toBeCloseTo(
-        pin.position!.x + dx * (10 - markerOffset),
-        4,
-      )
-      expect(coord("Y2")).toBeCloseTo(
-        pin.position!.y + dy * (10 - markerOffset),
-        4,
-      )
-      expect(wire.getNumber("LINEWIDTH")).toBe(0)
+      const component = doc.components[0]!.position!
+      // The native connection is the source port center, not the marker edge.
+      expect(pin.position).toEqual({
+        x: component.x + dx * 30,
+        y: component.y + dy * 30,
+      })
+      const stem = getHairlinePinStem(doc, pin)!
+      expect(stem).toBeDefined()
+      const start = getRecordLocation(stem)
+      expect(start.x).toBeCloseTo(component.x + dx * (20 + markerOffset), 4)
+      expect(start.y).toBeCloseTo(component.y + dy * (20 + markerOffset), 4)
+      expect(getRecordCorner(stem)).toEqual(pin.position!)
+      expect(pin.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(10)
+      expect(pin.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(-7)
+      expect(stem.getNumber("LINEWIDTH")).toBe(0)
     }
   },
 )

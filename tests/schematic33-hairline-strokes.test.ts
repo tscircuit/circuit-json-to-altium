@@ -59,7 +59,7 @@ test("exports smallest schematic strokes with unchanged text fonts", async () =>
     polygons.filter((p) => p.getNumber("LOCATIONCOUNT") !== 3),
   ).toHaveLength(16)
   expect(doc.getRecordsByKind("14")).toHaveLength(2)
-  expect(doc.getRecordsByKind("27")).toHaveLength(54 + doc.pins.length)
+  expect(doc.getRecordsByKind("27")).toHaveLength(54)
 
   // A renderer downgrade can still accept LINEWIDTH=0 while painting thick
   // strokes. Verify that the exported shapes retain device hairlines in SVG.

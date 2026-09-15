@@ -1,6 +1,11 @@
 import { expect, test } from "bun:test"
 import { getSchematicRecordPoints, serializeAltiumSheetToSvg } from "altiumts"
 import { board, extractArchive, sourceComponent, sourcePort } from "./fixtures"
+import {
+  getRecordCorner,
+  getRecordLocation,
+} from "./fixtures/altium-schematic-coordinate-utils"
+import { getHairlinePinStem } from "./fixtures/get-hairline-pin-stem"
 
 function getSchematicCoordinate(
   record: { getNumber(key: string): number | undefined },
@@ -65,18 +70,21 @@ for (const [orientation, facing] of ["right", "up", "left", "down"].entries()) {
       y: getSchematicCoordinate(bubble, "LOCATION.Y"),
     }
     const body = { x: center.x - dx * radius, y: center.y - dy * radius }
-    expect(pin.position!.x).toBeCloseTo(body.x + dx * 2.4)
-    expect(pin.position!.y).toBeCloseTo(body.y + dy * 2.4)
-    const wire = getSchematicRecordPoints(doc.wires[0]!)
-    expect(wire[0]).toEqual(pin.position!)
+    expect(pin.position!.x).toBeCloseTo(body.x + dx * 10)
+    expect(pin.position!.y).toBeCloseTo(body.y + dy * 10)
+    const stem = getHairlinePinStem(doc, pin)!
+    const wire = [getRecordLocation(stem), getRecordCorner(stem)]
+    expect(wire[0]!.x).toBeCloseTo(body.x + dx * 2.4)
+    expect(wire[0]!.y).toBeCloseTo(body.y + dy * 2.4)
+    expect(wire[1]).toEqual(pin.position!)
     expect(wire[1]!.x).toBeCloseTo(body.x + dx * 10)
     expect(wire[1]!.y).toBeCloseTo(body.y + dy * 10)
     // Moving the electrical terminal must not move either text anchor.
     expect(
-      getSchematicCoordinate(pin, "NAME_CUSTOMPOSITION_MARGIN") - 2.4,
+      getSchematicCoordinate(pin, "NAME_CUSTOMPOSITION_MARGIN") - 10,
     ).toBeCloseTo(0)
     expect(
-      getSchematicCoordinate(pin, "DESIGNATOR_CUSTOMPOSITION_MARGIN") + 2.4,
+      getSchematicCoordinate(pin, "DESIGNATOR_CUSTOMPOSITION_MARGIN") + 10,
     ).toBeCloseTo(3)
     const svg = serializeAltiumSheetToSvg(doc)
     expect(svg).toContain('rx="1.2" ry="1.2" fill="#ffffff"')
@@ -181,20 +189,22 @@ for (const [orientation, facing] of ["right", "up", "left", "down"].entries()) {
           }
         }
         const terminalOffset = outerEdge
-        const [start, end] = getSchematicRecordPoints(doc.wires[0]!).map(local)
+        const stem = getHairlinePinStem(doc, pin)!
+        const [start, end] = [
+          getRecordLocation(stem),
+          getRecordCorner(stem),
+        ].map(local)
         // The wire meets the marker's exposed stem, never its filled interior.
         expect(start!.along).toBeCloseTo(terminalOffset, 4)
         expect(start!.across).toBeCloseTo(0, 4)
         expect(end!.along).toBeCloseTo(10, 4)
         expect(end!.across).toBeCloseTo(0, 4)
-        expect(local(pin.position!).along).toBeCloseTo(terminalOffset, 4)
+        expect(local(pin.position!).along).toBeCloseTo(10, 4)
         expect(
-          getSchematicCoordinate(pin, "NAME_CUSTOMPOSITION_MARGIN") -
-            terminalOffset,
+          getSchematicCoordinate(pin, "NAME_CUSTOMPOSITION_MARGIN") - 10,
         ).toBeCloseTo(0, 4)
         expect(
-          getSchematicCoordinate(pin, "DESIGNATOR_CUSTOMPOSITION_MARGIN") +
-            terminalOffset,
+          getSchematicCoordinate(pin, "DESIGNATOR_CUSTOMPOSITION_MARGIN") + 10,
         ).toBeCloseTo(3, 4)
         expect(pin.getNumber("ELECTRICAL")).toBe(4)
         const filledIntervals = expected.map((points) => [

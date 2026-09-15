@@ -1,11 +1,12 @@
 import { expect, test } from "bun:test"
-import {
-  getSchematicRecordPoints,
-  parseAltiumSchDoc,
-  serializeAltiumSheetToSvg,
-} from "altiumts"
+import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { expectValidSchematic } from "./fixtures"
+import {
+  getRecordCorner,
+  getRecordLocation,
+} from "./fixtures/altium-schematic-coordinate-utils"
+import { getHairlinePinStem } from "./fixtures/get-hairline-pin-stem"
 
 test("uses hairline stems for every component type with unchanged text and connected terminals", async () => {
   const source = await Bun.file(
@@ -58,21 +59,13 @@ test("uses hairline stems for every component type with unchanged text and conne
   for (const [index, pin] of after.pins.entries()) {
     const previous = before.pins[index]!
     expect(pin.getNumber("PINLENGTH")).toBe(0)
-    // Custom filled markers move the zero-length terminal to their outer edge.
-    // Its sheet wire must still reach the original pin's connection point.
-    const stem = after.wires.find((wire) => {
-      const [start, end] = getSchematicRecordPoints(wire)
-      const previousEnd = endpoint(previous)
-      return (
-        start &&
-        end &&
-        Math.abs(start.x - pin.position!.x) < 1e-4 &&
-        Math.abs(start.y - pin.position!.y) < 1e-4 &&
-        Math.abs(end.x - previousEnd[0]!) < 1e-4 &&
-        Math.abs(end.y - previousEnd[1]!) < 1e-4
-      )
-    })!
+    // The native terminal meets the original pin endpoint directly.
+    const previousEnd = endpoint(previous)
+    expect(pin.position).toEqual({ x: previousEnd[0]!, y: previousEnd[1]! })
+    const stem = getHairlinePinStem(after, pin)!
     expect(stem).toBeDefined()
+    expect(getRecordCorner(stem)).toEqual(pin.position!)
+    expect(getRecordLocation(stem)).not.toEqual(pin.position!)
     expect(stem.getNumber("LINEWIDTH")).toBe(0)
     expect(stem.getNumber("COLOR")).toBe(pin.getNumber("COLOR"))
     for (const field of [
@@ -89,7 +82,7 @@ test("uses hairline stems for every component type with unchanged text and conne
       )
     }
   }
-  expect(after.wires.length).toBe(before.wires.length + before.pins.length)
+  expect(after.wires.length).toBe(before.wires.length)
   expect(after.powerPorts.map((port) => port.text)).toEqual(
     before.powerPorts.map((port) => port.text),
   )

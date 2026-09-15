@@ -72,7 +72,7 @@ export function createSchematicPinMarkerRecords({
   ownerIndex: number
   color: number
   toAltiumLength: LengthTransform
-}): { records: string[][]; pinPosition: Point; bodyOffset: number } {
+}): { records: string[][]; stemStart: Point } {
   const dx = [1, 0, -1, 0][orientation & 3]!
   const dy = [0, 1, 0, -1][orientation & 3]!
   const radius = hasInversionCircle
@@ -126,15 +126,13 @@ export function createSchematicPinMarkerRecords({
     ])
     addArrow(arrowContext, outputTip, outputTip - arrowDepth)
   }
-  // Keep the electrical pin and its wire together outside the filled markers.
-  // Name/designator margins compensate for this shift from the body edge.
+  // The stem starts outside the filled markers, keeping their interiors clear.
   const bodyOffset = hasOutputArrow
     ? outputTip
     : bubbleEnd + (hasInputArrow ? arrowDepth : 0)
   return {
     records,
-    bodyOffset,
-    pinPosition: {
+    stemStart: {
       x: body.x + dx * bodyOffset,
       y: body.y + dy * bodyOffset,
     },

@@ -62,7 +62,7 @@ The custom settings preserve the existing pin text color.
 
 Current exports place pin names **0.1 circuit units inside the body edge**.
 Altium adds a 2-unit inward gap before `NAME_CUSTOMPOSITION_MARGIN`, so the
-margin is `0.1 × 20 - 2 = 0`, plus any outward shift for a filled pin marker.
+margin is `0.1 × 20 - 2 = 0`, plus the distance from the body to the native terminal.
 Custom position and font are enabled together
 (`PINNAME_POSITIONCONGLOMERATE=17`). The earlier review file above predates this
 margin correction and retains the native default number position.
@@ -153,3 +153,18 @@ Visual input/output flags draw these custom arrows instead of inferring native
 Input/Output/Bidirectional types, which add fixed-size automatic triangles.
 These pins use **Passive** electrical type: connectivity is retained, but
 Altium ERC no longer checks their input/output direction.
+
+
+## Pin connection points
+
+[Automotive communication sheet](./automotive-mirror-communication-pin-terminals.SchDoc)
+and [four-direction pin example](./pin-connection-points.SchDoc) ([SVG detail](./pin-connection-points-detail.svg)) place native
+zero-length pin terminals at the converted `schematic_port.center`, where the
+Circuit JSON trace connects. This applies to boxed chips, built-in symbols and
+custom symbols, including U6, R21 and L7 in the automotive sheet.
+
+Stems are component-owned lines using **Smallest** (`LINEWIDTH=0`), ending at
+the outside of filled pin markers. They are no longer sheet wires with native
+terminals at the body. For a body-to-terminal distance `L`, native name margin
+is `L` and number margin is `3 - L`, preserving the 2-unit name inset and
+3-unit number offset from the body. Fonts, marker sizes and colors are unchanged.
