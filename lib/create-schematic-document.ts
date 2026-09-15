@@ -112,7 +112,7 @@ const ALTIUM_PIN_CUSTOM_POSITION_FLAG = 0x01
 // Match Circuit JSON's pin-name inset from the body edge, independently of font size.
 const SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS = 0.1
 // Keep pin numbers near the body instead of Altium's default 9-unit margin.
-const SCHEMATIC_PIN_NUMBER_MARGIN_CIRCUIT_UNITS = 0.2
+const SCHEMATIC_PIN_NUMBER_MARGIN_CIRCUIT_UNITS = 0.15
 const ALTIUM_PIN_CLOCK_SYMBOL = 3
 const ALTIUM_PIN_INVERSION_SYMBOL = 1
 const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f

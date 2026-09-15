@@ -68,8 +68,8 @@ default position in this earlier file.
 ## Pin number positions
 
 [TI TPS61288 power supply](./ti-tps61288-pin-numbers-start.SchDoc) places native
-pin numbers **0.2 circuit units outside the component body**:
-`DESIGNATOR_CUSTOMPOSITION_MARGIN = 0.2 × 20 = 4`, replacing Altium's default
+pin numbers **0.15 circuit units outside the component body**:
+`DESIGNATOR_CUSTOMPOSITION_MARGIN = 0.15 × 20 = 3`, replacing Altium's default
 margin of 9. Custom position and font are enabled together
 (`PINDESIGNATOR_POSITIONCONGLOMERATE=17`). Numbers remain Arial **4 pt**, and
 names remain **3 pt**. U1/U2 pin 5 was checked in the real Altium 365 Viewer.

@@ -86,7 +86,7 @@ test("uses hairline stems for every component type with unchanged text and conne
   // Pin-number positioning is covered separately in schematic39.
   for (const pin of before.pins) {
     pin.set("PINDESIGNATOR_POSITIONCONGLOMERATE", "17")
-    pin.set("DESIGNATOR_CUSTOMPOSITION_MARGIN", "4")
+    pin.set("DESIGNATOR_CUSTOMPOSITION_MARGIN", "3")
   }
   const text = (doc: typeof before) =>
     Array.from(

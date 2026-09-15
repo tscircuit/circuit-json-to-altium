@@ -38,7 +38,7 @@ test("exports native Arial 3 pin names and Arial 4 numbers with the correct name
     expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(-2)
     expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN_FRAC")).toBeUndefined()
     expect(record.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(17)
-    expect(record.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(4)
+    expect(record.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(3)
     for (const kind of ["NAME", "DESIGNATOR"]) {
       const fontId = record.getNumber(`${kind}_CUSTOMFONTID`)
       expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe(
