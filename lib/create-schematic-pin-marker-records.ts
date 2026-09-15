@@ -8,6 +8,52 @@ import type { LengthTransform, Point } from "./types"
 export const SCHEMATIC_PIN_INVERSION_RADIUS = 0.06
 export const SCHEMATIC_PIN_ARROW_SIZE = 0.1
 
+type PinMarkerFrame = { body: Point; dx: number; dy: number }
+
+type PinArrowContext = {
+  frame: PinMarkerFrame
+  records: string[][]
+  arrowHalfWidth: number
+  ownerIndex: number
+  color: number
+}
+
+function point(
+  { body, dx, dy }: PinMarkerFrame,
+  along: number,
+  across = 0,
+): Point {
+  return {
+    x: body.x + dx * along - dy * across,
+    y: body.y + dy * along + dx * across,
+  }
+}
+
+function addArrow(
+  { frame, records, arrowHalfWidth, ownerIndex, color }: PinArrowContext,
+  tip: number,
+  base: number,
+): void {
+  const points = [
+    point(frame, tip),
+    point(frame, base, arrowHalfWidth),
+    point(frame, base, -arrowHalfWidth),
+  ]
+  records.push([
+    "RECORD=7",
+    ...createOwnedSchematicRecordFields(ownerIndex),
+    "LOCATIONCOUNT=3",
+    ...points.flatMap((p, i) => [
+      ...coordinates(`X${i + 1}`, p.x),
+      ...coordinates(`Y${i + 1}`, p.y),
+    ]),
+    `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
+    `COLOR=${color}`,
+    `AREACOLOR=${ALTIUM_SCHEMATIC_WHITE}`,
+    "ISSOLID=T",
+  ])
+}
+
 export function createSchematicPinMarkerRecords({
   body,
   orientation,
@@ -32,10 +78,7 @@ export function createSchematicPinMarkerRecords({
   const radius = hasInversionCircle
     ? toAltiumLength(SCHEMATIC_PIN_INVERSION_RADIUS)
     : 0
-  const point = (along: number, across = 0): Point => ({
-    x: body.x + dx * along - dy * across,
-    y: body.y + dy * along + dx * across,
-  })
+  const frame: PinMarkerFrame = { body, dx, dy }
   const records = hasInversionCircle
     ? [
         [
@@ -56,34 +99,21 @@ export function createSchematicPinMarkerRecords({
   const arrowDepth = arrowSize * Math.cos(Math.PI / 6)
   const arrowHalfWidth = arrowSize * Math.sin(Math.PI / 6)
   const bubbleEnd = radius * 2
-  const addArrow = (tip: number, base: number) => {
-    const points = [
-      point(tip),
-      point(base, arrowHalfWidth),
-      point(base, -arrowHalfWidth),
-    ]
-    records.push([
-      "RECORD=7",
-      ...createOwnedSchematicRecordFields(ownerIndex),
-      "LOCATIONCOUNT=3",
-      ...points.flatMap((p, i) => [
-        ...coordinates(`X${i + 1}`, p.x),
-        ...coordinates(`Y${i + 1}`, p.y),
-      ]),
-      `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
-      `COLOR=${color}`,
-      `AREACOLOR=${ALTIUM_SCHEMATIC_WHITE}`,
-      "ISSOLID=T",
-    ])
+  const arrowContext: PinArrowContext = {
+    frame,
+    records,
+    arrowHalfWidth,
+    ownerIndex,
+    color,
   }
-  if (hasInputArrow) addArrow(bubbleEnd, bubbleEnd + arrowDepth)
+  if (hasInputArrow) addArrow(arrowContext, bubbleEnd, bubbleEnd + arrowDepth)
   // Circuit JSON places an output arrow one arrow-size beyond its base
   // origin; bidirectional pins put that origin after the input arrow.
   const outputTip = bubbleEnd + (hasInputArrow ? arrowDepth : 0) + arrowSize
   if (hasOutputArrow) {
     // Draw only the exposed gap; the wire must not cross a filled triangle.
-    const gapStart = point(bubbleEnd + (hasInputArrow ? arrowDepth : 0))
-    const gapEnd = point(outputTip - arrowDepth)
+    const gapStart = point(frame, bubbleEnd + (hasInputArrow ? arrowDepth : 0))
+    const gapEnd = point(frame, outputTip - arrowDepth)
     records.push([
       "RECORD=13",
       ...createOwnedSchematicRecordFields(ownerIndex),
@@ -94,7 +124,7 @@ export function createSchematicPinMarkerRecords({
       `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
       `COLOR=${color}`,
     ])
-    addArrow(outputTip, outputTip - arrowDepth)
+    addArrow(arrowContext, outputTip, outputTip - arrowDepth)
   }
   // Keep the electrical pin and its wire together outside the filled markers.
   // Name/designator margins compensate for this shift from the body edge.
