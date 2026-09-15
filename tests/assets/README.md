@@ -60,10 +60,12 @@ Altium pins use independently enabled `NAME_CUSTOMFONTID` and
 `DESIGNATOR_CUSTOMFONTID` settings. Generic pin `FONTID` does not control them.
 The custom settings preserve the existing pin text color.
 
-Pin names sit **0.1 circuit units inside the body edge**, matching Circuit JSON:
-`NAME_CUSTOMPOSITION_MARGIN = -(0.1 × 20) = -2`. Custom position and font are
-enabled together (`PINNAME_POSITIONCONGLOMERATE=17`); numbers retain their native
-default position in this earlier file.
+Current exports place pin names **0.1 circuit units inside the body edge**.
+Altium adds a 2-unit inward gap before `NAME_CUSTOMPOSITION_MARGIN`, so the
+margin is `0.1 × 20 - 2 = 0`, plus any outward shift for a filled pin marker.
+Custom position and font are enabled together
+(`PINNAME_POSITIONCONGLOMERATE=17`). The earlier review file above predates this
+margin correction and retains the native default number position.
 
 ## Pin number positions
 
@@ -136,10 +138,18 @@ uses Arial **4 pt** for custom-symbol U3 (`0.18 × 20 = 3.6 → 4 pt`),
 pin numbers (`0.13 × 20 = 2.6 → 3 pt`). Text linked by `schematic_symbol_id`
 uses the same native font-size mapping as standalone notes.
 
-## Pin inversion bubbles
+## Pin markers
 
-[Pin marker comparison](./pin-marker-bubbles-1p2.SchDoc) uses a white-filled
-native ellipse with radius **1.2 Altium units** (`0.06 Circuit JSON units × 20`).
+[Pin marker comparison](./pin-marker-bubbles-1p2.SchDoc) uses white-filled
+native graphics with the hairline stroke preset (`LINEWIDTH=0`). Bubble radius
+is **1.2 Altium units** (`0.06 Circuit JSON units × 20`). Triangle side length
+is **2 units** (`0.1 × 20`), with depth **√3 units** and half-width **1 unit**.
+Wires stop at the markers' outer edges, leaving their interiors clear.
+[Automotive communication sheet](./automotive-mirror-communication-pin-markers.SchDoc)
+shows the same conversion on the VCC and signal pins.
 Pin names remain 2 units inside the body; numbers remain 3 units outside.
-Input arrows no longer add an extra clock symbol. Electrical Input/Output
-indicators retain Altium's native size while their electrical types are preserved.
+
+Visual input/output flags draw these custom arrows instead of inferring native
+Input/Output/Bidirectional types, which add fixed-size automatic triangles.
+These pins use **Passive** electrical type: connectivity is retained, but
+Altium ERC no longer checks their input/output direction.

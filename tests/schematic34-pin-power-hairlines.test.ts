@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test"
-import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
+import {
+  getSchematicRecordPoints,
+  parseAltiumSchDoc,
+  serializeAltiumSheetToSvg,
+} from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { expectValidSchematic } from "./fixtures"
 
@@ -20,6 +24,7 @@ test("uses hairline stems for every component type with unchanged text and conne
   )
   // Compare the hairline change using the 3 pt number font and 3-unit margin.
   // The historical fixture has 3 pt names, but predates the number-text fixes.
+  // Normalize its old name-margin encoding to the native 2-unit inset too.
   // Font and position behavior are covered separately in schematic29/30/39.
   const beforeSheet = before.getRecordsByKind("31")[0]!
   for (const pin of before.pins) {
@@ -28,6 +33,7 @@ test("uses hairline stems for every component type with unchanged text and conne
     pin.set("DESIGNATOR_CUSTOMFONTID", fontId)
     pin.set("PINDESIGNATOR_POSITIONCONGLOMERATE", "17")
     pin.set("DESIGNATOR_CUSTOMPOSITION_MARGIN", "3")
+    pin.set("NAME_CUSTOMPOSITION_MARGIN", "0")
   }
   const converter = new CircuitJsonToAltiumConverter(source, {
     projectName: "automotive-mirror-system",
@@ -51,18 +57,21 @@ test("uses hairline stems for every component type with unchanged text and conne
   }
   for (const [index, pin] of after.pins.entries()) {
     const previous = before.pins[index]!
-    expect([pin.getNumber("LOCATION.X"), pin.getNumber("LOCATION.Y")]).toEqual([
-      previous.getNumber("LOCATION.X"),
-      previous.getNumber("LOCATION.Y"),
-    ])
     expect(pin.getNumber("PINLENGTH")).toBe(0)
-    const stem = after.wires.find(
-      (wire) =>
-        wire.getNumber("X1") === endpoint(pin)[0] &&
-        wire.getNumber("Y1") === endpoint(pin)[1] &&
-        wire.getNumber("X2") === endpoint(previous)[0] &&
-        wire.getNumber("Y2") === endpoint(previous)[1],
-    )!
+    // Custom filled markers move the zero-length terminal to their outer edge.
+    // Its sheet wire must still reach the original pin's connection point.
+    const stem = after.wires.find((wire) => {
+      const [start, end] = getSchematicRecordPoints(wire)
+      const previousEnd = endpoint(previous)
+      return (
+        start &&
+        end &&
+        Math.abs(start.x - pin.position!.x) < 1e-4 &&
+        Math.abs(start.y - pin.position!.y) < 1e-4 &&
+        Math.abs(end.x - previousEnd[0]!) < 1e-4 &&
+        Math.abs(end.y - previousEnd[1]!) < 1e-4
+      )
+    })!
     expect(stem).toBeDefined()
     expect(stem.getNumber("LINEWIDTH")).toBe(0)
     expect(stem.getNumber("COLOR")).toBe(pin.getNumber("COLOR"))

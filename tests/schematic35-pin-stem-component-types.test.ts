@@ -59,9 +59,9 @@ test.each([undefined, ...componentFtypes])(
     expect(doc.wires).toHaveLength(4)
     for (const [i, pin] of doc.pins.entries()) {
       const nativeLength = 0
-      const markerOffset = i === 3 ? 0.06 * 20 * 2 : 0
+      const markerOffset = [0, Math.sqrt(3), 2, 2.4 + Math.sqrt(3) + 2][i]!
       expect(pin.getNumber("PINLENGTH")).toBe(nativeLength)
-      expect(pin.getNumber("ELECTRICAL")).toBe([4, 0, 2, 1][i])
+      expect(pin.getNumber("ELECTRICAL")).toBe(4)
       expect(pin.getNumber("SYMBOL_INNEREDGE")).toBeUndefined()
       expect(pin.getNumber("SYMBOL_OUTEREDGE")).toBeUndefined()
       const dx = [1, 0, -1, 0][i]!
@@ -74,10 +74,14 @@ test.each([undefined, ...componentFtypes])(
       const coord = (key: string) =>
         wire.getNumber(key)! + (wire.getNumber(`${key}_FRAC`) ?? 0) / 100_000
       expect([coord("X1"), coord("Y1")]).toEqual([start.x, start.y])
-      expect([wire.getNumber("X2"), wire.getNumber("Y2")]).toEqual([
+      expect(coord("X2")).toBeCloseTo(
         pin.position!.x + dx * (10 - markerOffset),
+        4,
+      )
+      expect(coord("Y2")).toBeCloseTo(
         pin.position!.y + dy * (10 - markerOffset),
-      ])
+        4,
+      )
       expect(wire.getNumber("LINEWIDTH")).toBe(0)
     }
   },

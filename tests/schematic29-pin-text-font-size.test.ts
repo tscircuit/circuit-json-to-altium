@@ -35,10 +35,22 @@ test("exports native Arial 3 pin names and numbers with the correct margins", as
     expect(record.getNumber("FONTID")).toBeUndefined()
     // Text remains anchored to the original body with independent native fonts.
     expect(record.getNumber("PINNAME_POSITIONCONGLOMERATE")).toBe(17)
-    expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(-2)
-    expect(record.getNumber("NAME_CUSTOMPOSITION_MARGIN_FRAC")).toBeUndefined()
+    const orientation = record.getNumber("PINCONGLOMERATE")! & 3
+    const dx = [1, 0, -1, 0][orientation]!
+    const dy = [0, 1, 0, -1][orientation]!
+    const markerOffset =
+      (record.position!.x - previous.position!.x) * dx +
+      (record.position!.y - previous.position!.y) * dy
+    const margin = (key: string) =>
+      record.getNumber(key)! + (record.getNumber(`${key}_FRAC`) ?? 0) / 100_000
+    expect(margin("NAME_CUSTOMPOSITION_MARGIN") - markerOffset).toBeCloseTo(
+      0,
+      4,
+    )
     expect(record.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(17)
-    expect(record.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(3)
+    expect(
+      margin("DESIGNATOR_CUSTOMPOSITION_MARGIN") + markerOffset,
+    ).toBeCloseTo(3, 4)
     for (const kind of ["NAME", "DESIGNATOR"]) {
       const fontId = record.getNumber(`${kind}_CUSTOMFONTID`)
       expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("3")

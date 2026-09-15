@@ -917,17 +917,7 @@ export function createSchematicDocument({
       )!
       const hasInputArrow = schematicPort.has_input_arrow === true
       const hasOutputArrow = schematicPort.has_output_arrow === true
-      // Derive direction from the pin, independently of its component's ftype.
-      // Pins with no direction use Passive instead of Altium's implicit Input.
-      // An input-direction arrow does not imply an IEEE clock edge symbol.
-      const electricalType = hasInputArrow
-        ? hasOutputArrow
-          ? 1 // Bidirectional
-          : 0 // Input
-        : hasOutputArrow
-          ? 2 // Output
-          : 4 // Passive
-      const nameMargin = -circuitToAltiumSchematicLength(
+      const nameInset = circuitToAltiumSchematicLength(
         SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS,
       )
       const numberMargin = circuitToAltiumSchematicLength(
@@ -938,6 +928,8 @@ export function createSchematicDocument({
         orientation: altiumPinOrientation,
         hasInversionCircle:
           schematicPort.is_drawn_with_inversion_circle === true,
+        hasInputArrow,
+        hasOutputArrow,
         ownerIndex: altiumComponentRecordIndex,
         color: pinColor,
         toAltiumLength: circuitToAltiumSchematicLength,
@@ -969,14 +961,18 @@ export function createSchematicDocument({
           `PINLENGTH=${hairlinePin.nativeLength}`,
           // This preset controls native pin symbols, not the straight stem.
           `SYMBOL_LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
-          `ELECTRICAL=${electricalType}`,
+          // Direction arrows are exported as sized graphics. Inferring native
+          // Input/Output types adds Altium's fixed-size automatic indicators.
+          "ELECTRICAL=4",
           `COLOR=${pinColor}`,
           // Native pins require independently enabled name/designator fonts.
           // Custom settings also select text color, so retain the pin color.
           `PINNAME_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG | ALTIUM_PIN_CUSTOM_POSITION_FLAG}`,
           ...createAltiumSchematicCoordinateFields(
             "NAME_CUSTOMPOSITION_MARGIN",
-            nameMargin - pinMarkers.bodyOffset,
+            // Native names start 2 units inside the pin body; custom margins
+            // add to that inset, unlike designator margins which point outward.
+            nameInset - 2 + pinMarkers.bodyOffset,
           ),
           `NAME_CUSTOMFONTID=${pinNameFontId}`,
           `NAME_CUSTOMCOLOR=${pinColor}`,

@@ -50,7 +50,14 @@ test("exports smallest schematic strokes with unchanged text fonts", async () =>
     expect(fields(doc)).toEqual(fields(previous))
   }
   expect(doc.getRecordsByKind("6")).toHaveLength(28)
-  expect(doc.getRecordsByKind("7")).toHaveLength(16)
+  const polygons = doc.getRecordsByKind("7")
+  // The existing 16 net-label outlines now accompany 21 custom pin arrows.
+  expect(
+    polygons.filter((p) => p.getNumber("LOCATIONCOUNT") === 3),
+  ).toHaveLength(21)
+  expect(
+    polygons.filter((p) => p.getNumber("LOCATIONCOUNT") !== 3),
+  ).toHaveLength(16)
   expect(doc.getRecordsByKind("14")).toHaveLength(2)
   expect(doc.getRecordsByKind("27")).toHaveLength(54 + doc.pins.length)
 

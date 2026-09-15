@@ -18,7 +18,7 @@ test("anchors native pin numbers near the body in all four orientations", async 
   for (const [index, pin] of doc.pins.entries()) {
     expect(pin.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(17)
     expect(pin.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(3)
-    expect(pin.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(-2)
+    expect(pin.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(0)
     const group = pinGroups[index]![1]!
     const body = group.match(/<line x1="([\d.-]+)" y1="([\d.-]+)"/u)!
     const number = group.match(
