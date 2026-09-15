@@ -33,8 +33,7 @@ test("anchors native pin numbers near the body in all four orientations", async 
       [0, -3, 0, 3][orientation]!,
     )
     expect(Number(number[3])).toBe(orientation % 2 === 1 ? -90 : 0)
-    expect(group).toContain('font-size="4"')
-    expect(group).toContain('font-size="3"')
+    expect(group.match(/font-size="3"/gu)).toHaveLength(2)
   }
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })

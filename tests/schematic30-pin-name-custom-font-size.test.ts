@@ -7,7 +7,7 @@ import {
   sourcePort,
 } from "./fixtures"
 
-test("uses an independent integer font for custom pin names while keeping numbers at 4 pt", async () => {
+test("uses an independent integer font for custom pin names while keeping numbers at 3 pt", async () => {
   const samples = [
     { size: undefined, points: "3" },
     { size: 0.15, points: "3" },
@@ -56,7 +56,7 @@ test("uses an independent integer font for custom pin names while keeping number
     expect(sheet.getCaseInsensitive(`SIZE${nameFontId}`)).toBe(
       samples[index]!.points,
     )
-    expect(sheet.getCaseInsensitive(`SIZE${numberFontId}`)).toBe("4")
+    expect(sheet.getCaseInsensitive(`SIZE${numberFontId}`)).toBe("3")
     expect(sheet.getDecoded(`FONTNAME${nameFontId}`)).toBe("Arial")
     expect(pin.getNumber("PINNAME_POSITIONCONGLOMERATE")! & 16).toBe(16)
     expect(pin.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")! & 16).toBe(16)

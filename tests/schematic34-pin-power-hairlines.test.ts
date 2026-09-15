@@ -18,6 +18,17 @@ test("uses hairline stems for every component type with unchanged text and conne
       ),
     ).bytes(),
   )
+  // Compare the hairline change using the 3 pt number font and 3-unit margin.
+  // The historical fixture has 3 pt names, but predates the number-text fixes.
+  // Font and position behavior are covered separately in schematic29/30/39.
+  const beforeSheet = before.getRecordsByKind("31")[0]!
+  for (const pin of before.pins) {
+    const fontId = pin.getCaseInsensitive("NAME_CUSTOMFONTID")!
+    expect(beforeSheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("3")
+    pin.set("DESIGNATOR_CUSTOMFONTID", fontId)
+    pin.set("PINDESIGNATOR_POSITIONCONGLOMERATE", "17")
+    pin.set("DESIGNATOR_CUSTOMPOSITION_MARGIN", "3")
+  }
   const converter = new CircuitJsonToAltiumConverter(source, {
     projectName: "automotive-mirror-system",
   })
@@ -81,12 +92,6 @@ test("uses hairline stems for every component type with unchanged text and conne
     expect(graphics.every((line) => line.getNumber("LINEWIDTH") === 0)).toBe(
       true,
     )
-  }
-  // Compare the hairline change using the same body-side number margin.
-  // Pin-number positioning is covered separately in schematic39.
-  for (const pin of before.pins) {
-    pin.set("PINDESIGNATOR_POSITIONCONGLOMERATE", "17")
-    pin.set("DESIGNATOR_CUSTOMPOSITION_MARGIN", "3")
   }
   const text = (doc: typeof before) =>
     Array.from(

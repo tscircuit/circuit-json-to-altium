@@ -74,6 +74,14 @@ margin of 9. Custom position and font are enabled together
 (`PINDESIGNATOR_POSITIONCONGLOMERATE=17`). Numbers remain Arial **4 pt**, and
 names remain **3 pt**. U1/U2 pin 5 was checked in the real Altium 365 Viewer.
 
+## Pin-number font size
+
+[TI TPS61288 power supply](./ti-tps61288-pin-numbers-3pt.SchDoc) uses Arial
+**3 pt** for native pin numbers: `0.15 circuit units × 20 = 3`, matching the
+Circuit JSON font size at the local preview's coordinate scale. The body-side
+number margin is **3 schematic units**. Pin-name fonts and pin lengths are
+unchanged.
+
 ## Schematic stroke widths
 
 [Microcontroller](./automotive-mirror-microcontroller-hairline-strokes.SchDoc)
