@@ -135,3 +135,11 @@ uses Arial **4 pt** for custom-symbol U3 (`0.18 × 20 = 3.6 → 4 pt`),
 **3 pt** for its MPN (`0.14 × 20 = 2.8 → 3 pt`) and **3 pt** for its drawn
 pin numbers (`0.13 × 20 = 2.6 → 3 pt`). Text linked by `schematic_symbol_id`
 uses the same native font-size mapping as standalone notes.
+
+## Pin inversion bubbles
+
+[Pin marker comparison](./pin-marker-bubbles-1p2.SchDoc) uses a white-filled
+native ellipse with radius **1.2 Altium units** (`0.06 Circuit JSON units × 20`).
+Pin names remain 2 units inside the body; numbers remain 3 units outside.
+Input arrows no longer add an extra clock symbol. Electrical Input/Output
+indicators retain Altium's native size while their electrical types are preserved.

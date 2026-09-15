@@ -27,6 +27,7 @@ import {
 import { createAltiumSchematicSymbolPrimitiveRecordFields } from "./create-altium-schematic-symbol-primitive-record-fields"
 import { createAltiumSchematicSymbolRecords } from "./create-altium-schematic-symbol-records"
 import { createAltiumSchematicTextRecordFields } from "./create-altium-schematic-text-record-fields"
+import { createSchematicPinMarkerRecords } from "./create-schematic-pin-marker-records"
 import type { AltiumSchematicTemplate } from "./extract-altium-schematic-template"
 import { findSchematicComponentText } from "./find-schematic-component-text"
 import { findSchematicTextPresentation } from "./find-schematic-text-presentation"
@@ -113,8 +114,6 @@ const ALTIUM_PIN_CUSTOM_POSITION_FLAG = 0x01
 const SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS = 0.1
 // Keep pin numbers near the body instead of Altium's default 9-unit margin.
 const SCHEMATIC_PIN_NUMBER_MARGIN_CIRCUIT_UNITS = 0.15
-const ALTIUM_PIN_CLOCK_SYMBOL = 3
-const ALTIUM_PIN_INVERSION_SYMBOL = 1
 const ALTIUM_SCHEMATIC_DEFAULT_COLOR = 0x37_29_1f
 const ALTIUM_SCHEMATIC_FALLBACK_BODY_COLOR = 0xc2_ffff
 const ALTIUM_PIN_ORIENTATION_BY_FACING_DIRECTION: Record<string, number> = {
@@ -920,6 +919,7 @@ export function createSchematicDocument({
       const hasOutputArrow = schematicPort.has_output_arrow === true
       // Derive direction from the pin, independently of its component's ftype.
       // Pins with no direction use Passive instead of Altium's implicit Input.
+      // An input-direction arrow does not imply an IEEE clock edge symbol.
       const electricalType = hasInputArrow
         ? hasOutputArrow
           ? 1 // Bidirectional
@@ -933,12 +933,22 @@ export function createSchematicDocument({
       const numberMargin = circuitToAltiumSchematicLength(
         SCHEMATIC_PIN_NUMBER_MARGIN_CIRCUIT_UNITS,
       )
-      const hairlinePin = getHairlinePinGeometry({
+      const pinMarkers = createSchematicPinMarkerRecords({
         body: altiumPinLocation,
-        length: altiumPinLength,
         orientation: altiumPinOrientation,
         hasInversionCircle:
           schematicPort.is_drawn_with_inversion_circle === true,
+        ownerIndex: altiumComponentRecordIndex,
+        color: pinColor,
+        toAltiumLength: circuitToAltiumSchematicLength,
+      })
+      for (const record of pinMarkers.records) {
+        addSchematicRecord(record, schematicRecordContext)
+      }
+      const hairlinePin = getHairlinePinGeometry({
+        body: pinMarkers.pinPosition,
+        length: altiumPinLength - pinMarkers.bodyOffset,
+        orientation: altiumPinOrientation,
       })
       addSchematicRecord(
         [
@@ -948,42 +958,41 @@ export function createSchematicDocument({
           `DESIGNATOR=${pinDesignator}`,
           `NAME=${pinName}`,
           `PINCONGLOMERATE=${altiumPinConglomerate}`,
-          `LOCATION.X=${altiumPinLocation.x}`,
-          `LOCATION.Y=${altiumPinLocation.y}`,
+          ...createAltiumSchematicCoordinateFields(
+            "LOCATION.X",
+            pinMarkers.pinPosition.x,
+          ),
+          ...createAltiumSchematicCoordinateFields(
+            "LOCATION.Y",
+            pinMarkers.pinPosition.y,
+          ),
           `PINLENGTH=${hairlinePin.nativeLength}`,
           // This preset controls native pin symbols, not the straight stem.
           `SYMBOL_LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
           `ELECTRICAL=${electricalType}`,
-          ...(schematicPort.has_input_arrow === true
-            ? [`SYMBOL_INNEREDGE=${ALTIUM_PIN_CLOCK_SYMBOL}`]
-            : []),
-          ...(schematicPort.is_drawn_with_inversion_circle === true
-            ? [`SYMBOL_OUTEREDGE=${ALTIUM_PIN_INVERSION_SYMBOL}`]
-            : []),
           `COLOR=${pinColor}`,
           // Native pins require independently enabled name/designator fonts.
           // Custom settings also select text color, so retain the pin color.
           `PINNAME_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG | ALTIUM_PIN_CUSTOM_POSITION_FLAG}`,
           ...createAltiumSchematicCoordinateFields(
             "NAME_CUSTOMPOSITION_MARGIN",
-            nameMargin,
+            nameMargin - pinMarkers.bodyOffset,
           ),
           `NAME_CUSTOMFONTID=${pinNameFontId}`,
           `NAME_CUSTOMCOLOR=${pinColor}`,
           `PINDESIGNATOR_POSITIONCONGLOMERATE=${ALTIUM_PIN_CUSTOM_FONT_FLAG | ALTIUM_PIN_CUSTOM_POSITION_FLAG}`,
           ...createAltiumSchematicCoordinateFields(
             "DESIGNATOR_CUSTOMPOSITION_MARGIN",
-            numberMargin,
+            numberMargin - pinMarkers.bodyOffset,
           ),
           `DESIGNATOR_CUSTOMFONTID=${pinNumberFontId}`,
           `DESIGNATOR_CUSTOMCOLOR=${pinColor}`,
         ],
         schematicRecordContext,
       )
-      if (hairlinePin.nativeLength < altiumPinLength) {
-        // Keep native names, numbers, electrical type and edge symbols anchored
-        // to the body. The thin wire joins the native terminal to its original
-        // connection, including on component types other than passive parts.
+      if (pinMarkers.bodyOffset !== altiumPinLength) {
+        // Join the native terminal to the original Circuit JSON connection.
+        // Filled markers occupy the gap between this terminal and the body.
         addSchematicRecord(
           [
             "RECORD=27",

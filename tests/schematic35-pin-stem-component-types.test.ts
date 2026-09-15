@@ -17,7 +17,7 @@ const componentFtypes = any_source_component.options.flatMap((schema) =>
 )
 
 test.each([undefined, ...componentFtypes])(
-  "exports connected hairline pin stems for ftype %s and preserves clock/inversion edges",
+  "exports connected hairline pin stems for ftype %s and preserves pin markers",
   async (ftype) => {
     const elements: CircuitElement[] = [
       board(),
@@ -58,13 +58,12 @@ test.each([undefined, ...componentFtypes])(
     expect(doc.pins).toHaveLength(4)
     expect(doc.wires).toHaveLength(4)
     for (const [i, pin] of doc.pins.entries()) {
-      const nativeLength = i === 3 ? 5 : 0
+      const nativeLength = 0
+      const markerOffset = i === 3 ? 0.06 * 20 * 2 : 0
       expect(pin.getNumber("PINLENGTH")).toBe(nativeLength)
       expect(pin.getNumber("ELECTRICAL")).toBe([4, 0, 2, 1][i])
-      expect(pin.getNumber("SYMBOL_INNEREDGE")).toBe(
-        i === 1 || i === 3 ? 3 : undefined,
-      )
-      expect(pin.getNumber("SYMBOL_OUTEREDGE")).toBe(i === 3 ? 1 : undefined)
+      expect(pin.getNumber("SYMBOL_INNEREDGE")).toBeUndefined()
+      expect(pin.getNumber("SYMBOL_OUTEREDGE")).toBeUndefined()
       const dx = [1, 0, -1, 0][i]!
       const dy = [0, 1, 0, -1][i]!
       const start = {
@@ -72,13 +71,12 @@ test.each([undefined, ...componentFtypes])(
         y: pin.position!.y + dy * nativeLength,
       }
       const wire = doc.wires[i]!
-      expect([wire.getNumber("X1"), wire.getNumber("Y1")]).toEqual([
-        start.x,
-        start.y,
-      ])
+      const coord = (key: string) =>
+        wire.getNumber(key)! + (wire.getNumber(`${key}_FRAC`) ?? 0) / 100_000
+      expect([coord("X1"), coord("Y1")]).toEqual([start.x, start.y])
       expect([wire.getNumber("X2"), wire.getNumber("Y2")]).toEqual([
-        pin.position!.x + dx * 10,
-        pin.position!.y + dy * 10,
+        pin.position!.x + dx * (10 - markerOffset),
+        pin.position!.y + dy * (10 - markerOffset),
       ])
       expect(wire.getNumber("LINEWIDTH")).toBe(0)
     }
