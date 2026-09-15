@@ -1,0 +1,40 @@
+import { expect, test } from "bun:test"
+import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
+import { CircuitJsonToAltiumConverter } from "../lib"
+import { expectValidSchematic } from "./fixtures"
+import { pinNumberPositionCircuit } from "./fixtures/pin-number-position-circuit"
+
+test("anchors native pin numbers near the body in all four orientations", async () => {
+  const converter = new CircuitJsonToAltiumConverter(pinNumberPositionCircuit, {
+    projectName: "pin-number-start",
+  })
+  converter.runUntilFinished()
+  const doc = parseAltiumSchDoc(converter.getOutput().schematics[0]!.content)
+  expectValidSchematic(doc)
+  expect(doc.pins).toHaveLength(4)
+  const svg = serializeAltiumSheetToSvg(doc)
+  const pinGroups = [...svg.matchAll(/<g data-record="2">([\s\S]*?)<\/g>/gu)]
+  expect(pinGroups).toHaveLength(4)
+  for (const [index, pin] of doc.pins.entries()) {
+    expect(pin.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(17)
+    expect(pin.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(2)
+    expect(pin.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(-2)
+    const group = pinGroups[index]![1]!
+    const body = group.match(/<line x1="([\d.-]+)" y1="([\d.-]+)"/u)!
+    const number = group.match(
+      /<text[^>]*dominant-baseline="text-after-edge"[^>]*transform="translate\(([\d.-]+) ([\d.-]+)\) rotate\(([\d.-]+)\)"/u,
+    )!
+    const orientation = pin.getNumber("PINCONGLOMERATE")! & 3
+    // SVG y increases downwards. Each number starts two units outside the body.
+    expect(Number(number[1]) - Number(body[1])).toBeCloseTo(
+      [2, 0, -2, 0][orientation]!,
+    )
+    expect(Number(number[2]) - Number(body[2])).toBeCloseTo(
+      [0, -2, 0, 2][orientation]!,
+    )
+    expect(Number(number[3])).toBe(orientation % 2 === 1 ? -90 : 0)
+    expect(group).toContain('font-size="4"')
+    expect(group).toContain('font-size="3"')
+  }
+  await expect(svg).toMatchSvgSnapshot(import.meta.path)
+})

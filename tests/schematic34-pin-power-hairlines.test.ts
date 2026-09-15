@@ -82,6 +82,12 @@ test("uses hairline stems for every component type with unchanged text and conne
       true,
     )
   }
+  // Compare the hairline change using the same body-side number margin.
+  // Pin-number positioning is covered separately in schematic39.
+  for (const pin of before.pins) {
+    pin.set("PINDESIGNATOR_POSITIONCONGLOMERATE", "17")
+    pin.set("DESIGNATOR_CUSTOMPOSITION_MARGIN", "2")
+  }
   const text = (doc: typeof before) =>
     Array.from(
       serializeAltiumSheetToSvg(doc).matchAll(/<text\b[\s\S]*?<\/text>/gu),
