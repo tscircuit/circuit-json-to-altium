@@ -118,3 +118,20 @@ uses Arial **4 pt** for custom-symbol U3 (`0.18 × 20 = 3.6 → 4 pt`),
 **3 pt** for its MPN (`0.14 × 20 = 2.8 → 3 pt`) and **3 pt** for its drawn
 pin numbers (`0.13 × 20 = 2.6 → 3 pt`). Text linked by `schematic_symbol_id`
 uses the same native font-size mapping as standalone notes.
+
+## TPS61288 junction and wire repro
+
+[Before cleanup](./ti-tps61288-junctions-before.SchDoc) and
+[green native junctions](./ti-tps61288-junctions-cleaned.SchDoc) export the
+[TI TPS61288 supply Circuit JSON](./ti-tps61288-power-supply.circuit.json).
+Shared trace edges are emitted once per sheet, regardless of direction;
+edges collapsed to a single point by Altium coordinate rounding are omitted.
+The fixture drops from **490 to 436 wires** (48 duplicates and 6 zero-length
+segments), preserving all **41 explicit junctions** and every conducting path.
+Junction records use **`LOCKED=T`, `COLOR=34816` (green), `SIZE=0`**.
+Pin and power-port T connections are also emitted as manual junctions so native
+Altium does not replace them with blue compiler markers. The native Viewer
+shows **87 green junctions and no blue dots** for this file.
+`SIZE=0` is the smallest native preset: radius **2 Altium units**, versus
+Circuit JSON's equivalent **0.6**. Exact size matching is still unresolved;
+the local altiumts preview currently renders this preset with radius **1.5**.

@@ -9,7 +9,8 @@ test("round-trips the open-source SimpleFOC StepMini Altium schematic", async ()
     projectName: "SimpleFOC StepMini schematic",
   })
 
-  expectOpenSourceSchematicRoundTrip(result)
+  // Make the native pin/wire T connection explicit to preserve its color.
+  expectOpenSourceSchematicRoundTrip(result, { additionalNativeJunctions: 1 })
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
   ).toMatchSvgSnapshot(import.meta.path)

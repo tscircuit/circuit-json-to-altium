@@ -396,6 +396,7 @@ function getStringFields({
 
 function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
   const points: Point[] = []
+  const seenTraceSegments = new Set<string>()
   const noConnectSourcePortIds = new Set<SourcePortId>(
     circuitJson.flatMap((element) =>
       element.type === "source_port" && element.do_not_connect === true
@@ -493,18 +494,36 @@ function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
         if (!isCircuitElement(edge)) continue
         const from = asPoint(edge.from)
         const to = asPoint(edge.to)
+        // Wire cleanup changes record multiplicity, not conducting geometry.
+        // Keep comparing every distinct nonzero segment and its endpoints.
+        if (from && to) {
+          if (from.x === to.x && from.y === to.y) continue
+          const key = `${asString(element.schematic_sheet_id)}:${[
+            `${from.x},${from.y}`,
+            `${to.x},${to.y}`,
+          ]
+            .sort()
+            .join(";")}`
+          if (seenTraceSegments.has(key)) continue
+          seenTraceSegments.add(key)
+        }
         if (from) points.push(from)
         if (to) points.push(to)
       }
     }
-    if (Array.isArray(element.junctions)) {
-      for (const junction of element.junctions) {
-        const point = asPoint(junction)
-        if (point) points.push(point)
-      }
-    }
   }
   return points
+}
+
+function getJunctionPoints(circuitJson: CircuitElement[]): Point[] {
+  return circuitJson.flatMap((element) =>
+    element.type === "schematic_trace" && Array.isArray(element.junctions)
+      ? element.junctions.flatMap((junction) => {
+          const point = asPoint(junction)
+          return point ? [point] : []
+        })
+      : [],
+  )
 }
 
 function getGeometryMaxDelta(
@@ -513,12 +532,15 @@ function getGeometryMaxDelta(
 ): number {
   const sourcePoints = getSchematicGeometryPoints(sourceCircuitJson)
   const roundTripPoints = getSchematicGeometryPoints(roundTripCircuitJson)
+  const sourceJunctions = getJunctionPoints(sourceCircuitJson)
+  const roundTripJunctions = getJunctionPoints(roundTripCircuitJson)
   if (sourcePoints.length !== roundTripPoints.length) {
     return Number.POSITIVE_INFINITY
   }
-  const sourceAnchor = sourcePoints[0]
-  const roundTripAnchor = roundTripPoints[0]
-  if (!sourceAnchor || !roundTripAnchor) return 0
+  const sourceAnchor = sourcePoints[0] ?? sourceJunctions[0]
+  const roundTripAnchor = roundTripPoints[0] ?? roundTripJunctions[0]
+  if (!sourceAnchor) return 0
+  if (!roundTripAnchor) return Number.POSITIVE_INFINITY
 
   let maximumDelta = 0
   for (const [pointIndex, sourcePoint] of sourcePoints.entries()) {
@@ -533,6 +555,30 @@ function getGeometryMaxDelta(
         sourcePoint.y - sourceAnchor.y - (roundTripPoint.y - roundTripAnchor.y),
       ),
     )
+  }
+  // Native T junctions can become explicit on export. Every source junction
+  // must still exist at the same relative position; added junctions do not
+  // shift the ordered comparison of wires and other schematic geometry.
+  for (const sourcePoint of sourceJunctions) {
+    let nearestDelta = Number.POSITIVE_INFINITY
+    for (const roundTripPoint of roundTripJunctions) {
+      nearestDelta = Math.min(
+        nearestDelta,
+        Math.max(
+          Math.abs(
+            sourcePoint.x -
+              sourceAnchor.x -
+              (roundTripPoint.x - roundTripAnchor.x),
+          ),
+          Math.abs(
+            sourcePoint.y -
+              sourceAnchor.y -
+              (roundTripPoint.y - roundTripAnchor.y),
+          ),
+        ),
+      )
+    }
+    maximumDelta = Math.max(maximumDelta, nearestDelta)
   }
   return maximumDelta
 }

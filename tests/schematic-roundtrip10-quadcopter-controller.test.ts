@@ -9,7 +9,8 @@ test("round-trips the open-source quadcopter controller Altium schematic", async
     projectName: "Quadcopter Controller schematic",
   })
 
-  expectOpenSourceSchematicRoundTrip(result)
+  // Make native pin/wire T connections explicit to preserve their color.
+  expectOpenSourceSchematicRoundTrip(result, { additionalNativeJunctions: 4 })
   expect(result.sourceSheetSize).toEqual({ height: 37.5, width: 47.5 })
   await expect(
     createSideBySideSvg(result.sourceSvg, result.roundTripSvg),
