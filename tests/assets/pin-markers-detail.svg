@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1120" height="840" viewBox="145 132 140 105" role="img" aria-label="Altium schematic sheet" class="altium-sheet" data-renderer="altiumts">
+  <title>Altium schematic sheet</title>
+  <rect width="428" height="328" fill="#fffcf8"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <defs><clipPath id="altium-sheet-paper"><rect x="14" y="14" width="400" height="300"/></clipPath></defs>
+    <g data-record="SheetBorder" fill="#fffef8" stroke="#334155" stroke-width="1"><rect x="14" y="14" width="400" height="300"/><rect x="24" y="24" width="380" height="280" fill="none"/><path d="M 87.3333 14 V 24 M 87.3333 304 V 314"/><path d="M 150.6667 14 V 24 M 150.6667 304 V 314"/><path d="M 214 14 V 24 M 214 304 V 314"/><path d="M 277.3333 14 V 24 M 277.3333 304 V 314"/><path d="M 340.6667 14 V 24 M 340.6667 304 V 314"/><path d="M 14 94 H 24 M 404 94 H 414"/><path d="M 14 164 H 24 M 404 164 H 414"/><path d="M 14 234 H 24 M 404 234 H 414"/></g>
+    <g data-sheet-content="true" clip-path="url(#altium-sheet-paper)">
+    <rect data-record="14" vector-effect="non-scaling-stroke" x="174" y="159" width="80" height="60" rx="0" fill="#ffffc2" stroke="#880000" stroke-width="1"/>
+    <text data-record="34" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="4" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(174 147) rotate(0)">U1</text>
+    <polygon data-record="7" vector-effect="non-scaling-stroke" points="174,175 172.268,176 172.268,174" fill="#ffffff" stroke="#840000" stroke-width="1"/>
+    <ellipse data-record="8" vector-effect="non-scaling-stroke" cx="255.2" cy="189" rx="1.2" ry="1.2" fill="#ffffff" stroke="#840000" stroke-width="1"/>
+    <polyline data-record="27" vector-effect="non-scaling-stroke" points="172.268,175 154,175" fill="none" stroke="#840000" stroke-width="1"/>
+    <ellipse data-record="8" vector-effect="non-scaling-stroke" cx="214" cy="157.8" rx="1.2" ry="1.2" fill="#ffffff" stroke="#840000" stroke-width="1"/>
+    <polygon data-record="7" vector-effect="non-scaling-stroke" points="214,156.6 213,154.868 215,154.868" fill="#ffffff" stroke="#840000" stroke-width="1"/>
+    <polyline data-record="27" vector-effect="non-scaling-stroke" points="256.4,189 274,189" fill="none" stroke="#840000" stroke-width="1"/>
+    <g data-record="2"><line x1="172.268" y1="175" x2="172.268" y2="175" stroke="#840000" stroke-width="1"/><text x="0" y="0" fill="#840000" font-family="Arial" font-size="3" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="end" dominant-baseline="text-after-edge" transform="translate(171 175) rotate(0)">1</text><text x="0" y="0" fill="#840000" font-family="Arial" font-size="3" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="central" transform="translate(176 175) rotate(0)">CLOCK</text></g>
+    <g data-record="2"><line x1="256.4" y1="189" x2="256.4" y2="189" stroke="#840000" stroke-width="1"/><text x="0" y="0" fill="#840000" font-family="Arial" font-size="3" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(257 189) rotate(0)">2</text><text x="0" y="0" fill="#840000" font-family="Arial" font-size="3" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="end" dominant-baseline="central" transform="translate(252 189) rotate(0)">INVERTED</text></g>
+    <g data-record="2"><line x1="214" y1="154.868" x2="214" y2="154.868" stroke="#840000" stroke-width="1"/><text x="0" y="0" fill="#840000" font-family="Arial" font-size="3" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(214 156) rotate(-90)">3</text><text x="0" y="0" fill="#840000" font-family="Arial" font-size="3" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="end" dominant-baseline="central" transform="translate(214 161) rotate(-90)">INVERTED CLOCK</text></g>
+    <polyline data-record="27" vector-effect="non-scaling-stroke" points="214,154.868 214,139" fill="none" stroke="#840000" stroke-width="1"/>
+    </g>
+  </g>
+</svg>
