@@ -79,7 +79,17 @@ test("preserves symbols, pins, wires, labels, and unique junctions", async () =>
   expect(component?.libraryReference).toBe("box resistor")
   expect(schematic.pins.map((pin) => pin.designator)).toEqual(["1", "2"])
   expect(schematic.wires).toHaveLength(4)
-  expect(schematic.getRecordsByKind("29")).toHaveLength(1)
+  // One source junction and four native junctions from overlapping pin stems.
+  const junctions = schematic.getRecordsByKind("29")
+  expect(junctions).toHaveLength(5)
+  expect(
+    new Set(
+      junctions.map(
+        (record) =>
+          `${record.getNumber("LOCATION.X")}:${record.getNumber("LOCATION.Y")}`,
+      ),
+    ).size,
+  ).toBe(junctions.length)
   expect(schematic.netLabels.map((label) => label.text)).toEqual(["SIG NA ME"])
   expect(
     owned.find((record) => record.get("NAME") === "Designator")?.get("TEXT"),

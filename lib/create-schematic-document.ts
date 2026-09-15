@@ -41,6 +41,7 @@ import {
 } from "./format"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import { getHairlinePinGeometry } from "./get-hairline-pin-geometry"
+import { getSchematicAutoJunctionPoints } from "./get-schematic-auto-junction-points"
 import { getSchematicTransform } from "./get-schematic-transform"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
 import { isSchematicSymbolPrimitive } from "./is-schematic-symbol-primitive"
@@ -1086,9 +1087,13 @@ export function createSchematicDocument({
       addSchematicRecord(
         [
           "RECORD=29",
+          "OWNERPARTID=-1",
+          `INDEXINSHEET=${schematicRecordContext.nextRecordIndex}`,
           `LOCATION.X=${altiumJunctionPoint.x}`,
           `LOCATION.Y=${altiumJunctionPoint.y}`,
           "COLOR=34816",
+          "SIZE=0",
+          "LOCKED=T",
         ],
         schematicRecordContext,
       )
@@ -1152,6 +1157,30 @@ export function createSchematicDocument({
       })
     if (!annotationRecordFields) continue
     addSchematicRecord(annotationRecordFields, schematicRecordContext)
+  }
+
+  // Include native pin/power-port T connections, which may not be present in
+  // Circuit JSON's explicit junction arrays. Locked junctions retain the saved
+  // green color instead of being replaced with Altium's blue auto-junctions.
+  for (const point of getSchematicAutoJunctionPoints(
+    schematicRecordContext.lines.join("\r\n"),
+  )) {
+    const key = `${point.x}:${point.y}`
+    if (emittedJunctions.has(key)) continue
+    emittedJunctions.add(key)
+    addSchematicRecord(
+      [
+        "RECORD=29",
+        "OWNERPARTID=-1",
+        `INDEXINSHEET=${schematicRecordContext.nextRecordIndex}`,
+        ...createAltiumSchematicCoordinateFields("LOCATION.X", point.x),
+        ...createAltiumSchematicCoordinateFields("LOCATION.Y", point.y),
+        "COLOR=34816",
+        "SIZE=0",
+        "LOCKED=T",
+      ],
+      schematicRecordContext,
+    )
   }
 
   return `${schematicRecordContext.lines.join("\r\n")}\r\n`

@@ -11,6 +11,8 @@ test("round-trips the open-source SimpleFOC Shield V3 Altium schematic", async (
   // The source repeats (163.071, 1293.819) -> (163.071, 1318.819).
   expect(result.roundTripCounts).toEqual({
     ...result.sourceCounts,
+    // Preserve the saved color at four native T connections.
+    junction: result.sourceCounts.junction + 4,
     wire_segment: result.sourceCounts.wire_segment - 1,
   })
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)

@@ -7,6 +7,7 @@ import {
 } from "altiumts"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { CircuitJsonToAltiumConverter } from "../lib"
+import { getSchematicAutoJunctionPoints } from "../lib/get-schematic-auto-junction-points"
 import { expectValidSchematic } from "./fixtures"
 import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
 import { getSchematicRoundTripMetrics } from "./fixtures/get-schematic-round-trip-metrics"
@@ -22,7 +23,7 @@ function segmentKey(wire: AltiumRecord): string {
 // @tscircuit/core 0.0.1787 and PCB/parts/routing/DRC/simulation disabled.
 // https://github.com/tscircuit/ti/blob/fe07a1a/lib/subcircuits/USBC_PowerDeliveryProgrammablePowerSupply_TPS61288.circuit.tsx
 // The baseline SchDoc was exported by converter a55f715 before wire cleanup.
-test("removes redundant wires from the TPS61288 supply without changing its connections or pin text", async () => {
+test("exports green manual junctions at TPS61288 native connections without changing wiring or pin text", async () => {
   const source = await Bun.file(
     new URL("./assets/ti-tps61288-power-supply.circuit.json", import.meta.url),
   ).json()
@@ -65,7 +66,10 @@ test("removes redundant wires from the TPS61288 supply without changing its conn
   for (const kind of new Set(
     before.records
       .map((record) => record.recordKind)
-      .filter((kind): kind is string => kind !== undefined && kind !== "27"),
+      .filter(
+        (kind): kind is string =>
+          kind !== undefined && kind !== "27" && kind !== "29",
+      ),
   )) {
     const fields = (records: AltiumRecord[]) =>
       records.map((record) =>
@@ -77,22 +81,25 @@ test("removes redundant wires from the TPS61288 supply without changing its conn
       fields(before.getRecordsByKind(kind)),
     )
   }
-  expect(
-    doc
-      .getRecordsByKind("29")
-      .map((junction) => [
-        junction.getNumber("LOCATION.X"),
-        junction.getNumber("LOCATION.Y"),
-      ]),
-  ).toEqual(
-    before
-      .getRecordsByKind("29")
-      .map((junction) => [
-        junction.getNumber("LOCATION.X"),
-        junction.getNumber("LOCATION.Y"),
-      ]),
-  )
-  expect(doc.getRecordsByKind("29")).toHaveLength(41)
+  const junctions = doc.getRecordsByKind("29")
+  const junctionPoints = junctions.map((junction) => [
+    junction.getNumber("LOCATION.X"),
+    junction.getNumber("LOCATION.Y"),
+  ])
+  for (const junction of before.getRecordsByKind("29")) {
+    expect(junctionPoints).toContainEqual([
+      junction.getNumber("LOCATION.X"),
+      junction.getNumber("LOCATION.Y"),
+    ])
+  }
+  // All 87 positions were observed in native Altium Viewer, including 46
+  // auto-junctions absent from Circuit JSON's explicit junction arrays.
+  expect(junctions).toHaveLength(87)
+  for (const junction of junctions) {
+    expect(junction.getBoolean("LOCKED")).toBe(true)
+    expect(junction.getNumber("SIZE")).toBe(0)
+    expect(junction.getNumber("COLOR")).toBe(34816)
+  }
   await expect(
     createSideBySideSvg(
       convertCircuitJsonToSchematicSvg(source),
@@ -103,6 +110,30 @@ test("removes redundant wires from the TPS61288 supply without changing its conn
       },
     ),
   ).toMatchSvgSnapshot(import.meta.path)
+})
+
+test("finds native T connections without connecting interior wire crossings or label text", () => {
+  const ascii = [
+    "|HEADER=Protel for Windows - Schematic Capture Ascii File Version 5.0",
+    "|RECORD=31",
+    "|RECORD=27|LOCATIONCOUNT=2|X1=0|Y1=0|X2=20|Y2=0",
+    "|RECORD=27|LOCATIONCOUNT=2|X1=10|Y1=0|X2=10|Y2=10",
+    "|RECORD=27|LOCATIONCOUNT=2|X1=5|Y1=-5|X2=5|Y2=5",
+    "|RECORD=25|LOCATION.X=15|LOCATION.Y=0|TEXT=LABEL",
+    // Electrical end is (30, 0), not the pin body at (25, 0).
+    "|RECORD=2|LOCATION.X=25|LOCATION.Y=0|PINLENGTH=5|PINCONGLOMERATE=32",
+    "|RECORD=27|LOCATIONCOUNT=2|X1=30|Y1=-5|X2=30|Y2=5",
+    "|RECORD=17|LOCATION.X=40|LOCATION.Y=0|TEXT=VDD",
+    "|RECORD=27|LOCATIONCOUNT=2|X1=40|Y1=-5|X2=40|Y2=5",
+    // A plain degree-two bend does not need a junction.
+    "|RECORD=27|LOCATIONCOUNT=2|X1=50|Y1=0|X2=55|Y2=0",
+    "|RECORD=27|LOCATIONCOUNT=2|X1=55|Y1=0|X2=55|Y2=5",
+  ].join("\r\n")
+  expect(getSchematicAutoJunctionPoints(ascii)).toEqual([
+    { x: 10, y: 0 },
+    { x: 30, y: 0 },
+    { x: 40, y: 0 },
+  ])
 })
 
 test("deduplicates reversed and rounded trace edges separately on each sheet", () => {
@@ -180,4 +211,23 @@ test("round-trip geometry ignores redundant wires but still detects missing or m
   expect(
     geometryDelta([horizontal, { from: branch.from, to: { x: 1, y: 2 } }]),
   ).toBe(1)
+})
+
+test("round-trip geometry permits added native junctions but detects missing or moved source junctions", () => {
+  const edges = [{ from: { x: 0, y: 0 }, to: { x: 2, y: 0 } }]
+  const geometryDelta = (junctions: { x: number; y: number }[]) =>
+    getSchematicRoundTripMetrics({
+      sourceCircuitJson: [
+        { type: "schematic_trace", edges, junctions: [{ x: 1, y: 0 }] },
+      ],
+      roundTripCircuitJson: [{ type: "schematic_trace", edges, junctions }],
+    }).geometryMaxDeltaCircuitUnits
+  expect(
+    geometryDelta([
+      { x: 2, y: 0 },
+      { x: 1, y: 0 },
+    ]),
+  ).toBe(0)
+  expect(geometryDelta([])).toBe(Number.POSITIVE_INFINITY)
+  expect(geometryDelta([{ x: 2, y: 0 }])).toBe(1)
 })

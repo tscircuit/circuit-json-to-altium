@@ -9,8 +9,10 @@ test("round-trips the open-source SimpleFOC Mini Altium schematic", async () => 
   })
 
   // The source has a zero-length wire at (608.12, 330.9767).
+  // One native T junction is made explicit to preserve its color.
   expect(result.roundTripCounts).toEqual({
     ...result.sourceCounts,
+    junction: result.sourceCounts.junction + 1,
     wire_segment: result.sourceCounts.wire_segment - 1,
   })
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)

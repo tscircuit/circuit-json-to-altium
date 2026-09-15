@@ -5,9 +5,16 @@ export function expectOpenSourceSchematicRoundTrip(
   result: OpenSourceSchematicRoundTrip,
   {
     offSheetPortFontSizeTolerancePoints = 0,
-  }: { offSheetPortFontSizeTolerancePoints?: number } = {},
+    additionalNativeJunctions = 0,
+  }: {
+    offSheetPortFontSizeTolerancePoints?: number
+    additionalNativeJunctions?: number
+  } = {},
 ): void {
-  expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  expect(result.roundTripCounts).toEqual({
+    ...result.sourceCounts,
+    junction: result.sourceCounts.junction + additionalNativeJunctions,
+  })
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,
