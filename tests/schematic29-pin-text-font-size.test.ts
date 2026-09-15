@@ -47,11 +47,12 @@ test("exports native Arial 3 pin names and numbers with the correct margins", as
         previous.getNumber("COLOR"),
       )
     }
+    // The historic file mapped input arrows to an extra IEEE clock symbol.
+    expect(record.getNumber("SYMBOL_INNEREDGE")).toBeUndefined()
     for (const field of [
       "NAME",
       "DESIGNATOR",
       "PINCONGLOMERATE",
-      "SYMBOL_INNEREDGE",
       "SYMBOL_OUTEREDGE",
     ]) {
       expect(record.getCaseInsensitive(field)).toBe(
