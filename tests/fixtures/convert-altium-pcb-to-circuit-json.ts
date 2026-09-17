@@ -824,6 +824,31 @@ export function convertAltiumPcbToCircuitJson(
         pcb_hole_id: `pcb_hole_${padIndex}`,
         ...holeFields,
       })
+    } else if (isSlotted && rotation !== holeRotation) {
+      const padShape = pad.getDecoded("SHAPE")?.toUpperCase()
+      elements.push({
+        type: "pcb_plated_hole",
+        pcb_plated_hole_id: `pcb_plated_hole_${padIndex}`,
+        ...commonFields,
+        shape: "rotated_pill_hole_with_rect_pad",
+        hole_shape: "rotated_pill",
+        hole_width: toCircuitLength(Math.max(holeWidthMils, holeSizeMils)),
+        hole_height: toCircuitLength(holeSizeMils),
+        hole_ccw_rotation: holeRotation,
+        pad_shape: "rect",
+        rect_pad_width: toCircuitLength(outerWidthMils),
+        rect_pad_height: toCircuitLength(outerHeightMils),
+        rect_ccw_rotation: rotation,
+        ...(padShape === "ROUND"
+          ? {
+              rect_border_radius: toCircuitLength(
+                Math.min(outerWidthMils, outerHeightMils) / 2,
+              ),
+            }
+          : {}),
+        hole_offset_x: 0,
+        hole_offset_y: 0,
+      })
     } else {
       elements.push({
         type: "pcb_plated_hole",
