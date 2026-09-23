@@ -29,6 +29,7 @@ import { createAltiumSchematicSymbolPrimitiveRecordFields } from "./create-altiu
 import { createAltiumSchematicSymbolRecords } from "./create-altium-schematic-symbol-records"
 import { createAltiumSchematicTextRecordFields } from "./create-altium-schematic-text-record-fields"
 import { createSchematicPinMarkerRecords } from "./create-schematic-pin-marker-records"
+import { createSchematicWireRecords } from "./create-schematic-wire-records"
 import type { AltiumSchematicTemplate } from "./extract-altium-schematic-template"
 import { findSchematicComponentText } from "./find-schematic-component-text"
 import { findSchematicTextPresentation } from "./find-schematic-text-presentation"
@@ -110,6 +111,8 @@ const ALTIUM_PIN_NAME_VISIBLE_FLAG = 0x08
 const ALTIUM_PIN_DESIGNATOR_VISIBLE_FLAG = 0x10
 const ALTIUM_PIN_CUSTOM_FONT_FLAG = 0x10
 const ALTIUM_PIN_CUSTOM_POSITION_FLAG = 0x01
+// Altium junction SIZE is a TSize enum, not a radius in schematic units.
+const ALTIUM_SMALLEST_JUNCTION_SIZE = 0
 // Match Circuit JSON's pin-name inset from the body edge, independently of font size.
 const SCHEMATIC_PIN_NAME_INSET_CIRCUIT_UNITS = 0.1
 // Keep pin numbers near the body instead of Altium's default 9-unit margin.
@@ -1043,31 +1046,11 @@ export function createSchematicDocument({
     )
   }
 
-  for (const schematicTrace of schematicElements.filter(
-    (element) => element.type === "schematic_trace",
-  )) {
-    if (!Array.isArray(schematicTrace.edges)) continue
-    for (const edge of schematicTrace.edges) {
-      if (!isCircuitElement(edge)) continue
-      const circuitStartPoint = asPoint(edge.from)
-      const circuitEndPoint = asPoint(edge.to)
-      if (!circuitStartPoint || !circuitEndPoint) continue
-      const altiumStartPoint = circuitToAltiumSchematicPoint(circuitStartPoint)
-      const altiumEndPoint = circuitToAltiumSchematicPoint(circuitEndPoint)
-      addSchematicRecord(
-        [
-          "RECORD=27",
-          `LINEWIDTH=${ALTIUM_SCHEMATIC_HAIRLINE_WIDTH}`,
-          "LOCATIONCOUNT=2",
-          `X1=${altiumStartPoint.x}`,
-          `Y1=${altiumStartPoint.y}`,
-          `X2=${altiumEndPoint.x}`,
-          `Y2=${altiumEndPoint.y}`,
-          "COLOR=34816",
-        ],
-        schematicRecordContext,
-      )
-    }
+  for (const recordFields of createSchematicWireRecords({
+    circuitToAltiumSchematicPoint,
+    schematicElements,
+  })) {
+    addSchematicRecord(recordFields, schematicRecordContext)
   }
 
   const emittedJunctions = new Set<AltiumSchematicPointKey>()
@@ -1086,9 +1069,12 @@ export function createSchematicDocument({
       addSchematicRecord(
         [
           "RECORD=29",
+          "OWNERPARTID=-1",
+          `INDEXINSHEET=${schematicRecordContext.nextRecordIndex}`,
           `LOCATION.X=${altiumJunctionPoint.x}`,
           `LOCATION.Y=${altiumJunctionPoint.y}`,
           "COLOR=34816",
+          `SIZE=${ALTIUM_SMALLEST_JUNCTION_SIZE}`,
         ],
         schematicRecordContext,
       )

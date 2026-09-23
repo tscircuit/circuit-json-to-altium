@@ -168,3 +168,12 @@ the outside of filled pin markers. They are no longer sheet wires with native
 terminals at the body. For a body-to-terminal distance `L`, native name margin
 is `L` and number margin is `3 - L`, preserving the 2-unit name inset and
 3-unit number offset from the body. Fonts, marker sizes and colors are unchanged.
+
+## Native junctions
+
+[Cobra MLX90640](./cobra-mlx90640-native-junctions.SchDoc) ([comparison](./cobra-mlx90640-native-junctions.svg))
+and [TI TPS61288](./ti-tps61288-native-junctions.SchDoc) ([comparison](./ti-tps61288-native-junctions.svg))
+use document-level junctions with **Smallest** (`SIZE=0`) and wire color
+`COLOR=34816`. `SIZE` is an Altium enum, not a radius. Repeated and zero-length
+trace segments are removed after coordinate conversion. These SVGs are local
+Altiumts previews; they do not verify the online Viewer's automatic junctions.

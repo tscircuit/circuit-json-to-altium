@@ -34,6 +34,17 @@ function roundToAltiumSchematicGrid(coordinate: number): number {
   return Math.round(coordinate * 20) / 20
 }
 
+function getWireSegmentKey(edge: unknown): string | undefined {
+  if (!isCircuitElement(edge)) return undefined
+  const from = asPoint(edge.from)
+  const to = asPoint(edge.to)
+  if (!from || !to) return undefined
+  const pointKey = ({ x, y }: Point) =>
+    `${roundToAltiumSchematicGrid(x)}:${roundToAltiumSchematicGrid(y)}`
+  const ends = [pointKey(from), pointKey(to)]
+  return ends[0] === ends[1] ? undefined : ends.sort().join("/")
+}
+
 export type SchematicPrimitiveCounts = Record<PreservedElementType, number> & {
   do_not_connect: number
   junction: number
@@ -281,13 +292,16 @@ function countSchematicPrimitives(
             !asString(element.schematic_symbol_id))),
     ).length
   let junctionCount = 0
-  let wireSegmentCount = 0
+  const wireSegments = new Set<string>()
   for (const element of circuitJson) {
     if (element.type !== "schematic_trace") continue
     junctionCount += Array.isArray(element.junctions)
       ? element.junctions.length
       : 0
-    wireSegmentCount += Array.isArray(element.edges) ? element.edges.length : 0
+    for (const edge of Array.isArray(element.edges) ? element.edges : []) {
+      const key = getWireSegmentKey(edge)
+      if (key) wireSegments.add(key)
+    }
   }
   return {
     do_not_connect: circuitJson.filter(
@@ -306,7 +320,7 @@ function countSchematicPrimitives(
     source_component: getElementCount("source_component"),
     source_net: getElementCount("source_net"),
     source_port: getElementCount("source_port"),
-    wire_segment: wireSegmentCount,
+    wire_segment: wireSegments.size,
   }
 }
 
@@ -396,6 +410,8 @@ function getStringFields({
 
 function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
   const points: Point[] = []
+  // Compare distinct electrical segments, not duplicate/zero-length records.
+  const wireSegments = new Set<string>()
   const noConnectSourcePortIds = new Set<SourcePortId>(
     circuitJson.flatMap((element) =>
       element.type === "source_port" && element.do_not_connect === true
@@ -490,6 +506,9 @@ function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
     if (element.type !== "schematic_trace") continue
     if (Array.isArray(element.edges)) {
       for (const edge of element.edges) {
+        const key = getWireSegmentKey(edge)
+        if (!key || wireSegments.has(key)) continue
+        wireSegments.add(key)
         if (!isCircuitElement(edge)) continue
         const from = asPoint(edge.from)
         const to = asPoint(edge.to)

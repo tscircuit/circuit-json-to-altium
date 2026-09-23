@@ -59,8 +59,8 @@ test("automotive chip, built-in and custom-symbol pins connect at Circuit JSON p
       expect(pin.position).toEqual(toAltium(asPoint(ports[pinIndex]!.center)!))
       checkedPins++
     }
-    // Source traces retain their endpoints. Net-label leaders follow these
-    // wires; pin stems are owned artwork rather than extra sheet wires.
+    // Distinct source traces retain their endpoints. Net-label leaders follow
+    // these wires; pin stems are owned artwork rather than extra sheet wires.
     const sourceEdges = elements
       .filter((e) => e.type === "schematic_trace")
       .flatMap(
@@ -70,11 +70,17 @@ test("automotive chip, built-in and custom-symbol pins connect at Circuit JSON p
             to: { x: number; y: number }
           }[],
       )
+    const uniqueEdges = new Map<string, ReturnType<typeof toAltium>[]>()
+    for (const edge of sourceEdges) {
+      const points = [toAltium(edge.from), toAltium(edge.to)]
+      const ends = points.map(({ x, y }) => `${x}:${y}`)
+      if (ends[0] === ends[1]) continue
+      const key = ends.sort().join("/")
+      if (!uniqueEdges.has(key)) uniqueEdges.set(key, points)
+    }
     expect(
-      doc.wires.slice(0, sourceEdges.length).map(getSchematicRecordPoints),
-    ).toEqual(
-      sourceEdges.map((edge) => [toAltium(edge.from), toAltium(edge.to)]),
-    )
+      doc.wires.slice(0, uniqueEdges.size).map(getSchematicRecordPoints),
+    ).toEqual([...uniqueEdges.values()])
   }
   expect(checkedPins).toBeGreaterThan(100)
   for (const name of ["U6", "R21", "L7"])
