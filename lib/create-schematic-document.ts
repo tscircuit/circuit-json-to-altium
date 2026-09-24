@@ -4,6 +4,7 @@ import {
   ALTIUM_SCHEMATIC_SHEET_AREA_COLOR,
 } from "./altium-schematic-colors"
 import { ALTIUM_SCHEMATIC_HAIRLINE_WIDTH } from "./altium-schematic-line-width"
+import { appendSchematicConnectionJunctions } from "./append-schematic-connection-junctions"
 import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import {
   createAltiumSchematicFontTable,
@@ -1075,6 +1076,9 @@ export function createSchematicDocument({
           `LOCATION.Y=${altiumJunctionPoint.y}`,
           "COLOR=34816",
           `SIZE=${ALTIUM_SMALLEST_JUNCTION_SIZE}`,
+          // Preserve explicit source junctions and their color when Altium
+          // rebuilds its automatic junctions on document load.
+          "LOCKED=T",
         ],
         schematicRecordContext,
       )
@@ -1140,5 +1144,7 @@ export function createSchematicDocument({
     addSchematicRecord(annotationRecordFields, schematicRecordContext)
   }
 
-  return `${schematicRecordContext.lines.join("\r\n")}\r\n`
+  return appendSchematicConnectionJunctions(
+    `${schematicRecordContext.lines.join("\r\n")}\r\n`,
+  )
 }

@@ -70,3 +70,94 @@ test("preserves branch endpoints and does not split an unconnected crossing", ()
     ),
   )
 })
+
+test("removes the contained C4 wire that creates an extra native junction", () => {
+  expect(
+    exportEdges([
+      { from: { x: 4.8, y: 8.68 }, to: { x: 4.8, y: 9.7 } },
+      { from: { x: 4.8, y: 8.88 }, to: { x: 4.8, y: 8.68 } },
+      { from: { x: 4.8, y: 8.6 }, to: { x: 4.8, y: 8.68 } },
+      { from: { x: 5.6, y: 8.88 }, to: { x: 4.8, y: 8.88 } },
+    ]),
+  ).toEqual([
+    [
+      { x: 96, y: 174 },
+      { x: 96, y: 194 },
+    ],
+    [
+      { x: 96, y: 172 },
+      { x: 96, y: 174 },
+    ],
+    [
+      { x: 112, y: 178 },
+      { x: 96, y: 178 },
+    ],
+  ])
+})
+
+test("merges partial diagonal overlaps but preserves parallel and crossing wires", () => {
+  expect(
+    exportEdges([
+      { from: { x: 0, y: 0 }, to: { x: 2, y: 2 } },
+      { from: { x: 3, y: 3 }, to: { x: 1, y: 1 } },
+      { from: { x: 0, y: 1 }, to: { x: 2, y: 3 } },
+      { from: { x: 1, y: 0 }, to: { x: 1, y: 3 } },
+      { from: { x: 3, y: 3 }, to: { x: 4, y: 4 } },
+    ]),
+  ).toEqual([
+    [
+      { x: 0, y: 0 },
+      { x: 20, y: 20 },
+    ],
+    [
+      { x: 20, y: 20 },
+      { x: 60, y: 60 },
+    ],
+    [
+      { x: 0, y: 20 },
+      { x: 40, y: 60 },
+    ],
+    [
+      { x: 20, y: 0 },
+      { x: 20, y: 60 },
+    ],
+    [
+      { x: 60, y: 60 },
+      { x: 80, y: 80 },
+    ],
+  ])
+})
+
+test("overlap cleanup retains a connected crossing originally defined by a wire end", () => {
+  const records = createSchematicWireRecords({
+    circuitToAltiumSchematicPoint: (point) => point,
+    schematicElements: [
+      {
+        type: "schematic_trace",
+        edges: [
+          { from: { x: 0, y: 0 }, to: { x: 3, y: 0 } },
+          { from: { x: 1, y: 0 }, to: { x: 4, y: 0 } },
+          { from: { x: 3, y: -1 }, to: { x: 3, y: 1 } },
+        ],
+      },
+    ],
+  })
+  const document = parseAltiumSchDoc(
+    "|RECORD=31|CUSTOMX=20|CUSTOMY=20\n" +
+      records.map((fields) => `|${fields.join("|")}`).join("\n"),
+  )
+  expect(document.wires.map(getSchematicRecordPoints)).toEqual([
+    [
+      { x: 0, y: 0 },
+      { x: 3, y: 0 },
+    ],
+    [
+      { x: 3, y: 0 },
+      { x: 4, y: 0 },
+    ],
+    [
+      { x: 3, y: -1 },
+      { x: 3, y: 1 },
+    ],
+  ])
+})

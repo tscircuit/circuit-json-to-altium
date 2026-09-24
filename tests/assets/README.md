@@ -173,7 +173,25 @@ is `L` and number margin is `3 - L`, preserving the 2-unit name inset and
 
 [Cobra MLX90640](./cobra-mlx90640-native-junctions.SchDoc) ([comparison](./cobra-mlx90640-native-junctions.svg))
 and [TI TPS61288](./ti-tps61288-native-junctions.SchDoc) ([comparison](./ti-tps61288-native-junctions.svg))
-use document-level junctions with **Smallest** (`SIZE=0`) and wire color
-`COLOR=34816`. `SIZE` is an Altium enum, not a radius. Repeated and zero-length
-trace segments are removed after coordinate conversion. These SVGs are local
-Altiumts previews; they do not verify the online Viewer's automatic junctions.
+use sheet-level native junctions with `SIZE=0`, `COLOR=34816` (wire green),
+and `LOCKED=T`. Altium rebuilds automatic junctions on load; locking preserves
+these explicit records and their color. They must be unlocked before moving them
+in Designer. The converter includes branch points introduced by power ports and
+net-label leaders, and coalesces overlapping wires without joining bare crossings.
+
+The TI file was checked in the online Altium Viewer: all 62 explicit junctions
+were green, including all 61 automatic-junction positions. Its 271 wires preserve
+the original wire coverage. Schematic scale, sheet dimensions, fonts and symbol
+records are unchanged.
+
+The Cobra file is retained as a regression fixture, not a successful native
+Viewer example: its current native rendering omits components and wires and
+still shows blue automatic dots. The local parser/SVG contains those records;
+that separate discrepancy remains unresolved.
+
+Native `SIZE` is an enum: Smallest/Small/Medium/Large have measured radii
+**2/3/5/10 Altium units**. This export keeps Smallest at the existing scale of
+20 Altium units per Circuit JSON unit, so its radius is **0.1 Circuit JSON units**.
+It remains larger than Circuit JSON's 0.03 radius. The pinned Altiumts preview
+currently renders `SIZE=0` at radius 1.5, so these local SVGs are not exact native
+size references. No global scaling or dependency patch is included here.

@@ -8,7 +8,13 @@ test("round-trips the open-source SimpleFOC Mini Altium schematic", async () => 
     projectName: "SimpleFOC Mini schematic",
   })
 
-  expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  // Native power/label connections add explicit junctions; overlapping wire
+  // records are coalesced. Geometry checks below compare full wire coverage.
+  expect(result.roundTripCounts).toEqual({
+    ...result.sourceCounts,
+    junction: result.sourceCounts.junction + 1,
+    wire_segment: result.sourceCounts.wire_segment - 2,
+  })
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,

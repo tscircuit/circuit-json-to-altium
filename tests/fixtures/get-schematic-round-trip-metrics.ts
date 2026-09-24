@@ -1,5 +1,6 @@
 import { asNumber, asPoint, asString, isCircuitElement } from "../../lib/format"
 import type { CircuitElement, Point, SourcePortId } from "../../lib/types"
+import { schematicWireCoverageMatches } from "./schematic-wire-coverage"
 
 const preservedElementTypes = [
   "source_component",
@@ -410,8 +411,6 @@ function getStringFields({
 
 function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
   const points: Point[] = []
-  // Compare distinct electrical segments, not duplicate/zero-length records.
-  const wireSegments = new Set<string>()
   const noConnectSourcePortIds = new Set<SourcePortId>(
     circuitJson.flatMap((element) =>
       element.type === "source_port" && element.do_not_connect === true
@@ -501,26 +500,6 @@ function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
           if (circuitPoint) points.push(circuitPoint)
         }
       }
-      continue
-    }
-    if (element.type !== "schematic_trace") continue
-    if (Array.isArray(element.edges)) {
-      for (const edge of element.edges) {
-        const key = getWireSegmentKey(edge)
-        if (!key || wireSegments.has(key)) continue
-        wireSegments.add(key)
-        if (!isCircuitElement(edge)) continue
-        const from = asPoint(edge.from)
-        const to = asPoint(edge.to)
-        if (from) points.push(from)
-        if (to) points.push(to)
-      }
-    }
-    if (Array.isArray(element.junctions)) {
-      for (const junction of element.junctions) {
-        const point = asPoint(junction)
-        if (point) points.push(point)
-      }
     }
   }
   return points
@@ -535,9 +514,73 @@ function getGeometryMaxDelta(
   if (sourcePoints.length !== roundTripPoints.length) {
     return Number.POSITIVE_INFINITY
   }
-  const sourceAnchor = sourcePoints[0]
-  const roundTripAnchor = roundTripPoints[0]
-  if (!sourceAnchor || !roundTripAnchor) return 0
+  const traceAnchor = (circuit: CircuitElement[]): Point => {
+    for (const trace of circuit) {
+      if (trace.type !== "schematic_trace") continue
+      const firstEdge = Array.isArray(trace.edges) ? trace.edges[0] : undefined
+      const point = isCircuitElement(firstEdge)
+        ? asPoint(firstEdge.from)
+        : undefined
+      if (point) return point
+    }
+    return { x: 0, y: 0 }
+  }
+  const sourceAnchor = sourcePoints[0] ?? traceAnchor(sourceCircuitJson)
+  const roundTripAnchor =
+    roundTripPoints[0] ?? traceAnchor(roundTripCircuitJson)
+
+  const relativePoint = (point: Point, anchor: Point): Point => ({
+    x: point.x - anchor.x,
+    y: point.y - anchor.y,
+  })
+  const traces = (circuit: CircuitElement[]) =>
+    circuit.filter((element) => element.type === "schematic_trace")
+  const segments = (circuit: CircuitElement[], anchor: Point) =>
+    traces(circuit).flatMap((trace) =>
+      (Array.isArray(trace.edges) ? trace.edges : []).flatMap((edge) => {
+        if (!isCircuitElement(edge)) return []
+        const from = asPoint(edge.from)
+        const to = asPoint(edge.to)
+        return from && to
+          ? [
+              {
+                from: relativePoint(from, anchor),
+                to: relativePoint(to, anchor),
+              },
+            ]
+          : []
+      }),
+    )
+  // Vertices may change when overlapping wires are coalesced. Check the full
+  // wire union in both directions instead of pairing serialized endpoints.
+  if (
+    !schematicWireCoverageMatches(
+      segments(sourceCircuitJson, sourceAnchor),
+      segments(roundTripCircuitJson, roundTripAnchor),
+      0.06,
+    )
+  )
+    return Number.POSITIVE_INFINITY
+  const junctions = (circuit: CircuitElement[], anchor: Point) =>
+    traces(circuit).flatMap((trace) =>
+      (Array.isArray(trace.junctions) ? trace.junctions : []).flatMap(
+        (value) => {
+          const point = asPoint(value)
+          return point ? [relativePoint(point, anchor)] : []
+        },
+      ),
+    )
+  const exportedJunctions = junctions(roundTripCircuitJson, roundTripAnchor)
+  if (
+    junctions(sourceCircuitJson, sourceAnchor).some(
+      (source) =>
+        !exportedJunctions.some(
+          (output) =>
+            Math.hypot(source.x - output.x, source.y - output.y) < 0.06,
+        ),
+    )
+  )
+    return Number.POSITIVE_INFINITY
 
   let maximumDelta = 0
   for (const [pointIndex, sourcePoint] of sourcePoints.entries()) {

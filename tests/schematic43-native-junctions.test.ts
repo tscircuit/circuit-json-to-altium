@@ -58,6 +58,7 @@ test("exports smallest sheet-level junctions on the real Cobra MLX90640 board", 
   )
   for (const junction of junctions) {
     expect(junction.getNumber("SIZE")).toBe(0)
+    expect(junction.getBoolean("LOCKED")).toBe(true)
     expect(junction.getNumber("COLOR")).toBe(34816)
     expect(junction.getNumber("OWNERPARTID")).toBe(-1)
     expect(junction.getNumber("INDEXINSHEET")).toBe(

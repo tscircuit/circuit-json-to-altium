@@ -8,7 +8,13 @@ test("round-trips the open-source SimpleFOC Shield V3 Altium schematic", async (
     projectName: "SimpleFOC Shield V3 schematic",
   })
 
-  expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  // Native power/label connections add explicit junctions; overlapping wire
+  // records are coalesced. Geometry checks below compare full wire coverage.
+  expect(result.roundTripCounts).toEqual({
+    ...result.sourceCounts,
+    junction: result.sourceCounts.junction + 2,
+    wire_segment: result.sourceCounts.wire_segment - 3,
+  })
   expect(result.roundTripComponentNames).toEqual(result.sourceComponentNames)
   expect(result.roundTripSymbolPrimitiveCounts).toEqual(
     result.sourceSymbolPrimitiveCounts,
