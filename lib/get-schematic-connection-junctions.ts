@@ -41,18 +41,22 @@ export function getSchematicConnectionJunctions({
     candidates.set(`${point.x.toFixed(5)}:${point.y.toFixed(5)}`, point)
   }
   return [...candidates.values()].filter((point) => {
-    let arms = terminals.filter((terminal) =>
+    const terminalCount = terminals.filter((terminal) =>
       pointsEqual(terminal, point),
     ).length
-    let touchesWire = false
+    const directions = new Set<string>()
     for (const segment of segments) {
       if (!containsPoint(segment, point)) continue
-      touchesWire = true
-      arms +=
-        pointsEqual(segment.from, point) || pointsEqual(segment.to, point)
-          ? 1
-          : 2
+      for (const end of [segment.from, segment.to]) {
+        if (pointsEqual(end, point)) continue
+        const dx = end.x - point.x
+        const dy = end.y - point.y
+        const length = Math.hypot(dx, dy)
+        directions.add(
+          `${(dx / length).toFixed(8)}:${(dy / length).toFixed(8)}`,
+        )
+      }
     }
-    return touchesWire && arms >= 3
+    return directions.size > 0 && directions.size + terminalCount >= 3
   })
 }
