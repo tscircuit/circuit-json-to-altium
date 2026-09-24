@@ -208,10 +208,10 @@ test("does not reserve sheet space for hierarchy metadata", async () => {
     width: sheetRecord?.getNumber("CUSTOMX"),
   }).toEqual({
     childLocations: [
-      { x: 200, y: 800 },
-      { x: 866, y: 800 },
+      { x: 60, y: 240 },
+      { x: 260, y: 240 },
     ],
-    height: 1000,
-    width: 1600,
+    height: 300,
+    width: 480,
   })
 })

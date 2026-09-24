@@ -54,7 +54,7 @@ for (const [orientation, facing] of ["right", "up", "left", "down"].entries()) {
     ).schematics[0]!
     const pin = doc.pins[0]!
     const bubble = doc.records.find((r) => r.recordKind === "8")!
-    const radius = (0.06 * 200) / 3
+    const radius = 0.06 * 20
     expect(getSchematicCoordinate(bubble, "RADIUS")).toBeCloseTo(radius)
     expect(getSchematicCoordinate(bubble, "SECONDARYRADIUS")).toBeCloseTo(
       radius,
@@ -70,24 +70,24 @@ for (const [orientation, facing] of ["right", "up", "left", "down"].entries()) {
       y: getSchematicCoordinate(bubble, "LOCATION.Y"),
     }
     const body = { x: center.x - dx * radius, y: center.y - dy * radius }
-    expect(pin.position!.x).toBeCloseTo(body.x + (dx * 100) / 3)
-    expect(pin.position!.y).toBeCloseTo(body.y + (dy * 100) / 3)
+    expect(pin.position!.x).toBeCloseTo(body.x + dx * 10)
+    expect(pin.position!.y).toBeCloseTo(body.y + dy * 10)
     const stem = getHairlinePinStem(doc, pin)!
     const wire = [getRecordLocation(stem), getRecordCorner(stem)]
-    expect(wire[0]!.x).toBeCloseTo(body.x + dx * 8)
-    expect(wire[0]!.y).toBeCloseTo(body.y + dy * 8)
+    expect(wire[0]!.x).toBeCloseTo(body.x + dx * 2.4)
+    expect(wire[0]!.y).toBeCloseTo(body.y + dy * 2.4)
     expect(wire[1]).toEqual(pin.position!)
-    expect(wire[1]!.x).toBeCloseTo(body.x + (dx * 100) / 3)
-    expect(wire[1]!.y).toBeCloseTo(body.y + (dy * 100) / 3)
+    expect(wire[1]!.x).toBeCloseTo(body.x + dx * 10)
+    expect(wire[1]!.y).toBeCloseTo(body.y + dy * 10)
     // Moving the electrical terminal must not move either text anchor.
     expect(
-      getSchematicCoordinate(pin, "NAME_CUSTOMPOSITION_MARGIN") - 100 / 3,
-    ).toBeCloseTo(14 / 3)
+      getSchematicCoordinate(pin, "NAME_CUSTOMPOSITION_MARGIN") - 10,
+    ).toBeCloseTo(0)
     expect(
-      getSchematicCoordinate(pin, "DESIGNATOR_CUSTOMPOSITION_MARGIN") + 100 / 3,
-    ).toBeCloseTo(10)
+      getSchematicCoordinate(pin, "DESIGNATOR_CUSTOMPOSITION_MARGIN") + 10,
+    ).toBeCloseTo(3)
     const svg = serializeAltiumSheetToSvg(doc)
-    expect(svg).toContain('rx="4" ry="4" fill="#ffffff"')
+    expect(svg).toContain('rx="1.2" ry="1.2" fill="#ffffff"')
     expect(svg).not.toContain("altium-schematic-pin-inversion-symbol")
   })
 }
@@ -133,13 +133,10 @@ for (const [orientation, facing] of ["right", "up", "left", "down"].entries()) {
         ).schematics[0]!
         const pin = doc.pins[0]!
         const center = doc.components[0]!.position!
-        const body = {
-          x: center.x + (dx * 200) / 3,
-          y: center.y + (dy * 200) / 3,
-        }
+        const body = { x: center.x + dx * 20, y: center.y + dy * 20 }
         const local = (point: { x: number; y: number }) => ({
-          along: ((point.x - body.x) * dx + (point.y - body.y) * dy) * 0.3,
-          across: (-(point.x - body.x) * dy + (point.y - body.y) * dx) * 0.3,
+          along: (point.x - body.x) * dx + (point.y - body.y) * dy,
+          across: -(point.x - body.x) * dy + (point.y - body.y) * dx,
         })
         const polygons = doc.records.filter((r) => r.recordKind === "7")
         expect(polygons).toHaveLength(kind === "bidirectional" ? 2 : 1)
@@ -204,12 +201,11 @@ for (const [orientation, facing] of ["right", "up", "left", "down"].entries()) {
         expect(end!.across).toBeCloseTo(0, 4)
         expect(local(pin.position!).along).toBeCloseTo(10, 4)
         expect(
-          getSchematicCoordinate(pin, "NAME_CUSTOMPOSITION_MARGIN") - 100 / 3,
-        ).toBeCloseTo(14 / 3, 4)
+          getSchematicCoordinate(pin, "NAME_CUSTOMPOSITION_MARGIN") - 10,
+        ).toBeCloseTo(0, 4)
         expect(
-          getSchematicCoordinate(pin, "DESIGNATOR_CUSTOMPOSITION_MARGIN") +
-            100 / 3,
-        ).toBeCloseTo(10, 4)
+          getSchematicCoordinate(pin, "DESIGNATOR_CUSTOMPOSITION_MARGIN") + 10,
+        ).toBeCloseTo(3, 4)
         expect(pin.getNumber("ELECTRICAL")).toBe(4)
         const filledIntervals = expected.map((points) => [
           Math.min(...points.map((p) => p[0]!)) + bubbleEnd,

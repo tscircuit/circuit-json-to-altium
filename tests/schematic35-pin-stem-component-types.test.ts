@@ -74,23 +74,17 @@ test.each([undefined, ...componentFtypes])(
       const component = doc.components[0]!.position!
       // The native connection is the source port center, not the marker edge.
       expect(pin.position).toEqual({
-        x: component.x + dx * 100,
-        y: component.y + dy * 100,
+        x: component.x + dx * 30,
+        y: component.y + dy * 30,
       })
       const stem = getHairlinePinStem(doc, pin)!
       expect(stem).toBeDefined()
       const start = getRecordLocation(stem)
-      expect(start.x).toBeCloseTo(
-        component.x + (dx * (20 + markerOffset) * 10) / 3,
-        4,
-      )
-      expect(start.y).toBeCloseTo(
-        component.y + (dy * (20 + markerOffset) * 10) / 3,
-        4,
-      )
+      expect(start.x).toBeCloseTo(component.x + dx * (20 + markerOffset), 4)
+      expect(start.y).toBeCloseTo(component.y + dy * (20 + markerOffset), 4)
       expect(getRecordCorner(stem)).toEqual(pin.position!)
-      expect(pin.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(38)
-      expect(pin.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(-23)
+      expect(pin.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(10)
+      expect(pin.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(-7)
       expect(stem.getNumber("LINEWIDTH")).toBe(0)
     }
   },

@@ -8,7 +8,7 @@ import {
 } from "./fixtures/altium-schematic-coordinate-utils"
 import { getHairlinePinStem } from "./fixtures/get-hairline-pin-stem"
 
-test("uses hairline stems for every component type with preserved text content and connected terminals", async () => {
+test("uses hairline stems for every component type with unchanged text and connected terminals", async () => {
   const source = await Bun.file(
     new URL(
       "./assets/generated-system-automotive-mirror.circuit.json",
@@ -61,8 +61,7 @@ test("uses hairline stems for every component type with preserved text content a
     expect(pin.getNumber("PINLENGTH")).toBe(0)
     // The native terminal meets the original pin endpoint directly.
     const previousEnd = endpoint(previous)
-    expect(pin.position!.x).toBeCloseTo((previousEnd[0]! * 10) / 3, 4)
-    expect(pin.position!.y).toBeCloseTo((previousEnd[1]! * 10) / 3, 4)
+    expect(pin.position).toEqual({ x: previousEnd[0]!, y: previousEnd[1]! })
     const stem = getHairlinePinStem(after, pin)!
     expect(stem).toBeDefined()
     expect(getRecordCorner(stem)).toEqual(pin.position!)
@@ -99,11 +98,7 @@ test("uses hairline stems for every component type with preserved text content a
   const text = (doc: typeof before) =>
     Array.from(
       serializeAltiumSheetToSvg(doc).matchAll(/<text\b[\s\S]*?<\/text>/gu),
-      (m) =>
-        m[0].replace(
-          / (?:data-record-index|font-size|transform|x|y)="[^"]*"/gu,
-          "",
-        ),
+      (m) => m[0].replace(/ data-record-index="\d+"/gu, ""),
     )
   expect(text(after)).toEqual(text(before))
 })

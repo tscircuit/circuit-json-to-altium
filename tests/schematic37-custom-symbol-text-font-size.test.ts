@@ -38,7 +38,7 @@ test("exports U3 custom-symbol text with native integer fonts", async () => {
     const fontId = text.getNumber("FONTID")
     expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
     expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe(
-      text.getDecoded("TEXT") === "U3" ? "14" : "10",
+      text.getDecoded("TEXT") === "U3" ? "4" : "3",
     )
     expect(text.getNumber("COLOR")).toBe(0)
     expect(text.getNumber("JUSTIFICATION")).toBe(

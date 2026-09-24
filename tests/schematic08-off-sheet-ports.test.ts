@@ -99,7 +99,7 @@ test("writes visible componentless schematic ports as native off-sheet ports", a
     fontIdCount: 3,
     portFontIds: [3],
     portFontName: "Times New Roman",
-    portFontSizePoints: 37,
+    portFontSizePoints: 11,
   })
   expect(
     schematic.ports.map((port) => ({
@@ -113,37 +113,37 @@ test("writes visible componentless schematic ports as native off-sheet ports", a
     {
       ioType: 0,
       name: "UNSPECIFIED",
-      position: { x: 400, y: 500 },
+      position: { x: 120, y: 150 },
       style: 0,
-      width: 293,
+      width: 88,
     },
     {
       ioType: 1,
       name: "INPUT",
-      position: { x: 533.33333, y: 500 },
+      position: { x: 160, y: 150 },
       style: 0,
-      width: 133,
+      width: 40,
     },
     {
       ioType: 2,
       name: "OUTPUT_SIGNAL",
-      position: { x: 666.66667, y: 500 },
+      position: { x: 200, y: 150 },
       style: 0,
-      width: 346,
+      width: 104,
     },
     {
       ioType: 3,
       name: "BIDIRECTIONAL",
-      position: { x: 800, y: 500 },
+      position: { x: 240, y: 150 },
       style: 0,
-      width: 346,
+      width: 104,
     },
     {
       ioType: 2,
       name: "VERTICAL_OUTPUT",
-      position: { x: 933.33333, y: 500 },
+      position: { x: 280, y: 150 },
       style: 4,
-      width: 400,
+      width: 120,
     },
   ])
   expectValidSchematic(schematic)

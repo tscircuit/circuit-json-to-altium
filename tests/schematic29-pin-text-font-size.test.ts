@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { parseAltiumSchDoc } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 
-test("exports native Arial 10 pin names and numbers with the correct margins", async () => {
+test("exports native Arial 3 pin names and numbers with the correct margins", async () => {
   const circuitJson = await Bun.file(
     new URL(
       "./assets/generated-system-automotive-mirror.circuit.json",
@@ -39,21 +39,21 @@ test("exports native Arial 10 pin names and numbers with the correct margins", a
     const dx = [1, 0, -1, 0][orientation]!
     const dy = [0, 1, 0, -1][orientation]!
     const markerOffset =
-      (record.position!.x - (previous.position!.x * 10) / 3) * dx +
-      (record.position!.y - (previous.position!.y * 10) / 3) * dy
+      (record.position!.x - previous.position!.x) * dx +
+      (record.position!.y - previous.position!.y) * dy
     const margin = (key: string) =>
       record.getNumber(key)! + (record.getNumber(`${key}_FRAC`) ?? 0) / 100_000
     expect(margin("NAME_CUSTOMPOSITION_MARGIN") - markerOffset).toBeCloseTo(
-      14 / 3,
+      0,
       4,
     )
     expect(record.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(17)
     expect(
       margin("DESIGNATOR_CUSTOMPOSITION_MARGIN") + markerOffset,
-    ).toBeCloseTo(10, 4)
+    ).toBeCloseTo(3, 4)
     for (const kind of ["NAME", "DESIGNATOR"]) {
       const fontId = record.getNumber(`${kind}_CUSTOMFONTID`)
-      expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("10")
+      expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("3")
       expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
       expect(record.getNumber(`${kind}_CUSTOMCOLOR`)).toBe(
         previous.getNumber("COLOR"),

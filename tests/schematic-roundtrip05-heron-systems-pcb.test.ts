@@ -44,9 +44,7 @@ test("round-trips the open-source HERON systems PCB Altium schematic", async () 
     result.sourceOffSheetPortSignatures,
   )
   expect(result.roundTripOffSheetPortFontSizePoints).toEqual(
-    result.sourceOffSheetPortFontSizePoints.map((size) =>
-      Math.ceil((size * 10) / 3),
-    ),
+    result.sourceOffSheetPortFontSizePoints,
   )
   expect(result.roundTripPowerPortSymbolNames).toEqual(
     result.sourcePowerPortSymbolNames,

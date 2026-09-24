@@ -28,15 +28,8 @@ test("automotive chip, built-in and custom-symbol pins connect at Circuit JSON p
         e.type !== "schematic_sheet" &&
         e.schematic_sheet_id === sheet.schematic_sheet_id,
     )
-    const layoutPoint =
+    const toAltium =
       getSchematicTransform(elements).circuitToAltiumSchematicPoint
-    const toAltium = (point: { x: number; y: number }) => {
-      const { x, y } = layoutPoint(point)
-      return {
-        x: Number(((x * 10) / 3).toFixed(5)),
-        y: Number(((y * 10) / 3).toFixed(5)),
-      }
-    }
     const file = converter
       .getOutput()
       .schematics.find(

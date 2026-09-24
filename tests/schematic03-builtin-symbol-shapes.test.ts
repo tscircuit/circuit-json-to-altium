@@ -67,13 +67,13 @@ test("converts built-in resistor and capacitor symbols to native paths", async (
 
   expect(getGraphicRecordKinds(resistorRecords)).toEqual(["6", "6", "6"])
   expect(getGraphicRecordKinds(capacitorRecords)).toEqual(["6", "6", "6", "6"])
-  expect(resistorFirstPath?.getNumber("X1")).toBe(580)
-  expect(resistorFirstPath?.getNumber("X2")).toBe(586)
-  expect(resistorDesignator?.getNumber("LOCATION.X")).toBe(600)
-  expect(resistorDesignator?.getNumber("LOCATION.Y")).toBe(510)
+  expect(resistorFirstPath?.getNumber("X1")).toBe(174)
+  expect(resistorFirstPath?.getNumber("X2")).toBe(176)
+  expect(resistorDesignator?.getNumber("LOCATION.X")).toBe(180)
+  expect(resistorDesignator?.getNumber("LOCATION.Y")).toBe(153)
   expect(resistorDesignator?.getNumber("JUSTIFICATION")).toBe(1)
-  expect(resistorComment?.getNumber("LOCATION.X")).toBe(600)
-  expect(resistorComment?.getNumber("LOCATION.Y")).toBe(490)
+  expect(resistorComment?.getNumber("LOCATION.X")).toBe(180)
+  expect(resistorComment?.getNumber("LOCATION.Y")).toBe(147)
   expect(resistorComment?.getNumber("JUSTIFICATION")).toBe(7)
   expectValidSchematic(schematic)
 })
@@ -125,7 +125,7 @@ test("preserves sub-grid path details in built-in LED arrows", async () => {
       nextArrowPoint.x - arrowStart.x,
       nextArrowPoint.y - arrowStart.y,
     ),
-  ).toBeCloseTo(2 / 3, 4)
+  ).toBeCloseTo(0.2, 8)
   const fractionalCoordinateFields = arrowShaft.fields.filter(({ key }) =>
     key.endsWith("_FRAC"),
   )

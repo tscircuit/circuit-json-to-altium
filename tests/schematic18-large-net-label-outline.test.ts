@@ -71,12 +71,8 @@ test("fits large pointed-label text inside its outline on every anchor side", as
     ).toBeGreaterThan(10)
     const label = labels[index]!
     const textPosition = {
-      x:
-        label.getNumber("LOCATION.X")! +
-        (label.getNumber("LOCATION.X_FRAC") ?? 0) / 100000,
-      y:
-        label.getNumber("LOCATION.Y")! +
-        (label.getNumber("LOCATION.Y_FRAC") ?? 0) / 100000,
+      x: label.getNumber("LOCATION.X")!,
+      y: label.getNumber("LOCATION.Y")!,
     }
     expect(along(textPosition)).toBeGreaterThan(2)
     expect(across(textPosition)).toBe(0)
@@ -84,7 +80,7 @@ test("fits large pointed-label text inside its outline on every anchor side", as
       schematic
         .getRecordsByKind("31")[0]
         ?.getNumber(`SIZE${label.getNumber("FONTID")}`),
-    ).toBe(34)
+    ).toBe(10)
     expect(schematic.netLabels[index]?.getBoolean("ISHIDDEN")).not.toBe(true)
   }
   expectValidSchematic(schematic)

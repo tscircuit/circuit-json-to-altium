@@ -90,11 +90,7 @@ export function appendAltiumSchematicSheetElements(
         x: side === 1 ? location.x + width : location.x,
         y:
           location.y -
-          Math.max(
-            getSchematicCoordinate({ record: entry, key: "DISTANCEFROMTOP" }),
-            0,
-          ) *
-            10,
+          Math.max(entry.getNumber("DISTANCEFROMTOP") ?? 0, 0) * 10,
       })
       elements.push(
         {

@@ -18,11 +18,6 @@ export function renderAltiumSchematicDetail(
       showBorder: false,
       width: COMPARISON_WIDTH,
     }),
-    {
-      x: (viewBox.x * 10) / 3,
-      y: (viewBox.y * 10) / 3,
-      width: (viewBox.width * 10) / 3,
-      height: (viewBox.height * 10) / 3,
-    },
+    viewBox,
   )
 }

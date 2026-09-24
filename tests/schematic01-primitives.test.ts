@@ -91,11 +91,8 @@ test("preserves symbols, pins, wires, labels, and unique junctions", async () =>
   ).toBe("10k Ω")
   const label = schematic.netLabels[0]
   const wireEnd = schematic.wires.at(-1)
-  expect(label?.position).toEqual({ x: 600, y: 333.33333 })
+  expect(label?.position).toEqual({ x: 180, y: 100 })
   expect(wireEnd?.getNumber("X2")).toBe(label?.position?.x)
-  expect(
-    (wireEnd?.getNumber("Y2") ?? 0) +
-      (wireEnd?.getNumber("Y2_FRAC") ?? 0) / 100000,
-  ).toBe(label!.position!.y)
+  expect(wireEnd?.getNumber("Y2")).toBe(label?.position?.y)
   expectValidSchematic(schematic)
 })

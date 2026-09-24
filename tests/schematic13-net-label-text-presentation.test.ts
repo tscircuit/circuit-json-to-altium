@@ -97,13 +97,13 @@ test("uses matching schematic text to present native net labels", async () => {
   }).toEqual({
     netLabel: {
       color: 0x56_34_12,
-      fontSizePoints: 37,
+      fontSizePoints: 11,
       justification: 8,
       orientation: 1,
     },
     powerPort: {
       color: 0x21_43_65,
-      fontSizePoints: 44,
+      fontSizePoints: 13,
     },
     sheetLabels: ["NOTE", "SIGNAL"],
   })

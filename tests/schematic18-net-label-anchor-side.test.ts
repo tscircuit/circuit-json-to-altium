@@ -105,10 +105,7 @@ test("positions net-label text from its Circuit JSON anchor side", async () => {
     width:
       Math.max(...rightOutline.map((point) => point.x)) -
       Math.min(...rightOutline.map((point) => point.x)),
-  }).toEqual({
-    height: expect.closeTo(40 / 3, 4),
-    width: expect.closeTo(200 / 3, 4),
-  })
+  }).toEqual({ height: 4, width: 20 })
   const topText = serializeAltiumSheetToSvg(schematic).match(
     /<text data-record="25"[^>]*>TOP<\/text>/u,
   )?.[0]

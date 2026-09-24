@@ -31,9 +31,7 @@ test("round-trips the open-source SimpleFOC Shield V3 Altium schematic", async (
     result.sourceOffSheetPortSignatures,
   )
   expect(result.roundTripOffSheetPortFontSizePoints).toEqual(
-    result.sourceOffSheetPortFontSizePoints.map((size) =>
-      Math.ceil((size * 10) / 3),
-    ),
+    result.sourceOffSheetPortFontSizePoints,
   )
   expect(result.roundTripPowerPortSymbolNames).toEqual(
     result.sourcePowerPortSymbolNames,

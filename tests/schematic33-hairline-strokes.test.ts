@@ -3,7 +3,7 @@ import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { expectValidSchematic } from "./fixtures"
 
-test("exports smallest schematic strokes with scaled text fonts", async () => {
+test("exports smallest schematic strokes with unchanged text fonts", async () => {
   const source = await Bun.file(
     new URL(
       "./assets/generated-system-automotive-mirror.circuit.json",
@@ -44,23 +44,10 @@ test("exports smallest schematic strokes with scaled text fonts", async () => {
         .getRecordsByKind(kind)
         .map((record) =>
           record.fields
-            .filter(
-              ({ key }) =>
-                key !== "OWNERINDEX" &&
-                !/^(LOCATION|CORNER)\.|^CUSTOM[XY]$|^SNAPGRIDSIZE$|^SIZE\d+$/u.test(
-                  key,
-                ),
-            )
+            .filter(({ key }) => key !== "OWNERINDEX")
             .map(({ key, value }) => [key, value]),
         )
     expect(fields(doc)).toEqual(fields(previous))
-  }
-  const oldSheet = previous.getRecordsByKind("31")[0]!
-  const newSheet = doc.getRecordsByKind("31")[0]!
-  for (const { key, value } of oldSheet.fields.filter(({ key }) =>
-    /^SIZE\d+$/u.test(key),
-  )) {
-    expect(newSheet.getNumber(key)).toBe(Math.ceil((Number(value) * 10) / 3))
   }
   expect(doc.getRecordsByKind("6")).toHaveLength(28)
   const polygons = doc.getRecordsByKind("7")

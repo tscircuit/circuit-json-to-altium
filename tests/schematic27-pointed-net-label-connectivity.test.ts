@@ -56,14 +56,7 @@ test("exports compact single-text labels connected to the original wire anchors"
     }
     const points = getSchematicRecordPoints(outline)
     expect(points).toHaveLength(5)
-    expect(points[0]!.x).toBeCloseTo(
-      (before.netLabels[index]!.position!.x * 10) / 3,
-      4,
-    )
-    expect(points[0]!.y).toBeCloseTo(
-      (before.netLabels[index]!.position!.y * 10) / 3,
-      4,
-    )
+    expect(points[0]).toEqual(before.netLabels[index]!.position!)
     expect(getSchematicRecordPoints(wire)).toEqual([
       points[0]!,
       label.position!,
@@ -72,9 +65,9 @@ test("exports compact single-text labels connected to the original wire anchors"
       Math.max(...points.map((p) => p.x)) - Math.min(...points.map((p) => p.x))
     const height =
       Math.max(...points.map((p) => p.y)) - Math.min(...points.map((p) => p.y))
-    expect(height).toBeCloseTo(40 / 3)
-    expect(width).toBeLessThan(100)
-    expect(width).toBeGreaterThan(50 / 3)
+    expect(height).toBeCloseTo(4)
+    expect(width).toBeLessThan(30)
+    expect(width).toBeGreaterThan(5)
   }
   expectValidSchematic(doc)
 })
