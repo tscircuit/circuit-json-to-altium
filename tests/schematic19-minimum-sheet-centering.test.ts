@@ -41,12 +41,12 @@ test("centers compact schematic content on the minimum-size sheet", async () => 
     width: sheet?.getNumber("CUSTOMX"),
   }).toEqual({
     areaColor: 0xf8_fc_ff,
-    height: 300,
+    height: 1000,
     labelLocations: [
-      { x: 180, y: 150 },
-      { x: 220, y: 150 },
+      { x: 600, y: 500 },
+      { x: 733, y: 500 },
     ],
-    width: 400,
+    width: 1334,
   })
   expectValidSchematic(schematic)
 })
@@ -85,9 +85,9 @@ test("uses explicit source sheet geometry without repositioning imported coordin
     },
     width: sheet?.getNumber("CUSTOMX"),
   }).toEqual({
-    height: 950,
-    labelLocation: { x: 500, y: 500 },
-    width: 1500,
+    height: 3167,
+    labelLocation: { x: 1666, y: 1666 },
+    width: 5000,
   })
   expectValidSchematic(schematic)
 })
@@ -159,14 +159,14 @@ test("uses the matching source geometry for each schematic sheet", () => {
     }),
   ).toEqual([
     {
-      height: 800,
-      labelLocation: { x: 220, y: 340 },
-      width: 1000,
+      height: 2667,
+      labelLocation: { x: 733, y: 1133 },
+      width: 3334,
     },
     {
-      height: 1400,
-      labelLocation: { x: 460, y: 580 },
-      width: 1800,
+      height: 4667,
+      labelLocation: { x: 1533, y: 1933 },
+      width: 6000,
     },
   ])
   for (const schematic of childSchematics) expectValidSchematic(schematic)

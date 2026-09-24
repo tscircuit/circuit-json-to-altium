@@ -54,7 +54,10 @@ test("exports smallest sheet-level junctions on the real Cobra MLX90640 board", 
   const junctions = document.getRecordsByKind("29")
   expect(junctions).toHaveLength(sourceJunctions.length)
   expect(junctions.map(getRecordLocation)).toEqual(
-    sourceJunctions.map(getRecordLocation),
+    sourceJunctions.map(getRecordLocation).map(({ x, y }) => ({
+      x: Number(((x * 10) / 3).toFixed(5)),
+      y: Number(((y * 10) / 3).toFixed(5)),
+    })),
   )
   for (const junction of junctions) {
     expect(junction.getNumber("SIZE")).toBe(0)
@@ -69,7 +72,10 @@ test("exports smallest sheet-level junctions on the real Cobra MLX90640 board", 
 
   // Every real wire segment and endpoint survives; none of the redundant ones do.
   const sourceSegments = source.wires.flatMap((wire) => {
-    const points = getSchematicRecordPoints(wire)
+    const points = getSchematicRecordPoints(wire).map(({ x, y }) => ({
+      x: Number(((x * 10) / 3).toFixed(5)),
+      y: Number(((y * 10) / 3).toFixed(5)),
+    }))
     return points.slice(1).map((point, index) => [points[index]!, point])
   })
   expect(document.wires.map(getSchematicRecordPoints)).toEqual(sourceSegments)

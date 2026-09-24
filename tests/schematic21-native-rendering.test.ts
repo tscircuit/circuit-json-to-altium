@@ -38,8 +38,8 @@ test("renders an exported Circuit JSON schematic with the installed native rende
   expect(svg).toContain(">U1</text>")
   expect(svg).toContain(">SIGNAL</text>")
   for (const [text, size] of [
-    ["SIGNAL", 3],
-    ["1", 3],
+    ["SIGNAL", 10],
+    ["1", 10],
   ]) {
     const element = svg.match(new RegExp(`<text[^>]*>${text}</text>`))?.[0]
     expect(element).toContain('font-family="Arial"')

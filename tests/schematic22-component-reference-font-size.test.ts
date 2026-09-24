@@ -30,7 +30,7 @@ test("exports the microcontroller reference and MPN at the capacitor text size",
     )
     expect(record, `Expected ${text}`).toBeDefined()
     const fontId = record!.getNumber("FONTID")
-    expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("4")
+    expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("14")
     expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
   }
 })

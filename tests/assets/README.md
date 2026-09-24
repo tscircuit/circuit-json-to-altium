@@ -1,5 +1,9 @@
 # Real-circuit fixtures
 
+Files below retain the sizes from the PR that introduced each fixture. Current
+exports use 66⅔ Altium units per Circuit JSON unit; the updated native-junction
+files at the end of this page demonstrate that scale.
+
 `sparkfun-level-shifter-8-channel-txs0108e.circuit.json` is the complete Circuit
 JSON export of the existing SparkFun TXS0108E 8-channel level-shifter board. The
 real board already includes a four-row voltage-range table above the boxed
@@ -181,8 +185,10 @@ net-label leaders, and coalesces overlapping wires without joining bare crossing
 
 The TI file was checked in the online Altium Viewer: all 62 explicit junctions
 were green, including all 61 automatic-junction positions. Its 271 wires preserve
-the original wire coverage. Schematic scale, sheet dimensions, fonts and symbol
-records are unchanged.
+the original wire coverage. Export coordinates, custom power graphics, sheet
+dimensions and fonts are scaled by 10/3. The sheet is 2287 × 1874 native units;
+component text is 14 pt and pin text is 10 pt. Native font points round up to
+integers, so relative text sizes can change slightly.
 
 The Cobra file is retained as a regression fixture, not a successful native
 Viewer example: its current native rendering omits components and wires and
@@ -190,8 +196,13 @@ still shows blue automatic dots. The local parser/SVG contains those records;
 that separate discrepancy remains unresolved.
 
 Native `SIZE` is an enum: Smallest/Small/Medium/Large have measured radii
-**2/3/5/10 Altium units**. This export keeps Smallest at the existing scale of
-20 Altium units per Circuit JSON unit, so its radius is **0.1 Circuit JSON units**.
-It remains larger than Circuit JSON's 0.03 radius. The pinned Altiumts preview
-currently renders `SIZE=0` at radius 1.5, so these local SVGs are not exact native
-size references. No global scaling or dependency patch is included here.
+**2/3/5/10 Altium units**. Smallest at **66⅔ Altium units per Circuit JSON unit**
+now gives a radius of **0.03 Circuit JSON units**, down from 0.1. Fresh TI output
+was verified in the real Viewer at this scale: 62 green dots, radius 2, and no
+exposed blue dots. A fixed screen-space outline can still affect pixel size
+at different zoom levels.
+
+The pinned Altiumts preview renders `SIZE=0` at radius 1.5 (0.0225 Circuit JSON
+units), so the local SVG remains a slightly smaller approximation of native
+junctions. It also ignores fractional sheet-entry distances; the native file
+uses the verified integer + `_FRAC` encoding. No dependency patch is used.

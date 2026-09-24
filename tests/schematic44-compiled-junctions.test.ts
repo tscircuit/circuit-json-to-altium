@@ -92,6 +92,7 @@ test("matches the 61 automatic junction positions measured on the real TI TPS612
   )
   // Coordinates observed from the native Viewer's rendered dots, 2026-09-24.
   // This includes branches introduced by label leaders and power ports.
+  // Compare the new export in the original measurement units (scale factor 0.3).
   const nativePositions = [
     [115, 220],
     [238, 277],
@@ -156,16 +157,30 @@ test("matches the 61 automatic junction positions measured on the real TI TPS612
     [438, 268],
   ]
   const predicted = getSchematicConnectionJunctions({ segments, terminals })
-  expect(predicted.map(({ x, y }) => `${x}:${y}`).sort()).toEqual(
-    nativePositions.map(([x, y]) => `${x}:${y}`).sort(),
+  expect(
+    predicted
+      .map(({ x, y }) => `${(x * 0.3).toFixed(4)}:${(y * 0.3).toFixed(4)}`)
+      .sort(),
+  ).toEqual(
+    nativePositions.map(([x, y]) => `${x!.toFixed(4)}:${y!.toFixed(4)}`).sort(),
   )
   const junctions = document.getRecordsByKind("29")
   expect(junctions).toHaveLength(62) // 61 compiled positions plus one explicit source junction.
   for (const [x, y] of nativePositions) {
     const junction = junctions.find(
       (record) =>
-        record.getNumber("LOCATION.X") === x &&
-        record.getNumber("LOCATION.Y") === y,
+        Math.abs(
+          (Number(record.getNumber("LOCATION.X")) +
+            Number(record.getNumber("LOCATION.X_FRAC") ?? 0) / 100000) *
+            0.3 -
+            x!,
+        ) < 0.00001 &&
+        Math.abs(
+          (Number(record.getNumber("LOCATION.Y")) +
+            Number(record.getNumber("LOCATION.Y_FRAC") ?? 0) / 100000) *
+            0.3 -
+            y!,
+        ) < 0.00001,
     )
     expect(junction).toBeDefined()
     expect(junction!.getBoolean("LOCKED")).toBe(true)

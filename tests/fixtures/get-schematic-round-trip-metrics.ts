@@ -218,7 +218,9 @@ function getSchematicComponentTextSignatures(
     return {
       anchor: asString(element.anchor),
       color: asString(element.color),
-      fontSizeCircuitUnits: asNumber(element.font_size),
+      fontSizeCircuitUnits: roundToAltiumSchematicGrid(
+        asNumber(element.font_size),
+      ),
       positionRelativeToFirstText: {
         x: roundToAltiumSchematicGrid(
           roundToAltiumSchematicGrid(position.x) -
@@ -364,7 +366,9 @@ function getSchematicAnnotationSignatures(
       signatures.push({
         anchor: asString(element.anchor),
         color: asString(element.color),
-        fontSizeCircuitUnits: asNumber(element.font_size),
+        fontSizeCircuitUnits: roundToAltiumSchematicGrid(
+          asNumber(element.font_size),
+        ),
         rotationDegrees: asNumber(element.rotation),
         text: asString(element.text),
         type: element.type,

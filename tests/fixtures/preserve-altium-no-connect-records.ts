@@ -34,7 +34,7 @@ function getCircuitSchematicPointKey({
   x: number
   y: number
 }): CircuitSchematicPointKey {
-  return `${x}:${y}`
+  return `${x.toFixed(5)}:${y.toFixed(5)}`
 }
 
 function getSourcePortsById(elements: CircuitElement[]): SourcePortsById {

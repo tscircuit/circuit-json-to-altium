@@ -7,15 +7,15 @@ import {
   sourcePort,
 } from "./fixtures"
 
-test("uses an independent integer font for custom pin names while keeping numbers at 3 pt", async () => {
+test("uses an independent integer font for custom pin names while keeping numbers at 10 pt", async () => {
   const samples = [
-    { size: undefined, points: "3" },
-    { size: 0.15, points: "3" },
-    { size: 0.155, points: "4" },
-    { size: 0.4, points: "8" },
-    { size: 0.01, points: "1" },
-    { size: 0, points: "3" },
-    { size: -1, points: "3" },
+    { size: undefined, points: "10" },
+    { size: 0.15, points: "10" },
+    { size: 0.155, points: "14" },
+    { size: 0.4, points: "27" },
+    { size: 0.01, points: "4" },
+    { size: 0, points: "10" },
+    { size: -1, points: "10" },
   ]
   const { schematics } = await extractArchive([
     board(),
@@ -56,7 +56,7 @@ test("uses an independent integer font for custom pin names while keeping number
     expect(sheet.getCaseInsensitive(`SIZE${nameFontId}`)).toBe(
       samples[index]!.points,
     )
-    expect(sheet.getCaseInsensitive(`SIZE${numberFontId}`)).toBe("3")
+    expect(sheet.getCaseInsensitive(`SIZE${numberFontId}`)).toBe("10")
     expect(sheet.getDecoded(`FONTNAME${nameFontId}`)).toBe("Arial")
     expect(pin.getNumber("PINNAME_POSITIONCONGLOMERATE")! & 16).toBe(16)
     expect(pin.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")! & 16).toBe(16)

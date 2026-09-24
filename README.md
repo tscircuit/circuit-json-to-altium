@@ -52,6 +52,14 @@ The returned ZIP archive contains:
 
 The converter validates its generated PCB and schematic documents before returning the archive. Invalid geometry is rejected with a descriptive error instead of producing a corrupt project.
 
+Schematic exports use **66⅔ Altium units per Circuit JSON unit**. Layout, fonts,
+custom power-symbol graphics and sheet dimensions are uniformly enlarged by
+10/3 at export so Altium's fixed Smallest junction radius (2 units) corresponds
+to Circuit JSON's 0.03-unit radius. Font sizes round up to native integer points
+(e.g. previous 3/4 pt fonts become 10/14 pt). PCB dimensions are unaffected.
+`schematicSheets` dimensions and origins remain in Circuit JSON units.
+
+
 ## Supported content
 
 The current converter handles board outlines, components, pads, plated and non-plated holes, routed copper with vias, nets, PCB silkscreen, schematic components, custom component symbol graphics, component pins, intentionally unconnected source ports, off-sheet ports, labels, native power ports, junctions, traces, and free-standing schematic sheet text and graphics. It also preserves multiple schematic sheets and sanitizes Altium field and filename text.

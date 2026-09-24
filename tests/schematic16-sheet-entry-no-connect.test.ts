@@ -50,14 +50,23 @@ test("writes a sheet-entry do-not-connect marker at its native Altium position",
     throw new Error("Expected a sheet entry with a No ERC marker")
   }
 
-  const sheetSymbolWidth = sheetLink.symbol.getNumber("XSIZE") ?? 0
+  const sheetSymbolWidth =
+    (sheetLink.symbol.getNumber("XSIZE") ?? 0) +
+    (sheetLink.symbol.getNumber("XSIZE_FRAC") ?? 0) / 100000
   const entrySide = sheetEntry.getNumber("SIDE") ?? 0
-  const entryDistanceFromTop = sheetEntry.getNumber("DISTANCEFROMTOP") ?? 0
+  const entryDistanceFromTop =
+    (sheetEntry.getNumber("DISTANCEFROMTOP") ?? 0) +
+    (sheetEntry.getNumber("DISTANCEFROMTOP_FRAC") ?? 0) / 100000
   expect(noConnectRecord.position).toEqual({
-    x: sheetSymbolPosition.x + (entrySide === 1 ? sheetSymbolWidth : 0),
-    y:
+    x: expect.closeTo(
+      sheetSymbolPosition.x + (entrySide === 1 ? sheetSymbolWidth : 0),
+      4,
+    ),
+    y: expect.closeTo(
       sheetSymbolPosition.y -
-      entryDistanceFromTop * ALTIUM_SHEET_ENTRY_DISTANCE_UNIT,
+        entryDistanceFromTop * ALTIUM_SHEET_ENTRY_DISTANCE_UNIT,
+      4,
+    ),
   })
   expect(rootSchematic.getRecordsByKind("22")).toHaveLength(1)
 })

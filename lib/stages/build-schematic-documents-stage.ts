@@ -5,6 +5,7 @@ import { createHairlinePowerPortDefinitions } from "../create-hairline-power-por
 import { createSchematicDocument } from "../create-schematic-document"
 import { extractAltiumSchematicTemplate } from "../extract-altium-schematic-template"
 import { asNumber, asString, byType } from "../format"
+import { scaleSchematicExport } from "../scale-schematic-export"
 import type {
   AltiumSchematicFile,
   AltiumSchematicSheetOptions,
@@ -118,7 +119,7 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
             projectContext: this.context.schematicProjectContext,
           })
         : undefined
-      const asciiContent = createSchematicDocument({
+      const layoutContent = createSchematicDocument({
         childSheets: definition.childSheets,
         circuitJson: this.input,
         schematicSheetId: definition.schematicSheetId,
@@ -126,12 +127,15 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         sheetSettings: sheetOptions,
         template,
       })
+      const asciiContent = scaleSchematicExport(layoutContent)
       return {
         asciiContent,
         content: serializeAltiumSchDocToBinary(asciiContent, {
           embeddedImages: template?.embeddedImages,
           objectDefinitionRecords:
-            createHairlinePowerPortDefinitions(asciiContent),
+            createHairlinePowerPortDefinitions(layoutContent).map(
+              scaleSchematicExport,
+            ),
         }),
         filename: definition.filename,
       }

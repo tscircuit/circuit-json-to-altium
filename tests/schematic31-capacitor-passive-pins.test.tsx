@@ -39,10 +39,10 @@ test("C11 decoupling capacitor exports passive pins without input arrows", async
       showBorder: false,
     }),
     {
-      x: 175,
-      y: 120,
-      width: 50,
-      height: 60,
+      x: (175 * 10) / 3,
+      y: (120 * 10) / 3,
+      width: (50 * 10) / 3,
+      height: (60 * 10) / 3,
     },
   )
   await expect(

@@ -3,10 +3,10 @@ import { board, expectValidSchematic, extractArchive } from "./fixtures"
 
 test("preserves custom inline sizes and uses integer fonts for matched net labels", async () => {
   const samples = [
-    { text: "SIGNAL", size: 0.12, points: "3" },
-    { text: "CUSTOM", size: 0.2, points: "4" },
-    { text: "LARGE", size: 0.5, points: "10" },
-    { text: "SMALL", size: 0.01, points: "1" },
+    { text: "SIGNAL", size: 0.12, points: "10" },
+    { text: "CUSTOM", size: 0.2, points: "14" },
+    { text: "LARGE", size: 0.5, points: "34" },
+    { text: "SMALL", size: 0.01, points: "4" },
   ]
   const { schematics } = await extractArchive([
     board(),

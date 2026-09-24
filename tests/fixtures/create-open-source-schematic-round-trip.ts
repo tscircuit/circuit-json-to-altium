@@ -9,6 +9,7 @@ import { CircuitJsonToAltiumConverter } from "../../lib"
 import { convertAltiumSchematicToCircuitJson } from "./convert-altium-schematic-to-circuit-json"
 import { getSchematicRoundTripMetrics } from "./get-schematic-round-trip-metrics"
 import { normalizeHairlinePinStems } from "./normalize-hairline-pin-stems"
+import { rescaleSchematicCircuitJson } from "./rescale-schematic-circuit-json"
 
 export type OpenSourceSchematicRoundTrip = ReturnType<
   typeof getSchematicRoundTripMetrics
@@ -144,8 +145,11 @@ export async function createOpenSourceSchematicRoundTrip({
     throw new Error("Converter did not create a schematic document")
   }
   const roundTripDocument = parseSchematicDocument(generatedSchematic.content)
-  const roundTripCircuitJson = convertAltiumSchematicToCircuitJson(
-    normalizeHairlinePinStems(roundTripDocument),
+  const roundTripCircuitJson = rescaleSchematicCircuitJson(
+    convertAltiumSchematicToCircuitJson(
+      normalizeHairlinePinStems(roundTripDocument),
+    ),
+    0.3,
   )
   const resolveDateTimeReferences = (value: string): string => {
     if (!sourceProjectContext) return value

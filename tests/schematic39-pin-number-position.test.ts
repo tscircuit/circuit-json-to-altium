@@ -17,23 +17,23 @@ test("anchors native pin numbers near the body in all four orientations", async 
   expect(pinGroups).toHaveLength(4)
   for (const [index, pin] of doc.pins.entries()) {
     expect(pin.getNumber("PINDESIGNATOR_POSITIONCONGLOMERATE")).toBe(17)
-    expect(pin.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(-7)
-    expect(pin.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(10)
+    expect(pin.getNumber("DESIGNATOR_CUSTOMPOSITION_MARGIN")).toBe(-23)
+    expect(pin.getNumber("NAME_CUSTOMPOSITION_MARGIN")).toBe(38)
     const group = pinGroups[index]![1]!
     const terminal = group.match(/<line x1="([\d.-]+)" y1="([\d.-]+)"/u)!
     const number = group.match(
       /<text[^>]*dominant-baseline="text-after-edge"[^>]*transform="translate\(([\d.-]+) ([\d.-]+)\) rotate\(([\d.-]+)\)"/u,
     )!
     const orientation = pin.getNumber("PINCONGLOMERATE")! & 3
-    // SVG y increases downwards. Each number starts three units outside the body.
+    // SVG y increases downwards. Each number starts ten units outside the body.
     expect(Number(number[1]) - Number(terminal[1])).toBeCloseTo(
-      [-7, 0, 7, 0][orientation]!,
+      [-70 / 3, 0, 70 / 3, 0][orientation]!,
     )
     expect(Number(number[2]) - Number(terminal[2])).toBeCloseTo(
-      [0, 7, 0, -7][orientation]!,
+      [0, 70 / 3, 0, -70 / 3][orientation]!,
     )
     expect(Number(number[3])).toBe(orientation % 2 === 1 ? -90 : 0)
-    expect(group.match(/font-size="3"/gu)).toHaveLength(2)
+    expect(group.match(/font-size="10"/gu)).toHaveLength(2)
   }
   await expect(svg).toMatchSvgSnapshot(import.meta.path)
 })

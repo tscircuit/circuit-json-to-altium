@@ -32,9 +32,12 @@ export function expectOpenSourceSchematicRoundTrip(
   ] of result.sourceOffSheetPortFontSizePoints.entries()) {
     expect(
       Math.abs(
-        result.roundTripOffSheetPortFontSizePoints[index]! - sourceFontSize,
+        result.roundTripOffSheetPortFontSizePoints[index]! -
+          Math.ceil((sourceFontSize * 10) / 3),
       ),
-    ).toBeLessThanOrEqual(offSheetPortFontSizeTolerancePoints)
+    ).toBeLessThanOrEqual(
+      Math.ceil((offSheetPortFontSizeTolerancePoints * 10) / 3),
+    )
   }
   expect(result.roundTripPowerPortSymbolNames).toEqual(
     result.sourcePowerPortSymbolNames,

@@ -7,10 +7,10 @@ import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
 import { cropSvgViewBox } from "./fixtures/crop-svg-view-box"
 
 const POWER_DETAIL_VIEW_BOX = {
-  x: 135,
-  y: 120,
-  width: 130,
-  height: 65,
+  x: (135 * 10) / 3,
+  y: (120 * 10) / 3,
+  width: (130 * 10) / 3,
+  height: (65 * 10) / 3,
 }
 
 test("snapshots a VCC and GND power-label detail", async () => {
@@ -49,7 +49,7 @@ test("snapshots a VCC and GND power-label detail", async () => {
   expect({
     height: sheetRecord?.getNumber("CUSTOMY"),
     width: sheetRecord?.getNumber("CUSTOMX"),
-  }).toEqual({ height: 300, width: 400 })
+  }).toEqual({ height: 1000, width: 1334 })
   expect(
     altiumSchematic.powerPorts.map((powerPort) => ({
       color: powerPort.getNumber("COLOR"),

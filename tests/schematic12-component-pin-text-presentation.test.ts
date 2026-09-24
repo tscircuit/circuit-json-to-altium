@@ -112,8 +112,15 @@ test("preserves component and pin text presentation", async () => {
   const schematicElements = elements.filter(
     (element) => element.type?.startsWith("schematic_") === true,
   )
-  const pointTransform =
+  const layoutPoint =
     getSchematicTransform(schematicElements).circuitToAltiumSchematicPoint
+  const pointTransform = (point: { x: number; y: number }) => {
+    const { x, y } = layoutPoint(point)
+    return {
+      x: Number(((x * 10) / 3).toFixed(5)),
+      y: Number(((y * 10) / 3).toFixed(5)),
+    }
+  }
   const expectedDesignatorPosition = pointTransform({ x: -0.8, y: 0.8 })
   const expectedValuePosition = pointTransform({ x: 0.8, y: -0.8 })
   const expectedPinNamePosition = pointTransform({ x: -0.9, y: 0 })
@@ -170,7 +177,7 @@ test("preserves component and pin text presentation", async () => {
   }).toEqual({
     designator: {
       color: 0x56_34_12,
-      fontSizePoints: 10,
+      fontSizePoints: 34,
       justification: 8,
       orientation: 1,
       position: expectedDesignatorPosition,
@@ -182,14 +189,14 @@ test("preserves component and pin text presentation", async () => {
     pinTexts: [
       {
         color: 0x0c_0b_0a,
-        fontSizePoints: 7,
+        fontSizePoints: 24,
         justification: 0,
         position: expectedPinNamePosition,
         text: "positive",
       },
       {
         color: 0x0f_0e_0d,
-        fontSizePoints: 8,
+        fontSizePoints: 27,
         justification: 2,
         position: expectedPinNumberPosition,
         text: "2",
@@ -197,7 +204,7 @@ test("preserves component and pin text presentation", async () => {
     ],
     value: {
       color: 0x21_43_65,
-      fontSizePoints: 9,
+      fontSizePoints: 30,
       justification: 4,
       orientation: 0,
       position: expectedValuePosition,

@@ -40,7 +40,7 @@ test("exports the microcontroller inline trace labels at a native integer size",
   ])
   for (const record of inlineLabels) {
     const fontId = record.getNumber("FONTID")
-    expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("3")
+    expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("10")
     expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
   }
   expect(inlineLabels.map((record) => record.getNumber("ORIENTATION"))).toEqual(

@@ -191,7 +191,7 @@ test("writes schematic sheet annotations as native records", async () => {
   }).toEqual({
     fontCount: 5,
     fontNames: ["Arial", "Arial"],
-    fontSizesPoints: [12, 24],
+    fontSizesPoints: [40, 80],
   })
   expect(
     labels.map((label) => ({

@@ -3,10 +3,10 @@ import { board, expectValidSchematic, extractArchive } from "./fixtures"
 
 test("uses native integer fonts for net labels and standalone notes", async () => {
   const samples = [
-    { text: "DEFAULT", size: undefined, points: "4" },
-    { text: "FRACTIONAL", size: 0.22, points: "5" },
-    { text: "CUSTOM", size: 0.5, points: "10" },
-    { text: "SMALL", size: 0.01, points: "1" },
+    { text: "DEFAULT", size: undefined, points: "14" },
+    { text: "FRACTIONAL", size: 0.22, points: "17" },
+    { text: "CUSTOM", size: 0.5, points: "34" },
+    { text: "SMALL", size: 0.01, points: "4" },
   ]
   const { schematics } = await extractArchive([
     board(),
@@ -64,6 +64,6 @@ test("uses native integer fonts for net labels and standalone notes", async () =
     (record) => record.getDecoded("TEXT") === "NOTE",
   )!
   expect(note.recordKind).toBe("4")
-  expect(sheet.getCaseInsensitive(`SIZE${note.getNumber("FONTID")}`)).toBe("5")
+  expect(sheet.getCaseInsensitive(`SIZE${note.getNumber("FONTID")}`)).toBe("17")
   expectValidSchematic(schematic)
 })

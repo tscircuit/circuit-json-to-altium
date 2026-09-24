@@ -24,7 +24,7 @@ test("exports ordinary microcontroller net-label text at a native integer size",
   expect(doc.netLabels).toHaveLength(16)
   for (const record of doc.netLabels) {
     const fontId = record.getNumber("FONTID")
-    expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("4")
+    expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("14")
     expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
   }
 })
