@@ -52,6 +52,39 @@ The returned ZIP archive contains:
 
 The converter validates its generated PCB and schematic documents before returning the archive. Invalid geometry is rejected with a descriptive error instead of producing a corrupt project.
 
+## Schematic junction scale (experimental)
+
+Altium's smallest native junction has a fixed radius of 2 schematic units.
+The default conversion uses 20 Altium units per Circuit JSON unit, so that
+radius is 0.1 Circuit JSON units. To target the 0.03-unit dot used by
+`circuit-to-svg`, opt into a larger schematic coordinate scale:
+
+```ts
+const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+  schematicUnitsPerCircuitUnit: 200 / 3,
+})
+```
+
+This option maps source geometry and fonts at the selected scale before
+rounding. It also scales the sheet, pin text offsets, custom power symbols,
+labels, and sheet symbols. Junction `SIZE=0` stays an enum; it is not a radius.
+The [Altium junction dialog](https://www.altium.com/documentation/cstu/junction)
+lists the four size presets. Sheet-entry offsets use `DISTANCEFROMTOP_FRAC1`,
+as documented by the [KiCad Altium importer](https://github.com/KiCad/kicad-source-mirror/blob/master/eeschema/sch_io/altium/altium_parser_sch.cpp).
+PCB geometry is unaffected. The default remains 20, and custom Altium sheet
+templates currently require that default.
+
+Final wires, including generated net-label leaders, are normalized before
+junction detection. Coincident wire records contribute only their distinct
+connection directions, so a label on a straight wire does not create extra
+dots. Real branches and connected crossings retain their vertices.
+
+The optional scale has binary round-trip and real-board regression coverage,
+but its new output still needs visual verification in Altium before release.
+Fixed native marker sizes and integer font sizes do not scale continuously.
+The pinned local SVG renderer also does not model native junction sizes
+accurately, so its preview is not evidence of the native dot radius.
+
 ## Supported content
 
 The current converter handles board outlines, components, pads, plated and non-plated holes, routed copper with vias, nets, PCB silkscreen, schematic components, custom component symbol graphics, component pins, intentionally unconnected source ports, off-sheet ports, labels, native power ports, junctions, traces, and free-standing schematic sheet text and graphics. It also preserves multiple schematic sheets and sanitizes Altium field and filename text.

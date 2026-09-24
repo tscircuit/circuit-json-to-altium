@@ -11,6 +11,7 @@ export function getHairlinePowerPortDefinitionId(
 /** Native power ports retain their global-net semantics and native text. */
 export function createHairlinePowerPortDefinitions(
   asciiContent: string,
+  scale = 1,
 ): string[] {
   const definitions: string[] = []
   const seen = new Set<string>()
@@ -30,6 +31,10 @@ export function createHairlinePowerPortDefinitions(
       `|RECORD=129|ObjectDefinitionId=${id}|LibReference=HairlinePower${style}|PartCount=2|CurrentPartId=1|DisplayModeCount=1|Location.X=0|Location.Y=0|OwnerPartId=-1`,
     )
     const line = (x1: number, y1: number, x2: number, y2: number) => {
+      x1 *= scale
+      y1 *= scale
+      x2 *= scale
+      y2 *= scale
       definitions.push(
         `|RECORD=13|OwnerIndex=${owner}|OwnerPartId=-1|${[...createAltiumSchematicCoordinateFields("Location.X", x1), ...createAltiumSchematicCoordinateFields("Location.Y", y1), ...createAltiumSchematicCoordinateFields("Corner.X", x2), ...createAltiumSchematicCoordinateFields("Corner.Y", y2)].join("|")}|LineWidth=0|Color=${color}`,
       )

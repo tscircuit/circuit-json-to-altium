@@ -19,6 +19,8 @@ export type CircuitJsonToAltiumConverterOptions = {
   projectName?: string
   schematicSheets?: AltiumSchematicSheetOptions[]
   schematicProjectContext?: AltiumSchematicProjectContext
+  /** Default 20. Use 200 / 3 to make native radius-2 junctions equal 0.03 circuit units. */
+  schematicUnitsPerCircuitUnit?: number
 }
 
 function normalizeCircuitJson(
@@ -45,12 +47,31 @@ export class CircuitJsonToAltiumConverter {
   ) {
     const projectName = options.projectName ?? "board"
     const normalizedCircuitJson = normalizeCircuitJson(circuitJson)
+    const schematicUnitsPerCircuitUnit =
+      options.schematicUnitsPerCircuitUnit ?? 20
+    if (
+      !Number.isFinite(schematicUnitsPerCircuitUnit) ||
+      schematicUnitsPerCircuitUnit <= 0
+    ) {
+      throw new RangeError(
+        "schematicUnitsPerCircuitUnit must be a positive finite number",
+      )
+    }
+    if (
+      schematicUnitsPerCircuitUnit !== 20 &&
+      options.schematicSheets?.some((sheet) => sheet.templateContent)
+    ) {
+      throw new Error(
+        "Custom schematic templates currently require schematicUnitsPerCircuitUnit=20",
+      )
+    }
     this.context = {
       circuitJson: normalizedCircuitJson,
       projectName,
       schematicProjectContext: options.schematicProjectContext,
       safeProjectName: sanitizeFilename(projectName),
       schematicSheets: options.schematicSheets ?? [],
+      schematicUnitsPerCircuitUnit,
       validated: false,
     }
     this.pipeline = [
