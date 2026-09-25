@@ -2,6 +2,9 @@ import type { Point } from "./types"
 
 export type SchematicWireSegment = { from: Point; to: Point }
 
+type SchematicWireLineKey = string
+type SchematicWirePointKey = string
+
 type Interval = {
   low: Point
   high: Point
@@ -66,7 +69,7 @@ export function normalizeSchematicWireSegments<T extends SchematicWireSegment>(
     from: toTicks(from),
     to: toTicks(to),
   }))
-  const groups = new Map<string, Interval[]>()
+  const groups = new Map<SchematicWireLineKey, Interval[]>()
   for (const [inputIndex, { from, to }] of segments.entries()) {
     let dx = to.x - from.x
     let dy = to.y - from.y
@@ -78,7 +81,7 @@ export function normalizeSchematicWireSegments<T extends SchematicWireSegment>(
       dx = -dx
       dy = -dy
     }
-    const key = `${dx}:${dy}:${BigInt(dx) * BigInt(from.y) - BigInt(dy) * BigInt(from.x)}`
+    const key: SchematicWireLineKey = `${dx}:${dy}:${BigInt(dx) * BigInt(from.y) - BigInt(dy) * BigInt(from.x)}`
     const start = dx === 0 ? from.y : from.x
     const end = dx === 0 ? to.y : to.x
     const reversed = start > end
@@ -124,13 +127,13 @@ export function normalizeSchematicWireSegments<T extends SchematicWireSegment>(
       to: reversed ? low : high,
       inputIndex,
     }))
-  const finalEnds = new Set(
+  const finalEnds = new Set<SchematicWirePointKey>(
     merged.flatMap(({ from, to }) => [
       `${from.x}:${from.y}`,
       `${to.x}:${to.y}`,
     ]),
   )
-  const removedEnds = new Map(
+  const removedEnds = new Map<SchematicWirePointKey, Point>(
     segments
       .flatMap(({ from, to }) => [from, to])
       .filter((point) => !finalEnds.has(`${point.x}:${point.y}`))

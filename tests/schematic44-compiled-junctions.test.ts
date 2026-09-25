@@ -5,26 +5,33 @@ import { appendSchematicConnectionJunctions } from "../lib/append-schematic-conn
 import { getSchematicConnectionJunctions } from "../lib/get-schematic-connection-junctions"
 import type { SchematicWireSegment } from "../lib/normalize-schematic-wire-segments"
 
-const wire = (
-  x1: number,
-  y1: number,
-  x2: number,
-  y2: number,
-): SchematicWireSegment => ({
-  from: { x: x1, y: y1 },
-  to: { x: x2, y: y2 },
-})
+function wire({
+  x1,
+  y1,
+  x2,
+  y2,
+}: {
+  x1: number
+  y1: number
+  x2: number
+  y2: number
+}): SchematicWireSegment {
+  return {
+    from: { x: x1, y: y1 },
+    to: { x: x2, y: y2 },
+  }
+}
 
 test("finds electrical branches without connecting bare crossings or bends", () => {
   const segments = [
-    wire(0, 0, 20, 0),
-    wire(10, 0, 10, 10),
-    wire(30, 0, 50, 0),
-    wire(40, -10, 40, 10),
-    wire(60, 0, 70, 0),
-    wire(70, 0, 70, 10),
-    wire(80, 0, 90, 0),
-    wire(90, 0, 90, 10),
+    wire({ x1: 0, y1: 0, x2: 20, y2: 0 }),
+    wire({ x1: 10, y1: 0, x2: 10, y2: 10 }),
+    wire({ x1: 30, y1: 0, x2: 50, y2: 0 }),
+    wire({ x1: 40, y1: -10, x2: 40, y2: 10 }),
+    wire({ x1: 60, y1: 0, x2: 70, y2: 0 }),
+    wire({ x1: 70, y1: 0, x2: 70, y2: 10 }),
+    wire({ x1: 80, y1: 0, x2: 90, y2: 0 }),
+    wire({ x1: 90, y1: 0, x2: 90, y2: 10 }),
   ]
   expect(
     getSchematicConnectionJunctions({ segments, terminals: [{ x: 90, y: 0 }] }),

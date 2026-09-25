@@ -9,6 +9,10 @@ import { normalizeSchematicDocumentWires } from "./normalize-schematic-document-
 import type { SchematicWireSegment } from "./normalize-schematic-wire-segments"
 import type { Point } from "./types"
 
+function pointKey(point: Point): string {
+  return `${point.x.toFixed(5)}:${point.y.toFixed(5)}`
+}
+
 /** Include junctions introduced by the exported power ports and label leaders.
  * Locked native records retain their wire color when Altium recompiles the sheet.
  */
@@ -42,8 +46,6 @@ export function appendSchematicConnectionJunctions(
         (orientation === 1 ? length : orientation === 3 ? -length : 0),
     })
   }
-  const pointKey = (point: Point) =>
-    `${point.x.toFixed(5)}:${point.y.toFixed(5)}`
   const existing = new Set(
     document.records
       .filter(
