@@ -29,6 +29,7 @@ export type AltiumSchematicSheetSymbolPlan = {
 }
 
 type AltiumSchematicSheetEntryPlan = {
+  circuitPosition?: Point
   distanceFromTop: number
   doNotConnect: boolean
   ioType: number
@@ -37,11 +38,13 @@ type AltiumSchematicSheetEntryPlan = {
 }
 
 type CreateAltiumSchematicSheetSymbolPlansParams = {
+  scale?: number
   childSheets: AltiumSchematicChildSheet[]
   circuitJson: CircuitElement[]
 }
 
 type CreateAltiumSchematicSheetSymbolRecordFieldsParams = {
+  scale?: number
   altiumSymbolRecordIndex: number
   location: Point
   plan: AltiumSchematicSheetSymbolPlan
@@ -55,6 +58,7 @@ const ALTIUM_SCHEMATIC_COMPONENT_OUTLINE_COLOR = 132
 const ALTIUM_SCHEMATIC_COMPONENT_FILL_COLOR = 12_779_519
 
 export function createAltiumSchematicSheetSymbolPlans({
+  scale = 1,
   childSheets,
   circuitJson,
 }: CreateAltiumSchematicSheetSymbolPlansParams): AltiumSchematicSheetSymbolPlan[] {
@@ -94,12 +98,14 @@ export function createAltiumSchematicSheetSymbolPlans({
       sideEntryCounts[side]++
       return [
         {
+          circuitPosition: asPoint(schematicPort.center),
           distanceFromTop: placementComponent
             ? getAltiumSchematicSheetEntryDistanceFromTop({
                 placementComponent,
                 schematicPort,
+                scale,
               })
-            : sideEntryCounts[side],
+            : sideEntryCounts[side] * scale,
           doNotConnect: sourcePort?.do_not_connect === true,
           ioType: hasInputArrow
             ? hasOutputArrow
@@ -122,17 +128,21 @@ export function createAltiumSchematicSheetSymbolPlans({
     return {
       childSheet,
       entries,
-      height: Math.max(
-        ALTIUM_SHEET_SYMBOL_MINIMUM_HEIGHT,
-        Math.max(sideEntryCounts[0], sideEntryCounts[1]) *
-          ALTIUM_SHEET_ENTRY_SPACING +
-          20,
-      ),
+      height:
+        scale *
+        Math.max(
+          ALTIUM_SHEET_SYMBOL_MINIMUM_HEIGHT,
+          Math.max(sideEntryCounts[0], sideEntryCounts[1]) *
+            ALTIUM_SHEET_ENTRY_SPACING +
+            20,
+        ),
       placementComponent,
-      width: Math.max(
-        ALTIUM_SHEET_SYMBOL_MINIMUM_WIDTH,
-        longestLabelLength * 6 + 20,
-      ),
+      width:
+        scale *
+        Math.max(
+          ALTIUM_SHEET_SYMBOL_MINIMUM_WIDTH,
+          longestLabelLength * 6 + 20,
+        ),
     }
   })
 }
@@ -161,6 +171,7 @@ export function createAltiumSchematicSheetEntryNoConnectRecordFields({
 }
 
 export function createAltiumSchematicSheetSymbolOwnedRecordFields({
+  scale = 1,
   altiumSymbolRecordIndex,
   location,
   plan,
@@ -172,7 +183,7 @@ export function createAltiumSchematicSheetSymbolOwnedRecordFields({
       `OWNERINDEX=${altiumSymbolRecordIndex}`,
       "OWNERPARTID=-1",
       `LOCATION.X=${location.x}`,
-      `LOCATION.Y=${location.y + 10}`,
+      `LOCATION.Y=${location.y + 10 * scale}`,
       "COLOR=8388608",
       "FONTID=1",
       `TEXT=${sanitizeField(childSheet.name)}`,
@@ -230,9 +241,11 @@ export function createAltiumSchematicSheetSymbolRecordFields({
 function getAltiumSchematicSheetEntryDistanceFromTop({
   placementComponent,
   schematicPort,
+  scale,
 }: {
   placementComponent: CircuitElement
   schematicPort: CircuitElement
+  scale: number
 }): number {
   const componentCenter = asPoint(placementComponent.center)
   const portCenter = asPoint(schematicPort.center)
@@ -241,7 +254,8 @@ function getAltiumSchematicSheetEntryDistanceFromTop({
     : undefined
   if (!componentCenter || !portCenter || !componentSize) return 0
   const componentTop = componentCenter.y + asNumber(componentSize.height) / 2
-  return Math.max(Math.round((componentTop - portCenter.y) * 2), 0)
+  const distance = (componentTop - portCenter.y) * 2
+  return Math.max(scale === 1 ? Math.round(distance) : distance * scale, 0)
 }
 
 function getAltiumSchematicSheetEntrySide(

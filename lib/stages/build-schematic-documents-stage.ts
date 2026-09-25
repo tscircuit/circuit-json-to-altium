@@ -119,6 +119,7 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
           })
         : undefined
       const asciiContent = createSchematicDocument({
+        unitsPerCircuitUnit: this.context.schematicUnitsPerCircuitUnit,
         childSheets: definition.childSheets,
         circuitJson: this.input,
         schematicSheetId: definition.schematicSheetId,
@@ -130,8 +131,10 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
         asciiContent,
         content: serializeAltiumSchDocToBinary(asciiContent, {
           embeddedImages: template?.embeddedImages,
-          objectDefinitionRecords:
-            createHairlinePowerPortDefinitions(asciiContent),
+          objectDefinitionRecords: createHairlinePowerPortDefinitions(
+            asciiContent,
+            this.context.schematicUnitsPerCircuitUnit / 20,
+          ),
         }),
         filename: definition.filename,
       }

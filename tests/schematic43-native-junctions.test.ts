@@ -43,6 +43,7 @@ test("exports smallest sheet-level junctions on the real Cobra MLX90640 board", 
     junctions: [],
   })
   const converter = new CircuitJsonToAltiumConverter(circuit, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "cobra-native-junctions",
     schematicSheets: [
       { width: 75, height: 47.5, circuitOrigin: { x: 0, y: 0 } },

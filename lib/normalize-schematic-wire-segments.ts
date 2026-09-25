@@ -25,19 +25,50 @@ function containsInterior(
 ): boolean {
   const dx = to.x - from.x
   const dy = to.y - from.y
-  const along = (point.x - from.x) * dx + (point.y - from.y) * dy
+  const along =
+    BigInt(point.x - from.x) * BigInt(dx) +
+    BigInt(point.y - from.y) * BigInt(dy)
   return (
-    (point.x - from.x) * dy === (point.y - from.y) * dx &&
-    along > 0 &&
-    along < dx * dx + dy * dy
+    BigInt(point.x - from.x) * BigInt(dy) ===
+      BigInt(point.y - from.y) * BigInt(dx) &&
+    along > 0n &&
+    along < BigInt(dx) ** 2n + BigInt(dy) ** 2n
   )
 }
 
-// Coordinates have already been rounded to the native schematic grid. Merge
-// overlapping collinear wires, preserving the union and unconnected crossings.
-export function normalizeSchematicWireSegments(
-  segments: SchematicWireSegment[],
-): SchematicWireSegment[] {
+function parallel(a: SchematicWireSegment, b: SchematicWireSegment): boolean {
+  return (
+    BigInt(a.to.x - a.from.x) * BigInt(b.to.y - b.from.y) ===
+    BigInt(a.to.y - a.from.y) * BigInt(b.to.x - b.from.x)
+  )
+}
+
+const COORDINATE_TICKS = 100_000
+
+// Label leaders can contain native fractional coordinates. Work in exact ticks
+// and retain the first contributing segment's metadata when coalescing wires.
+export function normalizeSchematicWireSegments<T extends SchematicWireSegment>(
+  source: T[],
+  connectionSegments: SchematicWireSegment[] = source,
+): T[] {
+  const toTicks = ({ x, y }: Point): Point => {
+    const point = {
+      x: Math.round(x * COORDINATE_TICKS),
+      y: Math.round(y * COORDINATE_TICKS),
+    }
+    if (!Number.isSafeInteger(point.x) || !Number.isSafeInteger(point.y)) {
+      throw new RangeError("Invalid schematic wire coordinate")
+    }
+    return point
+  }
+  const segments = source.map(({ from, to }) => ({
+    from: toTicks(from),
+    to: toTicks(to),
+  }))
+  const connections = connectionSegments.map(({ from, to }) => ({
+    from: toTicks(from),
+    to: toTicks(to),
+  }))
   const groups = new Map<SchematicWireLineKey, Interval[]>()
   for (const [inputIndex, { from, to }] of segments.entries()) {
     let dx = to.x - from.x
@@ -50,7 +81,7 @@ export function normalizeSchematicWireSegments(
       dx = -dx
       dy = -dy
     }
-    const key: SchematicWireLineKey = `${dx}:${dy}:${dx * from.y - dy * from.x}`
+    const key: SchematicWireLineKey = `${dx}:${dy}:${BigInt(dx) * BigInt(from.y) - BigInt(dy) * BigInt(from.x)}`
     const start = dx === 0 ? from.y : from.x
     const end = dx === 0 ? to.y : to.x
     const reversed = start > end
@@ -91,9 +122,10 @@ export function normalizeSchematicWireSegments(
   }
   const merged = output
     .sort((a, b) => a.inputIndex - b.inputIndex)
-    .map(({ low, high, reversed }) => ({
+    .map(({ low, high, reversed, inputIndex }) => ({
       from: reversed ? high : low,
       to: reversed ? low : high,
+      inputIndex,
     }))
   const finalEnds = new Set<SchematicWirePointKey>(
     merged.flatMap(({ from, to }) => [
@@ -117,20 +149,25 @@ export function normalizeSchematicWireSegments(
         containsInterior(segment, point) &&
         segments.some(
           (original) =>
-            dx * (original.to.y - original.from.y) ===
-              dy * (original.to.x - original.from.x) &&
+            parallel(segment, original) &&
             ((original.from.x === point.x && original.from.y === point.y) ||
               (original.to.x === point.x && original.to.y === point.y)),
         ) &&
-        merged.some(
+        connections.some(
           (other) =>
-            dx * (other.to.y - other.from.y) !==
-              dy * (other.to.x - other.from.x) &&
-            containsInterior(other, point),
+            !parallel(segment, other) && containsInterior(other, point),
         ),
     )
     splits.sort((a, b) => (a.x - b.x) * dx + (a.y - b.y) * dy)
     const points = [segment.from, ...splits, segment.to]
-    return points.slice(1).map((to, index) => ({ from: points[index]!, to }))
+    const fromTicks = ({ x, y }: Point): Point => ({
+      x: x / COORDINATE_TICKS,
+      y: y / COORDINATE_TICKS,
+    })
+    return points.slice(1).map((to, index) => ({
+      ...source[segment.inputIndex]!,
+      from: fromTicks(points[index]!),
+      to: fromTicks(to),
+    }))
   })
 }

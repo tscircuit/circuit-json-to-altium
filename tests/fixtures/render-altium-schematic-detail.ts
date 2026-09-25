@@ -1,23 +1,24 @@
-import { serializeAltiumSheetToSvg } from "altiumts"
-import { cropSvgViewBox } from "./crop-svg-view-box"
+import type { AltiumSchDoc } from "altiumts"
+import { DEFAULT_SCHEMATIC_UNITS_PER_CIRCUIT_UNIT } from "../../lib/schematic-scale"
+import { renderAltiumSchematicCrop } from "./render-altium-schematic-crop"
 
-type SchematicSource = Parameters<typeof serializeAltiumSheetToSvg>[0]
-type DetailViewBox = Parameters<typeof cropSvgViewBox>[1]
+type DetailViewBox = Parameters<typeof renderAltiumSchematicCrop>[1]
 
 const COMPARISON_WIDTH = 1100
 const COMPARISON_HEIGHT = 600
 
 export function renderAltiumSchematicDetail(
-  source: SchematicSource,
+  source: AltiumSchDoc,
   viewBox: DetailViewBox,
 ): string {
-  return cropSvgViewBox(
-    serializeAltiumSheetToSvg(source, {
-      height: COMPARISON_HEIGHT,
-      margin: 0,
-      showBorder: false,
-      width: COMPARISON_WIDTH,
-    }),
-    viewBox,
+  return renderAltiumSchematicCrop(
+    source,
+    Object.fromEntries(
+      Object.entries(viewBox).map(([key, value]) => [
+        key,
+        (value * DEFAULT_SCHEMATIC_UNITS_PER_CIRCUIT_UNIT) / 20,
+      ]),
+    ) as DetailViewBox,
+    { width: COMPARISON_WIDTH, height: COMPARISON_HEIGHT },
   )
 }

@@ -5,6 +5,7 @@ import {
 } from "altiumts"
 import { createAltiumSchematicCoordinateFields } from "./create-altium-schematic-coordinate-fields"
 import { getSchematicConnectionJunctions } from "./get-schematic-connection-junctions"
+import { normalizeSchematicDocumentWires } from "./normalize-schematic-document-wires"
 import type { SchematicWireSegment } from "./normalize-schematic-wire-segments"
 import type { Point } from "./types"
 
@@ -18,7 +19,8 @@ function pointKey(point: Point): string {
 export function appendSchematicConnectionJunctions(
   asciiContent: string,
 ): string {
-  const document = parseAltiumSchDoc(asciiContent)
+  const normalizedContent = normalizeSchematicDocumentWires(asciiContent)
+  const document = parseAltiumSchDoc(normalizedContent)
   const segments: SchematicWireSegment[] = document.wires.flatMap((wire) => {
     const points = getSchematicRecordPoints(wire)
     return points.flatMap((from, index) => {
@@ -69,6 +71,7 @@ export function appendSchematicConnectionJunctions(
     "LOCKED=T",
   ])
   return (
-    asciiContent + records.map((record) => `|${record.join("|")}\r\n`).join("")
+    normalizedContent +
+    records.map((record) => `|${record.join("|")}\r\n`).join("")
   )
 }

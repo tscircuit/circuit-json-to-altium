@@ -10,6 +10,7 @@ test("exports the microcontroller reference and MPN at the capacitor text size",
     ),
   ).json()
   const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "automotive-mirror-system",
   })
   converter.runUntilFinished()

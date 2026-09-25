@@ -79,6 +79,7 @@ test("matches the 61 automatic junction positions measured on the real TI TPS612
     new URL("./assets/ti-tps61288-power-supply.circuit.json", import.meta.url),
   ).json()
   const converter = new CircuitJsonToAltiumConverter(circuit, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "ti-tps61288",
   })
   converter.runUntilFinished()

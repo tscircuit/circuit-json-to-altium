@@ -62,6 +62,7 @@ export type CircuitJsonToAltiumConverterContext = {
   schematicProjectContext?: AltiumSchematicProjectContext
   safeProjectName: string
   schematicSheets: AltiumSchematicSheetOptions[]
+  schematicUnitsPerCircuitUnit: number
   schematics?: AltiumSchematicFile[]
   validated: boolean
 }

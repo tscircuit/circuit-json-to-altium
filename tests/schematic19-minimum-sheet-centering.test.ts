@@ -63,6 +63,7 @@ test("uses explicit source sheet geometry without repositioning imported coordin
     },
   ]
   const converter = new CircuitJsonToAltiumConverter(elements, {
+    schematicUnitsPerCircuitUnit: 20,
     schematicSheets: [
       {
         circuitOrigin: { x: 0, y: 0 },
@@ -123,6 +124,7 @@ test("uses the matching source geometry for each schematic sheet", () => {
     },
   ]
   const converter = new CircuitJsonToAltiumConverter(elements, {
+    schematicUnitsPerCircuitUnit: 20,
     schematicSheets: [
       {
         schematicSheetId: "sheet-a",

@@ -131,11 +131,12 @@ function getNetLabelDisplayGeometry({
   anchorSide,
   fontSize,
   textFontSize,
+  scale,
   labelText,
 }: Pick<
   SchematicNetLabelRecordFieldsInput,
   "altiumLabelCenter" | "altiumLabelPosition" | "anchorSide" | "labelText"
-> & { fontSize: number; textFontSize: number }):
+> & { fontSize: number; textFontSize: number; scale: number }):
   | NetLabelDisplayGeometry
   | undefined {
   if (!isNetLabelAnchorSide(anchorSide)) return undefined
@@ -157,7 +158,7 @@ function getNetLabelDisplayGeometry({
   const width = Math.max(
     projectedHalfWidth * 2,
     textInset + textWidth + endPadding,
-    ALTIUM_SCHEMATIC_NET_LABEL_MINIMUM_WIDTH,
+    ALTIUM_SCHEMATIC_NET_LABEL_MINIMUM_WIDTH * scale,
   )
   const perpendicular = { x: -direction.y, y: direction.x }
   const point = (along: number, across = 0): Point => ({
@@ -280,6 +281,7 @@ export function createAltiumSchematicNetLabelRecordFields({
     altiumLabelCenter,
     altiumLabelPosition,
     anchorSide,
+    scale: (fontTable.unitsPerCircuitUnit ?? 20) / 20,
     // Keep the source height and inset; fit the width to the native font.
     fontSize: fontTable.fontSizePointsById.get(sourceFontId) ?? 4,
     textFontSize: fontTable.fontSizePointsById.get(fontId) ?? 4,

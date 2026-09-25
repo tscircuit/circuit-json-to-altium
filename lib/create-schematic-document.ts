@@ -60,6 +60,7 @@ import type {
 } from "./types"
 
 type CreateSchematicDocumentParams = {
+  unitsPerCircuitUnit?: number
   childSheets?: AltiumSchematicChildSheet[]
   circuitJson: CircuitElement[]
   includeAllSchematicElements: boolean
@@ -77,6 +78,7 @@ type SchematicSheetMembershipParams = {
 type SchematicRecordContext = {
   lines: string[]
   nextRecordIndex: number
+  encodeFractionalCoordinates: boolean
 }
 
 type AltiumSchematicPointKey = string
@@ -298,6 +300,23 @@ function addSchematicRecord(
   ctx: SchematicRecordContext,
 ): number {
   const altiumRecordIndex = ctx.nextRecordIndex
+  if (ctx.encodeFractionalCoordinates) {
+    recordFields = recordFields.flatMap((field) => {
+      const match =
+        /^((?:LOCATION|CORNER)\.[XY]|[XY]\d+|RADIUS|SECONDARYRADIUS|PINLENGTH|WIDTH|HEIGHT|XSIZE|YSIZE|DISTANCEFROMTOP)=([+-]?[\d.]+)$/iu.exec(
+          field,
+        )
+      if (!match || Number.isInteger(Number(match[2]))) return [field]
+      if (match[1] === "DISTANCEFROMTOP") {
+        // Sheet entries use 10-unit bases and _FRAC1 in 1/100,000 units.
+        const ticks = Math.round(Number(match[2]) * 1_000_000)
+        const base = Math.trunc(ticks / 1_000_000)
+        const fraction = ticks - base * 1_000_000
+        return [`DISTANCEFROMTOP=${base}`, `DISTANCEFROMTOP_FRAC1=${fraction}`]
+      }
+      return createAltiumSchematicCoordinateFields(match[1]!, Number(match[2]))
+    })
+  }
   ctx.lines.push(`|${recordFields.join("|")}`)
   ctx.nextRecordIndex++
   return altiumRecordIndex
@@ -319,6 +338,7 @@ function remapTemplateFontId({
 }
 
 export function createSchematicDocument({
+  unitsPerCircuitUnit = 20,
   childSheets = [],
   circuitJson,
   includeAllSchematicElements,
@@ -326,6 +346,7 @@ export function createSchematicDocument({
   sheetSettings,
   template,
 }: CreateSchematicDocumentParams): string {
+  const scaleRatio = unitsPerCircuitUnit / 20
   const sourcePorts = new Map<SourcePortId, CircuitElement>(
     byType(circuitJson, "source_port").map((sourcePort) => [
       asString(sourcePort.source_port_id),
@@ -355,8 +376,13 @@ export function createSchematicDocument({
     circuitToAltiumSchematicPrecisePoint,
     width: contentWidth,
     height: contentHeight,
-  } = getSchematicTransform(schematicElements, sheetSettings)
+  } = getSchematicTransform(
+    schematicElements,
+    sheetSettings,
+    unitsPerCircuitUnit,
+  )
   const sheetSymbolPlans = createAltiumSchematicSheetSymbolPlans({
+    scale: scaleRatio,
     childSheets,
     circuitJson,
   })
@@ -390,24 +416,24 @@ export function createSchematicDocument({
     0,
   )
   const sheetSymbolStartX = hasRenderableSchematicContent
-    ? contentWidth + 40
-    : 60
+    ? contentWidth + 40 * scaleRatio
+    : 60 * scaleRatio
   const sheetSymbolLayoutWidth =
     sheetSymbolColumnCount * sheetSymbolColumnWidth +
-    Math.max(sheetSymbolColumnCount - 1, 0) * 40
+    Math.max(sheetSymbolColumnCount - 1, 0) * 40 * scaleRatio
   const sheetSymbolLayoutHeight =
     sheetSymbolRowCount * sheetSymbolRowHeight +
-    Math.max(sheetSymbolRowCount - 1, 0) * 40
+    Math.max(sheetSymbolRowCount - 1, 0) * 40 * scaleRatio
   const altiumSheetWidth = Math.max(
     contentWidth,
     automaticallyPlacedSheetSymbolPlans.length > 0
-      ? sheetSymbolStartX + sheetSymbolLayoutWidth + 60
+      ? sheetSymbolStartX + sheetSymbolLayoutWidth + 60 * scaleRatio
       : 0,
   )
   const altiumSheetHeight = Math.max(
     contentHeight,
     automaticallyPlacedSheetSymbolPlans.length > 0
-      ? sheetSymbolLayoutHeight + 120
+      ? sheetSymbolLayoutHeight + 120 * scaleRatio
       : 0,
   )
   const sheetTexts = schematicElements.filter(
@@ -439,6 +465,7 @@ export function createSchematicDocument({
     })
   }
   const altiumSchematicFontTable = createAltiumSchematicFontTable({
+    unitsPerCircuitUnit,
     netLabelTextPresentations: netLabelPlans.flatMap(
       ({ schematicNetLabel, textPresentation }) =>
         textPresentation &&
@@ -459,17 +486,18 @@ export function createSchematicDocument({
       "|HEADER=Protel for Windows - Schematic Capture Ascii File Version 5.0",
     ],
     nextRecordIndex: 0,
+    encodeFractionalCoordinates: unitsPerCircuitUnit !== 20,
   }
   addSchematicRecord(
     [
       "RECORD=31",
       ...altiumSchematicFontTable.sheetRecordFields,
       `AREACOLOR=${ALTIUM_SCHEMATIC_SHEET_AREA_COLOR}`,
-      `CUSTOMX=${altiumSheetWidth}`,
-      `CUSTOMY=${altiumSheetHeight}`,
+      `CUSTOMX=${unitsPerCircuitUnit === 20 ? altiumSheetWidth : Math.ceil(altiumSheetWidth)}`,
+      `CUSTOMY=${unitsPerCircuitUnit === 20 ? altiumSheetHeight : Math.ceil(altiumSheetHeight)}`,
       "USECUSTOMSHEET=T",
       "SNAPGRIDON=T",
-      "SNAPGRIDSIZE=10",
+      `SNAPGRIDSIZE=${Math.max(1, Math.round(10 * scaleRatio))}`,
       ...(template?.sheetRecordFields ?? []),
     ],
     schematicRecordContext,
@@ -519,10 +547,10 @@ export function createSchematicDocument({
         ? plan.placementComponent.size
         : {}
       const width = circuitToAltiumSchematicLength(
-        asPositiveNumber(circuitSize.width, plan.width / 20),
+        asPositiveNumber(circuitSize.width, plan.width / unitsPerCircuitUnit),
       )
       const height = circuitToAltiumSchematicLength(
-        asPositiveNumber(circuitSize.height, plan.height / 20),
+        asPositiveNumber(circuitSize.height, plan.height / unitsPerCircuitUnit),
       )
       const altiumCenter = circuitToAltiumSchematicPoint(circuitCenter)
       location = {
@@ -530,14 +558,44 @@ export function createSchematicDocument({
         y: altiumCenter.y + height / 2,
       }
       placedPlan = { ...plan, height, width }
+      if (unitsPerCircuitUnit !== 20) {
+        const bounds = getFallbackSchematicBoxBounds({
+          circuitComponentCenter: circuitCenter,
+          circuitComponentHeight: height / unitsPerCircuitUnit,
+          circuitComponentWidth: width / unitsPerCircuitUnit,
+          circuitToAltiumSchematicPoint,
+        })
+        location = { x: bounds.left, y: bounds.top }
+        placedPlan = {
+          ...plan,
+          width: bounds.right - bounds.left,
+          height: bounds.top - bounds.bottom,
+          entries: plan.entries.map((entry) => ({
+            ...entry,
+            distanceFromTop: entry.circuitPosition
+              ? Math.max(
+                  0,
+                  (location.y -
+                    circuitToAltiumSchematicPoint(entry.circuitPosition).y) /
+                    10,
+                )
+              : entry.distanceFromTop,
+          })),
+        }
+      }
     } else {
       const columnIndex = automaticallyPlacedPlanIndex % sheetSymbolColumnCount
       const rowIndex = Math.floor(
         automaticallyPlacedPlanIndex / sheetSymbolColumnCount,
       )
       location = {
-        x: sheetSymbolStartX + columnIndex * (sheetSymbolColumnWidth + 40),
-        y: altiumSheetHeight - 60 - rowIndex * (sheetSymbolRowHeight + 40),
+        x:
+          sheetSymbolStartX +
+          columnIndex * (sheetSymbolColumnWidth + 40 * scaleRatio),
+        y:
+          altiumSheetHeight -
+          60 * scaleRatio -
+          rowIndex * (sheetSymbolRowHeight + 40 * scaleRatio),
       }
       automaticallyPlacedPlanIndex++
     }
@@ -553,6 +611,7 @@ export function createSchematicDocument({
         altiumSymbolRecordIndex,
         location,
         plan: placedPlan,
+        scale: scaleRatio,
       },
     )) {
       addSchematicRecord(recordFields, schematicRecordContext)
@@ -743,7 +802,7 @@ export function createSchematicDocument({
       fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR,
       fallbackAltiumPosition: designatorPlacement?.position ?? {
         x: fallbackSchematicBoxBounds.left,
-        y: fallbackSchematicBoxBounds.top + 12,
+        y: fallbackSchematicBoxBounds.top + 12 * scaleRatio,
       },
       fallbackFontId: 1,
       fallbackJustification: designatorPlacement?.justification ?? 0,
@@ -755,7 +814,7 @@ export function createSchematicDocument({
       fallbackAltiumColor: ALTIUM_SCHEMATIC_DEFAULT_COLOR,
       fallbackAltiumPosition: commentPlacement?.position ?? {
         x: fallbackSchematicBoxBounds.left,
-        y: fallbackSchematicBoxBounds.bottom - 12,
+        y: fallbackSchematicBoxBounds.bottom - 12 * scaleRatio,
       },
       fallbackFontId: 2,
       fallbackJustification: commentPlacement?.justification ?? 0,
@@ -1037,6 +1096,7 @@ export function createSchematicDocument({
     if (!portName || !circuitPortPosition) continue
     addSchematicRecord(
       createAltiumSchematicOffSheetPortRecordFields({
+        scale: scaleRatio,
         altiumPortPosition: circuitToAltiumSchematicPoint(circuitPortPosition),
         facingDirection: asString(schematicPort.facing_direction),
         hasInputArrow: schematicPort.has_input_arrow === true,

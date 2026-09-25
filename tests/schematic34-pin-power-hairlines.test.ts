@@ -37,6 +37,7 @@ test("uses hairline stems for every component type with unchanged text and conne
     pin.set("NAME_CUSTOMPOSITION_MARGIN", "0")
   }
   const converter = new CircuitJsonToAltiumConverter(source, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "automotive-mirror-system",
   })
   converter.runUntilFinished()

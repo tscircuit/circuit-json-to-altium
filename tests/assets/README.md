@@ -195,3 +195,18 @@ Native `SIZE` is an enum: Smallest/Small/Medium/Large have measured radii
 It remains larger than Circuit JSON's 0.03 radius. The pinned Altiumts preview
 currently renders `SIZE=0` at radius 1.5, so these local SVGs are not exact native
 size references. No global scaling or dependency patch is included here.
+
+
+## Default small native junctions
+
+[TI TPS61288](./ti-tps61288-small-junctions.SchDoc)
+([comparison](./ti-tps61288-small-junctions.svg)) and
+[automotive microcontroller](./automotive-microcontroller-small-junctions.SchDoc)
+([comparison](./automotive-microcontroller-small-junctions.svg)) use the default
+66.67-unit scale. Native radius-2 junctions correspond to 0.03 Circuit JSON
+units. These replace the old 20-unit exports above for small-dot review.
+
+The TI file has 62 green junctions with no exposed blue automatic dots in the
+native Viewer. These comparisons use the pinned Altiumts renderer, whose dot
+radius differs from native Altium. Regenerate with
+`bun scripts/generate-junction-review-files.ts`.

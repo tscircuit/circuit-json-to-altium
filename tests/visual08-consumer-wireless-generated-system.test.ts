@@ -82,19 +82,19 @@ test("reproduces the Consumer Wireless Module generated system", async () => {
     const width =
       Math.max(...points.map((point) => point.x)) -
       Math.min(...points.map((point) => point.x))
-    expect(maxY - minY).toBeCloseTo(4)
+    expect(maxY - minY).toBeCloseTo(40 / 3)
     expect(
       sensors
         .getRecordsByKind("31")[0]
         ?.getNumber(`SIZE${label.getNumber("FONTID")}`),
-    ).toBe(4)
+    ).toBe(12)
     return { minY, maxY, width }
   })
   const [upperLabel, lowerLabel] = adjacentLabelBounds
   expect(upperLabel!.minY - lowerLabel!.maxY).toBeGreaterThanOrEqual(-0.0001)
-  expect(upperLabel!.width).toBeLessThanOrEqual(24.001)
-  // Integer 4 pt text needs slightly more width than the old 3.6 pt estimate.
-  expect(lowerLabel!.width).toBeLessThanOrEqual(24.001)
+  expect(upperLabel!.width).toBeLessThanOrEqual(80.001)
+  // Native integer fonts must stay within the scaled source label width.
+  expect(lowerLabel!.width).toBeLessThanOrEqual(80.001)
 
   const rootSchematic = parsedSchematics[0]
   if (!rootSchematic) throw new Error("Converter did not create a root sheet")

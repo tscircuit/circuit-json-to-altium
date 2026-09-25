@@ -11,6 +11,7 @@ type AltiumSchematicFontId = number
 type SchematicFontSizeCircuitUnits = number
 
 export type AltiumSchematicFontTable = {
+  unitsPerCircuitUnit?: number
   nativeTextFontIdBySizeCircuitUnits: Map<
     SchematicFontSizeCircuitUnits,
     AltiumSchematicFontId
@@ -28,12 +29,12 @@ export type AltiumSchematicFontTable = {
 }
 
 type CreateAltiumSchematicFontTableInput = {
+  unitsPerCircuitUnit?: number
   netLabelTextPresentations?: CircuitElement[]
   schematicElements: CircuitElement[]
   templateFontFields?: AltiumSchematicTemplateFontFields[]
 }
 
-const ALTIUM_UNITS_PER_CIRCUIT_UNIT = 20
 const ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS = 4
 const ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME = "Arial"
 // Circuit JSON renders ordinary net labels at 0.18 circuit units.
@@ -43,25 +44,29 @@ export const SCHEMATIC_PIN_NAME_FONT_SIZE_CIRCUIT_UNITS = 0.15
 export const SCHEMATIC_PIN_NUMBER_FONT_SIZE_CIRCUIT_UNITS = 0.15
 
 export function createAltiumSchematicFontTable({
+  unitsPerCircuitUnit = 20,
   netLabelTextPresentations = [],
   schematicElements,
   templateFontFields = [],
 }: CreateAltiumSchematicFontTableInput): AltiumSchematicFontTable {
+  const componentFontSize = Math.ceil(
+    (ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS * unitsPerCircuitUnit) / 20,
+  )
+  const portFontSize = Math.ceil(
+    (ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS * unitsPerCircuitUnit) /
+      20,
+  )
   const fontIdBySizeCircuitUnits = new Map<
     SchematicFontSizeCircuitUnits,
     AltiumSchematicFontId
   >()
   const fontSizePointsById = new Map([
-    [1, ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS],
-    [2, ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS],
-    [
-      ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID,
-      ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS,
-    ],
+    [1, componentFontSize],
+    [2, componentFontSize],
+    [ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID, portFontSize],
   ])
   const offSheetPortFontSizeCircuitUnits =
-    ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS /
-    ALTIUM_UNITS_PER_CIRCUIT_UNIT
+    ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS / 20
   fontIdBySizeCircuitUnits.set(
     offSheetPortFontSizeCircuitUnits,
     ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID,
@@ -86,12 +91,15 @@ export function createAltiumSchematicFontTable({
     if (fontIdBySizeCircuitUnits.has(fontSizeCircuitUnits)) continue
     const fontId = nextFontId++
     fontIdBySizeCircuitUnits.set(fontSizeCircuitUnits, fontId)
-    fontSizePointsById.set(
-      fontId,
-      fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT,
-    )
+    const points =
+      unitsPerCircuitUnit === 20
+        ? fontSizeCircuitUnits * unitsPerCircuitUnit
+        : Math.ceil(
+            Number(formatNumber(fontSizeCircuitUnits * unitsPerCircuitUnit)),
+          )
+    fontSizePointsById.set(fontId, points)
     schematicFontRecordFields.push(
-      `SIZE${fontId}=${formatNumber(fontSizeCircuitUnits * ALTIUM_UNITS_PER_CIRCUIT_UNIT)}`,
+      `SIZE${fontId}=${formatNumber(points)}`,
       `FONTNAME${fontId}=${ALTIUM_SCHEMATIC_ANNOTATION_FONT_NAME}`,
     )
   }
@@ -111,9 +119,7 @@ export function createAltiumSchematicFontTable({
   }
 
   const nativeTextFontIdBySizeCircuitUnits = new Map(fontIdBySizeCircuitUnits)
-  const nativeTextFontIdBySizePoints = new Map([
-    [ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS, 1],
-  ])
+  const nativeTextFontIdBySizePoints = new Map([[componentFontSize, 1]])
   for (const [fontId, points] of fontSizePointsById) {
     // Only reuse the generated Arial fonts, not the off-sheet port font.
     if (
@@ -156,7 +162,7 @@ export function createAltiumSchematicFontTable({
     // For example, 0.18 becomes Arial 4, and inline labels at 0.12 become Arial 3.
     const points = Math.max(
       1,
-      Math.ceil(Number(formatNumber(size * ALTIUM_UNITS_PER_CIRCUIT_UNIT))),
+      Math.ceil(Number(formatNumber(size * unitsPerCircuitUnit))),
     )
     let fontId = nativeTextFontIdBySizePoints.get(points)
     if (fontId === undefined) {
@@ -175,13 +181,14 @@ export function createAltiumSchematicFontTable({
     nativeTextFontIdBySizeCircuitUnits,
     fontIdBySizeCircuitUnits,
     fontSizePointsById,
+    unitsPerCircuitUnit,
     sheetRecordFields: [
       `FONTIDCOUNT=${nextFontId - 1}`,
-      `SIZE1=${ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS}`,
+      `SIZE1=${componentFontSize}`,
       "FONTNAME1=Arial",
-      `SIZE2=${ALTIUM_SCHEMATIC_COMPONENT_FONT_SIZE_POINTS}`,
+      `SIZE2=${componentFontSize}`,
       "FONTNAME2=Arial",
-      `SIZE${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID}=${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_SIZE_POINTS}`,
+      `SIZE${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID}=${portFontSize}`,
       `FONTNAME${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_ID}=${ALTIUM_SCHEMATIC_OFF_SHEET_PORT_FONT_NAME}`,
       ...schematicFontRecordFields,
     ],

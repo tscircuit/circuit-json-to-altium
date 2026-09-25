@@ -133,6 +133,8 @@ export async function createOpenSourceSchematicRoundTrip({
     ? sourceBytes
     : undefined
   const converter = new CircuitJsonToAltiumConverter(sourceCircuitJson, {
+    // Import fixtures use the original native grid, including external templates.
+    schematicUnitsPerCircuitUnit: 20,
     projectName,
     schematicProjectContext: sourceProjectContext,
     schematicSheets: [{ ...sourceSheetSettings, templateContent }],

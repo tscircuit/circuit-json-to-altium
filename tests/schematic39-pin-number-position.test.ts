@@ -6,6 +6,7 @@ import { pinNumberPositionCircuit } from "./fixtures/pin-number-position-circuit
 
 test("anchors native pin numbers near the body in all four orientations", async () => {
   const converter = new CircuitJsonToAltiumConverter(pinNumberPositionCircuit, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "pin-number-start",
   })
   converter.runUntilFinished()

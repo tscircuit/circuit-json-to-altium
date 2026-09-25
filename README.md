@@ -52,6 +52,40 @@ The returned ZIP archive contains:
 
 The converter validates its generated PCB and schematic documents before returning the archive. Invalid geometry is rejected with a descriptive error instead of producing a corrupt project.
 
+## Schematic junction scale
+
+New schematics default to **200 / 3 (66.67) Altium units per Circuit JSON
+unit**. Altium's smallest native junction has radius 2, so its relative radius
+is **0.03 Circuit JSON units**. The native `SIZE=0` field stays a size preset.
+Coordinates and fonts are converted directly from the source before rounding;
+physical sheet dimensions and font-point values increase with this scale.
+PCB geometry is unchanged.
+
+For the previous physical sheet scale, use:
+
+```ts
+const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+  schematicUnitsPerCircuitUnit: 20,
+})
+```
+
+Imported Altium templates keep scale 20 by default to preserve their original
+native geometry. Explicitly selecting another scale with a template is rejected.
+
+Final wires, including generated net-label leaders, are normalized before
+junction detection. Coincident wire records contribute distinct connection
+directions, so a label on a straight wire does not create extra dots. Real
+branches and connected crossings retain their vertices.
+
+The TI TPS61288 export was checked in the native Altium Viewer: 62 green dots,
+radius 2 at the new scale, and no exposed blue automatic junctions. Native pin
+markers and the automotive microcontroller sheet were also inspected. Integer
+font sizes still require rounding. The pinned Altiumts preview uses a different
+junction radius, so local SVGs are not exact native dot-size references.
+
+Run `bun scripts/generate-junction-review-files.ts` to regenerate the native
+review files and source/preview comparisons in `tests/assets`.
+
 ## Supported content
 
 The current converter handles board outlines, components, pads, plated and non-plated holes, routed copper with vias, nets, PCB silkscreen, schematic components, custom component symbol graphics, component pins, intentionally unconnected source ports, off-sheet ports, labels, native power ports, junctions, traces, and free-standing schematic sheet text and graphics. It also preserves multiple schematic sheets and sanitizes Altium field and filename text.
