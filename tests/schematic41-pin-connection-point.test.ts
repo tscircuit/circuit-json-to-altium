@@ -5,6 +5,7 @@ import { asPoint, asString } from "../lib/format"
 import { getSchematicTransform } from "../lib/get-schematic-transform"
 import type { CircuitElement } from "../lib/types"
 import { expectValidSchematic } from "./fixtures"
+import { schematicWireCoverageMatches } from "./fixtures/schematic-wire-coverage"
 
 test("automotive chip, built-in and custom-symbol pins connect at Circuit JSON port centers", async () => {
   const circuit: CircuitElement[] = await Bun.file(
@@ -59,8 +60,8 @@ test("automotive chip, built-in and custom-symbol pins connect at Circuit JSON p
       expect(pin.position).toEqual(toAltium(asPoint(ports[pinIndex]!.center)!))
       checkedPins++
     }
-    // Source traces retain their endpoints. Net-label leaders follow these
-    // wires; pin stems are owned artwork rather than extra sheet wires.
+    // Overlap cleanup can change vertices and record counts, but must retain
+    // the entire source wire coverage. Net-label leaders are tested separately.
     const sourceEdges = elements
       .filter((e) => e.type === "schematic_trace")
       .flatMap(
@@ -70,11 +71,24 @@ test("automotive chip, built-in and custom-symbol pins connect at Circuit JSON p
             to: { x: number; y: number }
           }[],
       )
+    const sourceSegments = sourceEdges.map((edge) => ({
+      from: toAltium(edge.from),
+      to: toAltium(edge.to),
+    }))
+    const outputSegments = doc.wires
+      .filter(
+        (wire) => !wire.getCaseInsensitive("UNIQUEID")?.startsWith("CJNW"),
+      )
+      .map((wire) => {
+        const [from, to] = getSchematicRecordPoints(wire)
+        return { from: from!, to: to! }
+      })
     expect(
-      doc.wires.slice(0, sourceEdges.length).map(getSchematicRecordPoints),
-    ).toEqual(
-      sourceEdges.map((edge) => [toAltium(edge.from), toAltium(edge.to)]),
-    )
+      schematicWireCoverageMatches({
+        source: sourceSegments,
+        output: outputSegments,
+      }),
+    ).toBe(true)
   }
   expect(checkedPins).toBeGreaterThan(100)
   for (const name of ["U6", "R21", "L7"])
