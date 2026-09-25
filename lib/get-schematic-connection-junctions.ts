@@ -3,6 +3,8 @@ import type { Point } from "./types"
 
 const TOLERANCE = 0.00001
 
+type SchematicJunctionPointKey = string
+
 function pointsEqual(a: Point, b: Point): boolean {
   return Math.hypot(a.x - b.x, a.y - b.y) <= TOLERANCE
 }
@@ -33,7 +35,7 @@ export function getSchematicConnectionJunctions({
   segments: SchematicWireSegment[]
   terminals?: Point[]
 }): Point[] {
-  const candidates = new Map<string, Point>()
+  const candidates = new Map<SchematicJunctionPointKey, Point>()
   for (const point of [
     ...segments.flatMap(({ from, to }) => [from, to]),
     ...terminals,

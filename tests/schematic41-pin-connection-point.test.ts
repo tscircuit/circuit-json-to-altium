@@ -83,9 +83,12 @@ test("automotive chip, built-in and custom-symbol pins connect at Circuit JSON p
         const [from, to] = getSchematicRecordPoints(wire)
         return { from: from!, to: to! }
       })
-    expect(schematicWireCoverageMatches(sourceSegments, outputSegments)).toBe(
-      true,
-    )
+    expect(
+      schematicWireCoverageMatches({
+        source: sourceSegments,
+        output: outputSegments,
+      }),
+    ).toBe(true)
   }
   expect(checkedPins).toBeGreaterThan(100)
   for (const name of ["U6", "R21", "L7"])

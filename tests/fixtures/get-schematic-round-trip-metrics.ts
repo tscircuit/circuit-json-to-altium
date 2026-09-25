@@ -35,14 +35,16 @@ function roundToAltiumSchematicGrid(coordinate: number): number {
   return Math.round(coordinate * 20) / 20
 }
 
+function getWirePointKey({ x, y }: Point): string {
+  return `${roundToAltiumSchematicGrid(x)}:${roundToAltiumSchematicGrid(y)}`
+}
+
 function getWireSegmentKey(edge: unknown): string | undefined {
   if (!isCircuitElement(edge)) return undefined
   const from = asPoint(edge.from)
   const to = asPoint(edge.to)
   if (!from || !to) return undefined
-  const pointKey = ({ x, y }: Point) =>
-    `${roundToAltiumSchematicGrid(x)}:${roundToAltiumSchematicGrid(y)}`
-  const ends = [pointKey(from), pointKey(to)]
+  const ends = [getWirePointKey(from), getWirePointKey(to)]
   return ends[0] === ends[1] ? undefined : ends.sort().join("/")
 }
 
@@ -505,6 +507,59 @@ function getSchematicGeometryPoints(circuitJson: CircuitElement[]): Point[] {
   return points
 }
 
+function getTraceAnchor(circuit: CircuitElement[]): Point {
+  for (const trace of circuit) {
+    if (trace.type !== "schematic_trace") continue
+    const firstEdge = Array.isArray(trace.edges) ? trace.edges[0] : undefined
+    const point = isCircuitElement(firstEdge)
+      ? asPoint(firstEdge.from)
+      : undefined
+    if (point) return point
+  }
+  return { x: 0, y: 0 }
+}
+
+function getRelativePoint(point: Point, anchor: Point): Point {
+  return {
+    x: point.x - anchor.x,
+    y: point.y - anchor.y,
+  }
+}
+
+function getTraces(circuit: CircuitElement[]): CircuitElement[] {
+  return circuit.filter((element) => element.type === "schematic_trace")
+}
+
+function getRelativeWireSegments(circuit: CircuitElement[], anchor: Point) {
+  return getTraces(circuit).flatMap((trace) =>
+    (Array.isArray(trace.edges) ? trace.edges : []).flatMap((edge) => {
+      if (!isCircuitElement(edge)) return []
+      const from = asPoint(edge.from)
+      const to = asPoint(edge.to)
+      return from && to
+        ? [
+            {
+              from: getRelativePoint(from, anchor),
+              to: getRelativePoint(to, anchor),
+            },
+          ]
+        : []
+    }),
+  )
+}
+
+function getRelativeJunctions(
+  circuit: CircuitElement[],
+  anchor: Point,
+): Point[] {
+  return getTraces(circuit).flatMap((trace) =>
+    (Array.isArray(trace.junctions) ? trace.junctions : []).flatMap((value) => {
+      const point = asPoint(value)
+      return point ? [getRelativePoint(point, anchor)] : []
+    }),
+  )
+}
+
 function getGeometryMaxDelta(
   sourceCircuitJson: CircuitElement[],
   roundTripCircuitJson: CircuitElement[],
@@ -514,65 +569,26 @@ function getGeometryMaxDelta(
   if (sourcePoints.length !== roundTripPoints.length) {
     return Number.POSITIVE_INFINITY
   }
-  const traceAnchor = (circuit: CircuitElement[]): Point => {
-    for (const trace of circuit) {
-      if (trace.type !== "schematic_trace") continue
-      const firstEdge = Array.isArray(trace.edges) ? trace.edges[0] : undefined
-      const point = isCircuitElement(firstEdge)
-        ? asPoint(firstEdge.from)
-        : undefined
-      if (point) return point
-    }
-    return { x: 0, y: 0 }
-  }
-  const sourceAnchor = sourcePoints[0] ?? traceAnchor(sourceCircuitJson)
+  const sourceAnchor = sourcePoints[0] ?? getTraceAnchor(sourceCircuitJson)
   const roundTripAnchor =
-    roundTripPoints[0] ?? traceAnchor(roundTripCircuitJson)
+    roundTripPoints[0] ?? getTraceAnchor(roundTripCircuitJson)
 
-  const relativePoint = (point: Point, anchor: Point): Point => ({
-    x: point.x - anchor.x,
-    y: point.y - anchor.y,
-  })
-  const traces = (circuit: CircuitElement[]) =>
-    circuit.filter((element) => element.type === "schematic_trace")
-  const segments = (circuit: CircuitElement[], anchor: Point) =>
-    traces(circuit).flatMap((trace) =>
-      (Array.isArray(trace.edges) ? trace.edges : []).flatMap((edge) => {
-        if (!isCircuitElement(edge)) return []
-        const from = asPoint(edge.from)
-        const to = asPoint(edge.to)
-        return from && to
-          ? [
-              {
-                from: relativePoint(from, anchor),
-                to: relativePoint(to, anchor),
-              },
-            ]
-          : []
-      }),
-    )
   // Vertices may change when overlapping wires are coalesced. Check the full
   // wire union in both directions instead of pairing serialized endpoints.
   if (
-    !schematicWireCoverageMatches(
-      segments(sourceCircuitJson, sourceAnchor),
-      segments(roundTripCircuitJson, roundTripAnchor),
-      0.06,
-    )
+    !schematicWireCoverageMatches({
+      source: getRelativeWireSegments(sourceCircuitJson, sourceAnchor),
+      output: getRelativeWireSegments(roundTripCircuitJson, roundTripAnchor),
+      tolerance: 0.06,
+    })
   )
     return Number.POSITIVE_INFINITY
-  const junctions = (circuit: CircuitElement[], anchor: Point) =>
-    traces(circuit).flatMap((trace) =>
-      (Array.isArray(trace.junctions) ? trace.junctions : []).flatMap(
-        (value) => {
-          const point = asPoint(value)
-          return point ? [relativePoint(point, anchor)] : []
-        },
-      ),
-    )
-  const exportedJunctions = junctions(roundTripCircuitJson, roundTripAnchor)
+  const exportedJunctions = getRelativeJunctions(
+    roundTripCircuitJson,
+    roundTripAnchor,
+  )
   if (
-    junctions(sourceCircuitJson, sourceAnchor).some(
+    getRelativeJunctions(sourceCircuitJson, sourceAnchor).some(
       (source) =>
         !exportedJunctions.some(
           (output) =>
