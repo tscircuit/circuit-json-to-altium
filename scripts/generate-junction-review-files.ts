@@ -40,7 +40,7 @@ for (const [inputName, projectName, sheetIndex, outputName] of [
     new URL(`${outputName}.svg`, assets),
     createSideBySideSvg(sourceSvg, preview, {
       source: "Circuit JSON",
-      converted: "Altiumts preview (native junction radius differs)",
+      converted: "Altium format preview",
     }),
   )
 }
