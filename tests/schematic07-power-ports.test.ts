@@ -99,9 +99,7 @@ test("writes rail and ground net-label symbols as native power ports", async () 
   // All four power ports must paint their custom hairline definitions,
   // including both ground orientations, instead of built-in power symbols.
   expect(
-    serializeAltiumSheetToSvg(schematic).match(
-      /<line data-record="13" vector-effect="non-scaling-stroke"/gu,
-    ),
+    serializeAltiumSheetToSvg(schematic).match(/<line data-record="13"/gu),
   ).toHaveLength(12)
   expectValidSchematic(schematic)
 })

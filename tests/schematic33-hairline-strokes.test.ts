@@ -70,8 +70,16 @@ test("exports smallest schematic strokes with unchanged text fonts", async () =>
     ([tag]) => tag,
   )
   expect(graphicTags.length).toBeGreaterThan(0)
+  const root = svg.match(/<svg\b[^>]*>/u)![0]
+  const width = Number(root.match(/\bwidth="([^"]+)"/u)![1])
+  const height = Number(root.match(/\bheight="([^"]+)"/u)![1])
+  const viewBox = root
+    .match(/viewBox="([^"]+)"/u)![1]!
+    .split(" ")
+    .map(Number)
+  const pixelsPerUnit = Math.min(width / viewBox[2]!, height / viewBox[3]!)
   for (const tag of graphicTags) {
-    expect(tag).toContain('vector-effect="non-scaling-stroke"')
-    expect(tag).toContain('stroke-width="1"')
+    const strokeWidth = Number(tag.match(/stroke-width="([^"]+)"/u)![1])
+    expect(strokeWidth * pixelsPerUnit).toBeCloseTo(1, 3)
   }
 })

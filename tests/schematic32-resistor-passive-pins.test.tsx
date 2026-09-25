@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
+import { parseAltiumSchDoc } from "altiumts"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { Circuit } from "tscircuit"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
-import { cropSvgViewBox } from "./fixtures/crop-svg-view-box"
+import { renderAltiumSchematicCrop } from "./fixtures/render-altium-schematic-crop"
 
 test("R1 pull-down resistor exports passive pins without input arrows", async () => {
   const circuit = new Circuit()
@@ -32,19 +32,10 @@ test("R1 pull-down resistor exports passive pins without input arrows", async ()
     width: 500,
     height: 600,
   })
-  const altiumSvg = cropSvgViewBox(
-    serializeAltiumSheetToSvg(schematic, {
-      width: 500,
-      height: 600,
-      margin: 0,
-      showBorder: false,
-    }),
-    {
-      x: 175,
-      y: 120,
-      width: 50,
-      height: 60,
-    },
+  const altiumSvg = renderAltiumSchematicCrop(
+    schematic,
+    { x: 175, y: 120, width: 50, height: 60 },
+    { width: 500, height: 600 },
   )
   await expect(
     createSideBySideSvg(sourceSvg, altiumSvg, {

@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import { parseAltiumSchDoc, serializeAltiumSheetToSvg } from "altiumts"
+import { parseAltiumSchDoc } from "altiumts"
 import { convertCircuitJsonToSchematicSvg } from "circuit-to-svg"
 import { Circuit } from "tscircuit"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
-import { cropSvgViewBox } from "./fixtures/crop-svg-view-box"
+import { renderAltiumSchematicCrop } from "./fixtures/render-altium-schematic-crop"
 
 const POWER_DETAIL_VIEW_BOX = {
   x: 450,
@@ -63,14 +63,10 @@ test("snapshots a VCC and GND power-label detail", async () => {
   ])
 
   const circuitJsonSvg = await convertCircuitJsonToSchematicSvg(circuitJson)
-  const altiumSvg = cropSvgViewBox(
-    serializeAltiumSheetToSvg(altiumSchematic, {
-      height: 600,
-      margin: 0,
-      showBorder: false,
-      width: 1200,
-    }),
+  const altiumSvg = renderAltiumSchematicCrop(
+    altiumSchematic,
     POWER_DETAIL_VIEW_BOX,
+    { width: 1200, height: 600 },
   )
   await expect(
     createSideBySideSvg(circuitJsonSvg, altiumSvg),
