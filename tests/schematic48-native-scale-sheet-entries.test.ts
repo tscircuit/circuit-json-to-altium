@@ -41,9 +41,7 @@ test("scaled sheet entries use native FRAC1 units and keep No ERC markers aligne
           ]
         : []),
     ]
-    const converter = new CircuitJsonToAltiumConverter(circuit, {
-      schematicUnitsPerCircuitUnit: 200 / 3,
-    })
+    const converter = new CircuitJsonToAltiumConverter(circuit)
     converter.runUntilFinished()
     const output = converter.getOutput().schematics[0]!
     for (const content of [output.asciiContent, output.content]) {

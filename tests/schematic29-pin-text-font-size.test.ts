@@ -18,6 +18,7 @@ test("exports native Arial 3 pin names and numbers with the correct margins", as
     ).bytes(),
   )
   const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "automotive-mirror-system",
   })
   converter.runUntilFinished()

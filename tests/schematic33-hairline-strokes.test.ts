@@ -19,6 +19,7 @@ test("exports smallest schematic strokes with unchanged text fonts", async () =>
     ).bytes(),
   )
   const converter = new CircuitJsonToAltiumConverter(source, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "automotive-mirror-system",
   })
   converter.runUntilFinished()

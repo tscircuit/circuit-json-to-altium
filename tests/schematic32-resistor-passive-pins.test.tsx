@@ -21,6 +21,7 @@ test("R1 pull-down resistor exports passive pins without input arrows", async ()
   await circuit.renderUntilSettled()
   const circuitJson = circuit.getCircuitJson()
   const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "resistor-section",
   })
   converter.runUntilFinished()

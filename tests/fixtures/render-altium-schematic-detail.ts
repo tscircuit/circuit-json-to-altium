@@ -1,4 +1,5 @@
 import { serializeAltiumSheetToSvg } from "altiumts"
+import { DEFAULT_SCHEMATIC_UNITS_PER_CIRCUIT_UNIT } from "../../lib/schematic-scale"
 import { cropSvgViewBox } from "./crop-svg-view-box"
 
 type SchematicSource = Parameters<typeof serializeAltiumSheetToSvg>[0]
@@ -18,6 +19,11 @@ export function renderAltiumSchematicDetail(
       showBorder: false,
       width: COMPARISON_WIDTH,
     }),
-    viewBox,
+    Object.fromEntries(
+      Object.entries(viewBox).map(([key, value]) => [
+        key,
+        (value * DEFAULT_SCHEMATIC_UNITS_PER_CIRCUIT_UNIT) / 20,
+      ]),
+    ) as DetailViewBox,
   )
 }

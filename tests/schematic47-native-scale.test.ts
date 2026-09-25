@@ -4,9 +4,11 @@ import {
   getSchematicRecordPoints,
   parseAltiumSchDoc,
 } from "altiumts"
+import JSZip from "jszip"
 import {
   CircuitJsonToAltiumConverter,
   type CircuitJsonToAltiumConverterOptions,
+  convertCircuitJsonToAltiumZip,
 } from "../lib"
 import {
   board,
@@ -75,12 +77,22 @@ function convert(options: CircuitJsonToAltiumConverterOptions = {}) {
   return converter.getOutput()
 }
 
-test("optional native scale converts source geometry and fonts before rounding", () => {
-  const legacy = convert()
-  const explicitDefault = convert({ schematicUnitsPerCircuitUnit: 20 })
-  expect(explicitDefault).toEqual(legacy)
-  const scaled = convert({ schematicUnitsPerCircuitUnit: units })
+test("default native scale converts source geometry and fonts before rounding", async () => {
+  const legacy = convert({ schematicUnitsPerCircuitUnit: 20 })
+  const scaled = convert()
+  expect(convert({ schematicUnitsPerCircuitUnit: units })).toEqual(scaled)
   expect(scaled.pcb.content).toEqual(legacy.pcb.content)
+  const archive = await JSZip.loadAsync(
+    await convertCircuitJsonToAltiumZip(elements, "default-scale"),
+  )
+  const zipSheet = parseAltiumSchDoc(
+    await archive.file("default-scale.SchDoc")!.async("uint8array"),
+  )
+  expect(
+    zipSheet
+      .getRecordsByKind("31")[0]!
+      .getNumber(`SIZE${zipSheet.pins[0]!.getNumber("NAME_CUSTOMFONTID")}`),
+  ).toBe(10)
   const output = scaled.schematics[0]!
   for (const content of [output.asciiContent, output.content]) {
     const doc = parseAltiumSchDoc(content)
@@ -134,6 +146,23 @@ test("optional native scale converts source geometry and fonts before rounding",
 })
 
 test("native scale rejects invalid values and unscaled external templates", () => {
+  const schematicSheets = [
+    {
+      width: 10,
+      height: 10,
+      templateContent: new TextEncoder().encode(
+        "|RECORD=31\r\n|RECORD=39|FILENAME=legacy.SchDot\r\n|RECORD=14|OWNERINDEX=1|LOCATION.X=5|LOCATION.Y=10|CORNER.X=15|CORNER.Y=20\r\n",
+      ),
+    },
+  ]
+  // Imported native templates keep their original grid unless a supported
+  // explicit scale is selected; changing the new-export default cannot break them.
+  expect(convert({ schematicSheets })).toEqual(
+    convert({
+      schematicSheets,
+      schematicUnitsPerCircuitUnit: 20,
+    }),
+  )
   for (const value of [0, -1, Number.NaN, Number.POSITIVE_INFINITY]) {
     expect(() => convert({ schematicUnitsPerCircuitUnit: value })).toThrow(
       "positive finite",
@@ -153,15 +182,20 @@ test("native scale rejects invalid values and unscaled external templates", () =
   ).toThrow("Custom schematic templates")
 })
 
-test("the TI supply keeps native junctions and component terminals at the optional scale", async () => {
+test("the TI supply keeps native junctions and component terminals at the default scale", async () => {
   const source = await Bun.file(
     new URL("assets/ti-tps61288-power-supply.circuit.json", import.meta.url),
   ).json()
   const converter = new CircuitJsonToAltiumConverter(source, {
-    schematicUnitsPerCircuitUnit: units,
+    projectName: "ti-tps61288-small-junctions",
   })
   converter.runUntilFinished()
   const output = converter.getOutput().schematics[0]!
+  expect(output.content).toEqual(
+    await Bun.file(
+      new URL("assets/ti-tps61288-small-junctions.SchDoc", import.meta.url),
+    ).bytes(),
+  )
   const document = parseAltiumSchDoc(output.content)
   expect(document.pins).toHaveLength(145)
   expect(document.netLabels).toHaveLength(25)

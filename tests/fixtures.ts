@@ -9,7 +9,7 @@ import {
   validateAltiumDocument,
 } from "altiumts"
 import JSZip from "jszip"
-import { convertCircuitJsonToAltiumZip } from "../lib"
+import { CircuitJsonToAltiumConverter } from "../lib"
 
 export type CircuitElement = Record<string, unknown> & { type: string }
 
@@ -93,9 +93,14 @@ export const extractArchive = async (
   elements: CircuitElement[],
   projectName = "example-board",
 ) => {
-  const zip = await JSZip.loadAsync(
-    await convertCircuitJsonToAltiumZip(elements, projectName),
-  )
+  // Raw native-grid fixtures retain their 20-unit compatibility baseline.
+  // Default scaling is covered by schematic47 and the visual conversion tests.
+  const converter = new CircuitJsonToAltiumConverter(elements, {
+    projectName,
+    schematicUnitsPerCircuitUnit: 20,
+  })
+  converter.runUntilFinished()
+  const zip = await JSZip.loadAsync(await converter.getOutputZip())
   const filenames = Object.keys(zip.files).sort()
   const projectFilename = filenames.find((name) => name.endsWith(".PrjPcb"))
   const pcbFilename = filenames.find((name) => name.endsWith(".PcbDoc"))

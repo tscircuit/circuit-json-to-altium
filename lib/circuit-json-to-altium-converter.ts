@@ -1,6 +1,7 @@
 import JSZip from "jszip"
 import type { ConverterStage } from "./converter-stage"
 import { sanitizeFilename } from "./format"
+import { DEFAULT_SCHEMATIC_UNITS_PER_CIRCUIT_UNIT } from "./schematic-scale"
 import { BuildPcbDocumentStage } from "./stages/build-pcb-document-stage"
 import { BuildProjectDocumentStage } from "./stages/build-project-document-stage"
 import { BuildSchematicDocumentsStage } from "./stages/build-schematic-documents-stage"
@@ -19,7 +20,7 @@ export type CircuitJsonToAltiumConverterOptions = {
   projectName?: string
   schematicSheets?: AltiumSchematicSheetOptions[]
   schematicProjectContext?: AltiumSchematicProjectContext
-  /** Default 20. Use 200 / 3 to make native radius-2 junctions equal 0.03 circuit units. */
+  /** Default 200 / 3, matching Circuit JSON junction size; imported templates retain 20. */
   schematicUnitsPerCircuitUnit?: number
 }
 
@@ -47,8 +48,12 @@ export class CircuitJsonToAltiumConverter {
   ) {
     const projectName = options.projectName ?? "board"
     const normalizedCircuitJson = normalizeCircuitJson(circuitJson)
+    const hasTemplate = options.schematicSheets?.some(
+      (sheet) => sheet.templateContent,
+    )
     const schematicUnitsPerCircuitUnit =
-      options.schematicUnitsPerCircuitUnit ?? 20
+      options.schematicUnitsPerCircuitUnit ??
+      (hasTemplate ? 20 : DEFAULT_SCHEMATIC_UNITS_PER_CIRCUIT_UNIT)
     if (
       !Number.isFinite(schematicUnitsPerCircuitUnit) ||
       schematicUnitsPerCircuitUnit <= 0
@@ -57,10 +62,7 @@ export class CircuitJsonToAltiumConverter {
         "schematicUnitsPerCircuitUnit must be a positive finite number",
       )
     }
-    if (
-      schematicUnitsPerCircuitUnit !== 20 &&
-      options.schematicSheets?.some((sheet) => sheet.templateContent)
-    ) {
+    if (schematicUnitsPerCircuitUnit !== 20 && hasTemplate) {
       throw new Error(
         "Custom schematic templates currently require schematicUnitsPerCircuitUnit=20",
       )

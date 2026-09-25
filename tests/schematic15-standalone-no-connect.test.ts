@@ -30,7 +30,9 @@ test("round-trips a standalone Altium No ERC marker without adding a port symbol
     type: "schematic_port",
   })
 
-  const converter = new CircuitJsonToAltiumConverter(sourceCircuitJson)
+  const converter = new CircuitJsonToAltiumConverter(sourceCircuitJson, {
+    schematicUnitsPerCircuitUnit: 20,
+  })
   converter.runUntilFinished()
   const generatedSchematic = converter.getOutput().schematics[0]
   if (!generatedSchematic) {

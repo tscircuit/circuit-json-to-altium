@@ -10,6 +10,7 @@ test("exports the microcontroller inline trace labels at a native integer size",
     ),
   ).json()
   const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "automotive-mirror-system",
   })
   converter.runUntilFinished()

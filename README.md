@@ -52,38 +52,39 @@ The returned ZIP archive contains:
 
 The converter validates its generated PCB and schematic documents before returning the archive. Invalid geometry is rejected with a descriptive error instead of producing a corrupt project.
 
-## Schematic junction scale (experimental)
+## Schematic junction scale
 
-Altium's smallest native junction has a fixed radius of 2 schematic units.
-The default conversion uses 20 Altium units per Circuit JSON unit, so that
-radius is 0.1 Circuit JSON units. To target the 0.03-unit dot used by
-`circuit-to-svg`, opt into a larger schematic coordinate scale:
+New schematics default to **200 / 3 (66.67) Altium units per Circuit JSON
+unit**. Altium's smallest native junction has radius 2, so its relative radius
+is **0.03 Circuit JSON units**. The native `SIZE=0` field stays a size preset.
+Coordinates and fonts are converted directly from the source before rounding;
+physical sheet dimensions and font-point values increase with this scale.
+PCB geometry is unchanged.
+
+For the previous physical sheet scale, use:
 
 ```ts
 const converter = new CircuitJsonToAltiumConverter(circuitJson, {
-  schematicUnitsPerCircuitUnit: 200 / 3,
+  schematicUnitsPerCircuitUnit: 20,
 })
 ```
 
-This option maps source geometry and fonts at the selected scale before
-rounding. It also scales the sheet, pin text offsets, custom power symbols,
-labels, and sheet symbols. Junction `SIZE=0` stays an enum; it is not a radius.
-The [Altium junction dialog](https://www.altium.com/documentation/cstu/junction)
-lists the four size presets. Sheet-entry offsets use `DISTANCEFROMTOP_FRAC1`,
-as documented by the [KiCad Altium importer](https://github.com/KiCad/kicad-source-mirror/blob/master/eeschema/sch_io/altium/altium_parser_sch.cpp).
-PCB geometry is unaffected. The default remains 20, and custom Altium sheet
-templates currently require that default.
+Imported Altium templates keep scale 20 by default to preserve their original
+native geometry. Explicitly selecting another scale with a template is rejected.
 
 Final wires, including generated net-label leaders, are normalized before
-junction detection. Coincident wire records contribute only their distinct
-connection directions, so a label on a straight wire does not create extra
-dots. Real branches and connected crossings retain their vertices.
+junction detection. Coincident wire records contribute distinct connection
+directions, so a label on a straight wire does not create extra dots. Real
+branches and connected crossings retain their vertices.
 
-The optional scale has binary round-trip and real-board regression coverage,
-but its new output still needs visual verification in Altium before release.
-Fixed native marker sizes and integer font sizes do not scale continuously.
-The pinned local SVG renderer also does not model native junction sizes
-accurately, so its preview is not evidence of the native dot radius.
+The TI TPS61288 export was checked in the native Altium Viewer: 62 green dots,
+radius 2 at the new scale, and no exposed blue automatic junctions. Native pin
+markers and the automotive microcontroller sheet were also inspected. Integer
+font sizes still require rounding. The pinned Altiumts preview uses a different
+junction radius, so local SVGs are not exact native dot-size references.
+
+Run `bun scripts/generate-junction-review-files.ts` to regenerate the native
+review files and source/preview comparisons in `tests/assets`.
 
 ## Supported content
 

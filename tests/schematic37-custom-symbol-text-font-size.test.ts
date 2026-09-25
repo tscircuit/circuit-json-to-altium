@@ -11,6 +11,7 @@ test("exports U3 custom-symbol text with native integer fonts", async () => {
     ),
   ).json()
   const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "blood-pressure-monitor",
   })
   converter.runUntilFinished()

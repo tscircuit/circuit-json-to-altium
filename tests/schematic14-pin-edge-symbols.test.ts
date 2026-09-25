@@ -7,6 +7,7 @@ import { circuitJson } from "./fixtures/pin-edge-symbols-circuit"
 
 test("renders a schematic pin edge symbol round trip", async () => {
   const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "schematic-pin-symbols",
   })
   converter.runUntilFinished()

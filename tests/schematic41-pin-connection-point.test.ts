@@ -15,6 +15,7 @@ test("automotive chip, built-in and custom-symbol pins connect at Circuit JSON p
     ),
   ).json()
   const converter = new CircuitJsonToAltiumConverter(circuit, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "automotive-mirror-system",
   })
   converter.runUntilFinished()

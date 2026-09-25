@@ -25,6 +25,7 @@ test("a collinear label leader does not add junctions to a straight wire", () =>
       },
     ],
     {
+      schematicUnitsPerCircuitUnit: 20,
       schematicSheets: [
         { width: 10, height: 10, circuitOrigin: { x: 0, y: 0 } },
       ],

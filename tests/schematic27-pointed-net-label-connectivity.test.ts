@@ -19,6 +19,7 @@ test("exports compact single-text labels connected to the original wire anchors"
     ).bytes(),
   )
   const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "automotive-mirror-system",
   })
   converter.runUntilFinished()

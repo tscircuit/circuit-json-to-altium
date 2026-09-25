@@ -21,6 +21,7 @@ test("C11 decoupling capacitor exports passive pins without input arrows", async
   await circuit.renderUntilSettled()
   const circuitJson = circuit.getCircuitJson()
   const converter = new CircuitJsonToAltiumConverter(circuitJson, {
+    schematicUnitsPerCircuitUnit: 20,
     projectName: "capacitor-section",
   })
   converter.runUntilFinished()
