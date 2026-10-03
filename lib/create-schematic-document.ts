@@ -43,6 +43,7 @@ import {
   isCircuitElement,
   sanitizeField,
 } from "./format"
+import { createAltiumFootprintNameLookup } from "./get-altium-footprint-name"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
 import { getSchematicTransform } from "./get-schematic-transform"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
@@ -334,6 +335,69 @@ function remapTemplateFontId({
   })
 }
 
+/**
+ * Electrical anchor for a trace-name label: the end of its schematic trace
+ * stub nearest the text, else the nearest connected pin terminal.
+ */
+function getTraceLabelHotspot({
+  schematicElements,
+  sourceTrace,
+  sourceTraceId,
+  textPosition,
+}: {
+  schematicElements: CircuitElement[]
+  sourceTrace: CircuitElement | undefined
+  sourceTraceId: string
+  textPosition: Point
+}): Point | undefined {
+  const candidates: Point[] = []
+  for (const schematicTrace of schematicElements) {
+    if (
+      schematicTrace.type !== "schematic_trace" ||
+      asString(schematicTrace.source_trace_id) !== sourceTraceId ||
+      !Array.isArray(schematicTrace.edges)
+    ) {
+      continue
+    }
+    for (const edge of schematicTrace.edges) {
+      if (!isCircuitElement(edge)) continue
+      for (const point of [asPoint(edge.from), asPoint(edge.to)]) {
+        if (point) candidates.push(point)
+      }
+    }
+  }
+  if (candidates.length === 0) {
+    const connectedSourcePortIds = new Set(
+      Array.isArray(sourceTrace?.connected_source_port_ids)
+        ? sourceTrace.connected_source_port_ids.map((id) => asString(id))
+        : [],
+    )
+    for (const schematicPort of schematicElements) {
+      if (
+        schematicPort.type !== "schematic_port" ||
+        !connectedSourcePortIds.has(asString(schematicPort.source_port_id))
+      ) {
+        continue
+      }
+      const terminal = asPoint(schematicPort.center)
+      if (terminal) candidates.push(terminal)
+    }
+  }
+  let nearest: Point | undefined
+  let nearestDistance = Number.POSITIVE_INFINITY
+  for (const candidate of candidates) {
+    const distance = Math.hypot(
+      candidate.x - textPosition.x,
+      candidate.y - textPosition.y,
+    )
+    if (distance < nearestDistance) {
+      nearest = candidate
+      nearestDistance = distance
+    }
+  }
+  return nearest
+}
+
 export function createSchematicDocument({
   unitsPerCircuitUnit = 20,
   childSheets = [],
@@ -344,6 +408,19 @@ export function createSchematicDocument({
   template,
 }: CreateSchematicDocumentParams): string {
   const scaleRatio = unitsPerCircuitUnit / 20
+  const getFootprintName = createAltiumFootprintNameLookup(circuitJson)
+  const sourceTracesById = new Map(
+    byType(circuitJson, "source_trace").map((sourceTrace) => [
+      asString(sourceTrace.source_trace_id),
+      sourceTrace,
+    ]),
+  )
+  const pcbComponentsBySourceId = new Map(
+    byType(circuitJson, "pcb_component").map((pcbComponent) => [
+      asString(pcbComponent.source_component_id),
+      pcbComponent,
+    ]),
+  )
   const sourcePorts = new Map<SourcePortId, CircuitElement>(
     byType(circuitJson, "source_port").map((sourcePort) => [
       asString(sourcePort.source_port_id),
@@ -459,6 +536,38 @@ export function createSchematicDocument({
       netLabelIndex,
       schematicNetLabel,
       textPresentation,
+    })
+  }
+  // tscircuit draws nets it does not route on the schematic as short trace
+  // stubs labelled by a schematic_text carrying the source_trace_id. Exported
+  // as plain RECORD=4 text these labels are not electrical, so Altium compiles
+  // every stub as a separate single-pin net. Emit them as native net labels
+  // whose hotspot sits on the stub (or on the pin when there is no stub).
+  for (const traceLabelText of sheetTexts) {
+    if (consumedSheetTexts.has(traceLabelText)) continue
+    const sourceTraceId = asString(traceLabelText.source_trace_id)
+    const labelText = sanitizeField(traceLabelText.text)
+    const textPosition = asPoint(traceLabelText.position)
+    if (!sourceTraceId || !labelText || !textPosition) continue
+    const hotspot = getTraceLabelHotspot({
+      schematicElements,
+      sourceTrace: sourceTracesById.get(sourceTraceId),
+      sourceTraceId,
+      textPosition,
+    })
+    if (!hotspot) continue
+    consumedSheetTexts.add(traceLabelText)
+    netLabelPlans.push({
+      circuitLabelPosition: hotspot,
+      labelText,
+      netLabelIndex: netLabelPlans.length,
+      schematicNetLabel: {
+        type: "schematic_net_label",
+        anchor_position: hotspot,
+        center: hotspot,
+        text: labelText,
+      } as CircuitElement,
+      textPresentation: traceLabelText,
     })
   }
   const altiumSchematicFontTable = createAltiumSchematicFontTable({
@@ -1072,6 +1181,40 @@ export function createSchematicDocument({
         schematicText: componentGraphicText,
       })
       if (recordFields) addSchematicRecord(recordFields, schematicRecordContext)
+    }
+    // Link the symbol to its PCB footprint (implementation list 44 ->
+    // PCBLIB model 45 -> map definer list 46 + parameter list 48), as Altium
+    // writes it. Without it Altium has no footprint for the part and cannot
+    // pair schematic and PCB components.
+    const pcbComponent = pcbComponentsBySourceId.get(
+      asString(schematicComponent.source_component_id),
+    )
+    if (pcbComponent) {
+      const implementationListIndex = addSchematicRecord(
+        ["RECORD=44", `OWNERINDEX=${altiumComponentRecordIndex}`],
+        schematicRecordContext,
+      )
+      const implementationIndex = addSchematicRecord(
+        [
+          "RECORD=45",
+          `OWNERINDEX=${implementationListIndex}`,
+          "USECOMPONENTLIBRARY=T",
+          `MODELNAME=${getFootprintName(pcbComponent)}`,
+          "MODELTYPE=PCBLIB",
+          "ISCURRENT=T",
+          "DATALINKSLOCKED=T",
+          "DATABASEDATALINKSLOCKED=T",
+        ],
+        schematicRecordContext,
+      )
+      addSchematicRecord(
+        ["RECORD=46", `OWNERINDEX=${implementationIndex}`],
+        schematicRecordContext,
+      )
+      addSchematicRecord(
+        ["RECORD=48", `OWNERINDEX=${implementationIndex}`],
+        schematicRecordContext,
+      )
     }
   }
 

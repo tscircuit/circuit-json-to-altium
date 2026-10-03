@@ -44,7 +44,13 @@ test("preserves silkscreen text anchors, mirroring, and content", async () => {
   ]
 
   const { pcb } = await extractArchive(elements)
-  const texts = pcb.getRecordsByKind("Text")
+  // Designator/comment primitives owned by the component are added by the
+  // exporter; this test is about the Circuit JSON silkscreen texts.
+  const texts = pcb
+    .getRecordsByKind("Text")
+    .filter(
+      (text) => !text.getBoolean("DESIGNATOR") && !text.getBoolean("COMMENT"),
+    )
 
   expect(texts).toHaveLength(9)
   expect(texts.map((text) => text.get("JUSTIFICATION"))).toEqual([

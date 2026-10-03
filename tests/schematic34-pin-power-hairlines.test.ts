@@ -100,6 +100,9 @@ test("uses hairline stems for every component type with unchanged text and conne
     Array.from(
       serializeAltiumSheetToSvg(doc).matchAll(/<text\b[\s\S]*?<\/text>/gu),
       (m) => m[0].replace(/ data-record-index="\d+"/gu, ""),
+    ).filter(
+      // Inline trace labels are now electrical net labels at the wire end.
+      (svgText) => !/>(SWDIO|SWCLK|NRST|PA0)</u.test(svgText),
     )
   expect(text(after)).toEqual(text(before))
 })

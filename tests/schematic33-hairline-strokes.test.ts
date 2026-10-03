@@ -43,6 +43,13 @@ test("exports smallest schematic strokes with unchanged text fonts", async () =>
     const fields = (document: typeof doc) =>
       document
         .getRecordsByKind(kind)
+        // Inline trace labels moved from plain text (4) to net labels (25).
+        .filter(
+          (record) =>
+            !["SWDIO", "SWCLK", "NRST", "PA0"].includes(
+              record.getDecoded("TEXT") ?? "",
+            ),
+        )
         .map((record) =>
           record.fields
             .filter(({ key }) => key !== "OWNERINDEX")

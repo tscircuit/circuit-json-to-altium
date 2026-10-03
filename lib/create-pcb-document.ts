@@ -1,5 +1,6 @@
 import { convertCircuitPcbCcwRotationDegreesToAltium } from "./convert-circuit-pcb-ccw-rotation-degrees-to-altium"
 import { createCircuitToAltiumPcbPointTransform } from "./create-circuit-to-altium-pcb-point-transform"
+import { createPcbBoardLayerStackFields } from "./create-pcb-board-layer-stack-fields"
 import { createPcbComponentBodyRecords } from "./create-pcb-component-body-records"
 import { createPcbCopperPourRecords } from "./create-pcb-copper-pour-records"
 import { createPcbCourtyardRecords } from "./create-pcb-courtyard-records"
@@ -23,6 +24,7 @@ import {
   pointsEqual,
   sanitizeField,
 } from "./format"
+import { createAltiumFootprintNameLookup } from "./get-altium-footprint-name"
 import { getBoardOutline } from "./get-board-outline"
 import type {
   CircuitElement,
@@ -36,21 +38,53 @@ import type {
 
 type PadLookupContext = {
   netBySourcePortId: Map<SourcePortId, PcbNetEntry>
+  pcbComponents: Map<PcbComponentId, CircuitElement>
   pcbPorts: Map<PcbPortId, CircuitElement>
   sourcePorts: Map<SourcePortId, CircuitElement>
+}
+
+/**
+ * Source port for a pad. Pads without a pcb_port_id (for example plated shell
+ * holes of imported footprints) are matched through their port_hints against
+ * the owning component's source ports, as tscircuit itself matches them.
+ */
+function getPadSourcePort(
+  pad: CircuitElement,
+  context: PadLookupContext,
+): CircuitElement | undefined {
+  const pcbPort = context.pcbPorts.get(asString(pad.pcb_port_id))
+  const sourcePort = context.sourcePorts.get(asString(pcbPort?.source_port_id))
+  if (sourcePort || !Array.isArray(pad.port_hints)) return sourcePort
+  const sourceComponentId = asString(
+    context.pcbComponents.get(asString(pad.pcb_component_id))
+      ?.source_component_id,
+  )
+  if (!sourceComponentId) return undefined
+  const hints = new Set(pad.port_hints.map((hint) => asString(hint)))
+  for (const candidate of context.sourcePorts.values()) {
+    if (asString(candidate.source_component_id) !== sourceComponentId) continue
+    const pinNumber = candidate.pin_number?.toString()
+    if (
+      hints.has(asString(candidate.name)) ||
+      (pinNumber !== undefined &&
+        (hints.has(pinNumber) || hints.has(`pin${pinNumber}`)))
+    ) {
+      return candidate
+    }
+  }
+  return undefined
 }
 
 function getPadNet(
   pad: CircuitElement,
   context: PadLookupContext,
 ): PcbNetEntry | undefined {
-  const pcbPort = context.pcbPorts.get(asString(pad.pcb_port_id))
-  return context.netBySourcePortId.get(asString(pcbPort?.source_port_id))
+  const sourcePort = getPadSourcePort(pad, context)
+  return context.netBySourcePortId.get(asString(sourcePort?.source_port_id))
 }
 
 function getPadName(pad: CircuitElement, context: PadLookupContext): string {
-  const pcbPort = context.pcbPorts.get(asString(pad.pcb_port_id))
-  const sourcePort = context.sourcePorts.get(asString(pcbPort?.source_port_id))
+  const sourcePort = getPadSourcePort(pad, context)
   return (
     sanitizeField(sourcePort?.pin_number?.toString()) ||
     sanitizeField(sourcePort?.name) ||
@@ -112,6 +146,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       "KIND=Protel_Advanced_PCB",
       "VERSION=5.00",
       ...boardFields,
+      ...createPcbBoardLayerStackFields(),
     ].join("|"),
   ]
 
@@ -173,6 +208,14 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     }),
   )
 
+  const getFootprintName = createAltiumFootprintNameLookup(circuitJson)
+  const silkscreenTexts = byType(circuitJson, "pcb_silkscreen_text")
+  // Altium shows a component's designator from its owned Text primitive
+  // flagged DESIGNATOR=TRUE (and its comment from COMMENT=TRUE). Without
+  // them Altium invents "Designator1"/"Comment" on load, so mark the
+  // reference-designator silkscreen text, or add a hidden one.
+  const designatorTexts = new Set<CircuitElement>()
+  const designatorRecords: string[] = []
   for (const [index, component] of pcbComponents.entries()) {
     const componentId =
       asString(component.pcb_component_id) || `pcb_component_${index}`
@@ -184,9 +227,42 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     )
     const designator =
       sanitizeField(sourceComponent?.name) || `Component-${index + 1}`
-    const pattern = `TSCIRCUIT-${formatNumber(asPositiveNumber(component.width, 1))}x${formatNumber(asPositiveNumber(component.height, 1))}mm`
+    const pattern = getFootprintName(component)
     const componentLayer =
       asString(component.layer).toLowerCase() === "bottom" ? "BOTTOM" : "TOP"
+    const overlayLayer =
+      componentLayer === "BOTTOM" ? "BOTTOMOVERLAY" : "TOPOVERLAY"
+    const designatorText = silkscreenTexts.find(
+      (text) =>
+        asString(text.pcb_component_id) === componentId &&
+        sanitizeField(text.text) === designator,
+    )
+    if (designatorText) designatorTexts.add(designatorText)
+    const comment =
+      sanitizeField(sourceComponent?.display_value) ||
+      sanitizeField(sourceComponent?.manufacturer_part_number) ||
+      designator
+    const hiddenTextFields = (text: string, flag: "DESIGNATOR" | "COMMENT") =>
+      [
+        "|RECORD=Text",
+        `COMPONENT=${index}`,
+        `LAYER=${overlayLayer}`,
+        `X=${formatMil(altiumCenter.x)}`,
+        `Y=${formatMil(altiumCenter.y)}`,
+        "ROTATION=0",
+        `MIRROR=${componentLayer === "BOTTOM" ? "TRUE" : "FALSE"}`,
+        "HEIGHT=40mil",
+        "WIDTH=6mil",
+        "USETTFONTS=TRUE",
+        "FONTNAME=Arial",
+        "JUSTIFICATION=5",
+        `WIDESTRING=${[...text].map((c) => c.codePointAt(0)).join(",")}`,
+        `${flag}=TRUE`,
+      ].join("|")
+    if (!designatorText) {
+      designatorRecords.push(hiddenTextFields(designator, "DESIGNATOR"))
+    }
+    designatorRecords.push(hiddenTextFields(comment, "COMMENT"))
     lines.push(
       [
         "|RECORD=Component",
@@ -197,8 +273,8 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
         `ROTATION=${formatNumber(convertCircuitPcbCcwRotationDegreesToAltium(asNumber(component.rotation)))}`,
         `PATTERN=${pattern}`,
         `SOURCEDESIGNATOR=${designator}`,
-        "NAMEON=TRUE",
-        "COMMENTON=TRUE",
+        `NAMEON=${designatorText ? "TRUE" : "FALSE"}`,
+        "COMMENTON=FALSE",
         `SOURCEUNIQUEID=${sanitizeField(componentId)}`,
       ].join("|"),
     )
@@ -231,6 +307,12 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
 
   const padLookupContext: PadLookupContext = {
     netBySourcePortId,
+    pcbComponents: new Map(
+      pcbComponents.map((component) => [
+        asString(component.pcb_component_id),
+        component,
+      ]),
+    ),
     pcbPorts,
     sourcePorts,
   }
@@ -504,17 +586,21 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     }),
   )
 
-  for (const silkscreenText of byType(circuitJson, "pcb_silkscreen_text")) {
+  for (const silkscreenText of silkscreenTexts) {
+    const record = createPcbSilkscreenTextRecord({
+      altiumComponentIndex: componentIndex.get(
+        asString(silkscreenText.pcb_component_id),
+      ),
+      circuitToAltiumPcbPoint,
+      silkscreenText,
+    })
     lines.push(
-      createPcbSilkscreenTextRecord({
-        altiumComponentIndex: componentIndex.get(
-          asString(silkscreenText.pcb_component_id),
-        ),
-        circuitToAltiumPcbPoint,
-        silkscreenText,
-      }),
+      designatorTexts.has(silkscreenText)
+        ? `${record}|DESIGNATOR=TRUE`
+        : record,
     )
   }
+  lines.push(...designatorRecords)
 
   return `${lines.join("\r\n")}\r\n`
 }
