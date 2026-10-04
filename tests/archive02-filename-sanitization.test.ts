@@ -12,7 +12,7 @@ test("sanitizes project paths and reserved filenames", async () => {
     "board-CON.SchDoc",
   ])
   expect(result.project.documents.map((document) => document.path)).toEqual([
-    "board-CON.PcbDoc",
     "board-CON.SchDoc",
+    "board-CON.PcbDoc",
   ])
 })

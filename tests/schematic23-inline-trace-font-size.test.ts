@@ -22,8 +22,9 @@ test("exports the microcontroller inline trace labels at a native integer size",
   if (!file) throw new Error("Expected the microcontroller schematic")
   const doc = parseAltiumSchDoc(file.content)
   const sheet = doc.getRecordsByKind("31")[0]!
+  // Inline trace labels are exported as electrical net labels (RECORD=25).
   const inlineLabels = doc
-    .getRecordsByKind("4")
+    .getRecordsByKind("25")
     .filter((record) =>
       ["SWDIO", "SWCLK", "NRST", "PA0"].includes(
         record.getDecoded("TEXT") ?? "",

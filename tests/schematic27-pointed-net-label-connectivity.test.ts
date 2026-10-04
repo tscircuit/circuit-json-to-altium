@@ -29,16 +29,21 @@ test("exports compact single-text labels connected to the original wire anchors"
       (sheet) => sheet.filename === "automotive-mirror-system-04.SchDoc",
     )!
   const doc = parseAltiumSchDoc(file.content)
-  expect(doc.netLabels.map((label) => label.text)).toEqual(
+  // Inline trace labels are now net labels as well; this test covers the
+  // pointed (outlined) labels only.
+  const netLabels = doc.netLabels.filter(
+    (label) => !["SWDIO", "SWCLK", "NRST", "PA0"].includes(label.text ?? ""),
+  )
+  expect(netLabels.map((label) => label.text)).toEqual(
     before.netLabels.map((label) => label.text),
   )
-  expect(doc.netLabels).toHaveLength(16)
+  expect(netLabels).toHaveLength(16)
   expect(
     doc
       .getRecordsByKind("4")
       .some((record) => record.getDecoded("UNIQUEID")?.startsWith("CJNT")),
   ).toBe(false)
-  for (const [index, label] of doc.netLabels.entries()) {
+  for (const [index, label] of netLabels.entries()) {
     expect(label.getBoolean("ISHIDDEN")).not.toBe(true)
     const id = label.getDecoded("UNIQUEID")!
     const outline = doc.records.find(
