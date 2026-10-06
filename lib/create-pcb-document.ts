@@ -1,5 +1,6 @@
 import { convertCircuitPcbCcwRotationDegreesToAltium } from "./convert-circuit-pcb-ccw-rotation-degrees-to-altium"
 import { createCircuitToAltiumPcbPointTransform } from "./create-circuit-to-altium-pcb-point-transform"
+import { createAltiumRegionRecord } from "./create-pcb-annotation-primitives"
 import { createPcbComponentBodyRecords } from "./create-pcb-component-body-records"
 import { createPcbCopperPourRecords } from "./create-pcb-copper-pour-records"
 import { createPcbCourtyardRecords } from "./create-pcb-courtyard-records"
@@ -26,6 +27,7 @@ import {
 } from "./format"
 import { getAltiumPcbTrackLayer } from "./get-altium-pcb-track-layer"
 import { getBoardOutline } from "./get-board-outline"
+import { getPolygonPadAnchor } from "./get-polygon-pad-anchor"
 import type {
   CircuitElement,
   PcbComponentId,
@@ -238,17 +240,36 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
   }
 
   for (const pad of byType(circuitJson, "pcb_smtpad")) {
-    const altiumCenter = circuitToAltiumPcbPoint({
-      x: asNumber(pad.x),
-      y: asNumber(pad.y),
-    })
+    const polygonPoints =
+      pad.shape === "polygon" && Array.isArray(pad.points)
+        ? pad.points.map((point) => {
+            const parsed = asPoint(point)
+            if (!parsed)
+              throw new Error("A polygon pad requires finite vertices")
+            return parsed
+          })
+        : undefined
+    if (pad.shape === "polygon" && !polygonPoints)
+      throw new Error("A polygon pad requires points")
+    const polygonAnchor = polygonPoints
+      ? getPolygonPadAnchor(polygonPoints)
+      : undefined
+    const altiumCenter = circuitToAltiumPcbPoint(
+      polygonAnchor?.center ?? {
+        x: asNumber(pad.x),
+        y: asNumber(pad.y),
+      },
+    )
     const altiumComponentIndex = componentIndex.get(
       asString(pad.pcb_component_id),
     )
     const net = getPadNet(pad, padLookupContext)
-    const diameter = asPositiveNumber(pad.radius, 0.5) * 2
-    const width = asPositiveNumber(pad.width, diameter)
-    const height = asPositiveNumber(pad.height, width)
+    const diameter =
+      polygonAnchor?.diameter ?? asPositiveNumber(pad.radius, 0.5) * 2
+    const width =
+      polygonAnchor?.diameter ?? asPositiveNumber(pad.width, diameter)
+    const height =
+      polygonAnchor?.diameter ?? asPositiveNumber(pad.height, width)
     const layer =
       asString(pad.layer).toLowerCase() === "bottom" ? "BOTTOM" : "TOP"
     lines.push(
@@ -266,11 +287,26 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
         "LOCKED=FALSE",
         `X=${formatMil(altiumCenter.x)}`,
         `Y=${formatMil(altiumCenter.y)}`,
-        ...getSmtPadShapeFields({ pad, width, height, layer }),
+        ...(polygonAnchor
+          ? ["SHAPE=ROUND"]
+          : getSmtPadShapeFields({ pad, width, height, layer })),
         `XSIZE=${formatMil(width * MILLIMETERS_TO_MILS)}`,
         `YSIZE=${formatMil(height * MILLIMETERS_TO_MILS)}`,
       ].join("|"),
     )
+    if (polygonPoints) {
+      const region = (regionLayer: string) =>
+        createAltiumRegionRecord({
+          altiumComponentIndex,
+          circuitPoints: polygonPoints,
+          circuitToAltiumPcbPoint,
+          layer: regionLayer,
+        })
+      lines.push(region(layer) + (net ? `|NET=${net.index}` : ""))
+      if (pad.is_covered_with_solder_mask !== true)
+        lines.push(region(layer === "TOP" ? "TOPSOLDER" : "BOTTOMSOLDER"))
+      lines.push(region(layer === "TOP" ? "TOPPASTE" : "BOTTOMPASTE"))
+    }
   }
 
   for (const hole of byType(circuitJson, "pcb_plated_hole")) {
