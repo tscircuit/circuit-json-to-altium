@@ -10,6 +10,7 @@ import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
 import { createPcbSilkscreenCircleRecords } from "./create-pcb-silkscreen-circle-records"
 import { createPcbSilkscreenGraphicRecords } from "./create-pcb-silkscreen-graphic-records"
 import { createPcbSilkscreenLineRecords } from "./create-pcb-silkscreen-line-records"
+import { createPcbSilkscreenRectRecords } from "./create-pcb-silkscreen-rect-records"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
 import {
   asNumber,
@@ -510,6 +511,11 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
   }
 
   lines.push(
+    ...createPcbSilkscreenRectRecords({
+      circuitJson,
+      circuitToAltiumPcbPoint,
+      componentIndex,
+    }),
     ...createPcbSilkscreenCircleRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
