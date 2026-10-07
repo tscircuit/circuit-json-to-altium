@@ -109,7 +109,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       `VY${index}=${formatMil(altiumPoint.y)}`,
     ]
   })
-  const lines = [
+  const recordLines = [
     [
       "|RECORD=Board",
       "KIND=Protel_Advanced_PCB",
@@ -155,19 +155,19 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
   )
 
   for (const net of netEntries) {
-    lines.push(
+    recordLines.push(
       `|RECORD=Net|ID=${net.index}|NAME=${sanitizeField(net.name)}|VISIBLE=FALSE|JUMPERSVISIBLE=FALSE`,
     )
   }
 
-  lines.push(
+  recordLines.push(
     ...createPcbCutoutRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
     }),
   )
 
-  lines.push(
+  recordLines.push(
     ...createPcbCopperPourRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
@@ -190,7 +190,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     const pattern = `TSCIRCUIT-${formatNumber(asPositiveNumber(component.width, 1))}x${formatNumber(asPositiveNumber(component.height, 1))}mm`
     const componentLayer =
       asString(component.layer).toLowerCase() === "bottom" ? "BOTTOM" : "TOP"
-    lines.push(
+    recordLines.push(
       [
         "|RECORD=Component",
         `ID=${index}`,
@@ -207,7 +207,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     )
   }
 
-  lines.push(
+  recordLines.push(
     ...createPcbComponentBodyRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
@@ -215,7 +215,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     }),
   )
 
-  lines.push(
+  recordLines.push(
     ...createPcbKeepoutRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
@@ -252,7 +252,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     const height = asPositiveNumber(pad.height, width)
     const layer =
       asString(pad.layer).toLowerCase() === "bottom" ? "BOTTOM" : "TOP"
-    lines.push(
+    recordLines.push(
       [
         "|RECORD=Pad",
         ...(altiumComponentIndex === undefined
@@ -318,7 +318,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       hasIndependentPadRotation &&
       asPositiveNumber(hole.rect_border_radius, 0) >=
         Math.min(outerWidth, outerHeight) / 2 - 1e-9
-    lines.push(
+    recordLines.push(
       [
         "|RECORD=Pad",
         ...(altiumComponentIndex === undefined
@@ -358,7 +358,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     const padCcwRotationDegrees = asNumber(hole.ccw_rotation)
     let relativeHoleRotation = padCcwRotationDegrees
     if (isSlotted) relativeHoleRotation = holeHeight > holeWidth ? 90 : 0
-    lines.push(
+    recordLines.push(
       [
         "|RECORD=Pad",
         ...(altiumComponentIndex === undefined
@@ -416,7 +416,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
           asString(circuitRouteStart.layer, "top"),
         ),
       )
-      lines.push(
+      recordLines.push(
         [
           "|RECORD=Track",
           ...(net ? [`NET=${net.index}`] : []),
@@ -447,7 +447,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     const net = netByTraceId.get(
       asString(via.source_trace_id, asString(owningTrace?.source_trace_id)),
     )
-    lines.push(
+    recordLines.push(
       [
         "|RECORD=Via",
         ...(net ? [`NET=${net.index}`] : []),
@@ -462,7 +462,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     )
   }
 
-  lines.push(
+  recordLines.push(
     ...createPcbSilkscreenLineRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
@@ -492,7 +492,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       const altiumStartPoint = circuitToAltiumPcbPoint(circuitStartPoint)
       const altiumEndPoint = circuitToAltiumPcbPoint(circuitEndPoint)
       if (pointsEqual(altiumStartPoint, altiumEndPoint)) continue
-      lines.push(
+      recordLines.push(
         [
           "|RECORD=Track",
           ...(altiumComponentIndex === undefined
@@ -510,7 +510,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     }
   }
 
-  lines.push(
+  recordLines.push(
     ...createPcbSilkscreenRectRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
@@ -529,7 +529,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
   )
 
   for (const silkscreenText of byType(circuitJson, "pcb_silkscreen_text")) {
-    lines.push(
+    recordLines.push(
       createPcbSilkscreenTextRecord({
         altiumComponentIndex: componentIndex.get(
           asString(silkscreenText.pcb_component_id),
@@ -540,5 +540,5 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     )
   }
 
-  return `${lines.join("\r\n")}\r\n`
+  return `${recordLines.join("\r\n")}\r\n`
 }
