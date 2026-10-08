@@ -6,6 +6,7 @@ import {
   asString,
   formatMil,
   formatNumber,
+  isCircuitElement,
   MILLIMETERS_TO_MILS,
 } from "./format"
 import type { CircuitElement, Point, PointTransform } from "./types"
@@ -37,6 +38,30 @@ export function createPcbTextRecord({
     typeof explicitMirroring === "boolean" ? explicitMirroring : isBottomLayer
   const fontSizeMm = asPositiveNumber(circuitText.font_size, 1)
 
+  const knockoutFields: string[] = []
+  if (circuitText.is_knockout === true) {
+    const padding = isCircuitElement(circuitText.knockout_padding)
+      ? circuitText.knockout_padding
+      : undefined
+    const margins = ["left", "right", "top", "bottom"].map((side) =>
+      asNumber(padding?.[side], fontSizeMm * 0.3),
+    )
+    const margin = margins[0]!
+    if (
+      margin < 0 ||
+      margins.some((value) => Math.abs(value - margin) > 1e-9)
+    ) {
+      throw new Error(
+        "Native Altium knockout text requires equal, non-negative padding on all sides",
+      )
+    }
+    knockoutFields.push(
+      "INVERTED=TRUE",
+      "INVERTEDRECT=FALSE",
+      `MARGINBORDERWIDTH=${formatMil(margin * MILLIMETERS_TO_MILS)}`,
+    )
+  }
+
   return [
     "|RECORD=Text",
     ...(altiumComponentIndex === undefined
@@ -51,6 +76,7 @@ export function createPcbTextRecord({
     `WIDTH=${formatMil(Math.max(0.05, fontSizeMm * 0.1) * MILLIMETERS_TO_MILS)}`,
     "USETTFONTS=TRUE",
     "FONTNAME=Arial",
+    ...knockoutFields,
     `JUSTIFICATION=${getAltiumTextJustification(circuitText.anchor_alignment)}`,
     `WIDESTRING=${encodeAltiumWideString(asString(circuitText.text))}`,
   ].join("|")
