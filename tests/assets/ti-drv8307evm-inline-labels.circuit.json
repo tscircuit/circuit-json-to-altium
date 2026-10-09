@@ -1,0 +1,702 @@
+[
+  {
+    "type": "schematic_sheet",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "name": "Altium schematic",
+    "outline_color": "#334155",
+    "sheet_index": 0,
+    "sheet_width": 276.92307692307696,
+    "sheet_height": 200
+  },
+  {
+    "type": "source_component",
+    "display_name": "TP2",
+    "display_value": "TP-LOOP-ORANGE",
+    "name": "TP2",
+    "source_component_id": "source_component_altium_149",
+    "ftype": "simple_test_point"
+  },
+  {
+    "type": "source_port",
+    "name": "1",
+    "port_hints": ["1", "pin1"],
+    "source_component_id": "source_component_altium_149",
+    "source_port_id": "source_port_altium_150",
+    "pin_number": 1
+  },
+  {
+    "type": "schematic_port",
+    "center": {
+      "x": -3.3811629315566343,
+      "y": 8.161720169594187
+    },
+    "distance_from_component_edge": 0.2,
+    "facing_direction": "right",
+    "is_connected": true,
+    "schematic_component_id": "schematic_component_altium_149",
+    "schematic_port_id": "schematic_port_altium_150",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "side_of_component": "right",
+    "source_port_id": "source_port_altium_150",
+    "true_ccw_index": 0,
+    "pin_number": 1
+  },
+  {
+    "type": "schematic_component",
+    "center": {
+      "x": -3.5811629315566336,
+      "y": 8.161720169594187
+    },
+    "is_box_with_pins": true,
+    "schematic_component_id": "schematic_component_altium_149",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "size": {
+      "width": 0.325,
+      "height": 0.2
+    },
+    "source_component_id": "source_component_altium_149",
+    "symbol_display_value": "TP-LOOP-ORANGE"
+  },
+  {
+    "type": "source_component",
+    "display_name": "U1",
+    "display_value": "DRV8307",
+    "name": "U1",
+    "source_component_id": "source_component_altium_601",
+    "ftype": "simple_chip"
+  },
+  {
+    "type": "source_port",
+    "name": "HU+",
+    "port_hints": ["1", "HU+", "pin1"],
+    "source_component_id": "source_component_altium_601",
+    "source_port_id": "source_port_altium_603",
+    "pin_number": 1
+  },
+  {
+    "type": "schematic_port",
+    "center": {
+      "x": 4.080860084797093,
+      "y": -1.9155057540884304
+    },
+    "display_pin_label": "HU+",
+    "display_pin_label_font_size": 0.1665657177468201,
+    "distance_from_component_edge": 0.3331314354936402,
+    "facing_direction": "left",
+    "is_connected": true,
+    "schematic_component_id": "schematic_component_altium_601",
+    "schematic_port_id": "schematic_port_altium_603",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "side_of_component": "left",
+    "source_port_id": "source_port_altium_603",
+    "true_ccw_index": 0,
+    "pin_number": 1
+  },
+  {
+    "type": "schematic_component",
+    "center": {
+      "x": 5.829800121138705,
+      "y": -2.6650514839491226
+    },
+    "is_box_with_pins": true,
+    "schematic_component_id": "schematic_component_altium_601",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "size": {
+      "height": 2.8316172016959418,
+      "width": 2.8316172016959418
+    },
+    "source_component_id": "source_component_altium_601",
+    "symbol_display_value": "DRV8307"
+  },
+  {
+    "type": "source_component",
+    "display_name": "P3",
+    "display_value": "OSTTE080161",
+    "name": "P3",
+    "source_component_id": "source_component_altium_706",
+    "ftype": "simple_chip"
+  },
+  {
+    "type": "source_port",
+    "name": "7",
+    "port_hints": ["7", "pin7"],
+    "source_component_id": "source_component_altium_706",
+    "source_port_id": "source_port_altium_734",
+    "pin_number": 7
+  },
+  {
+    "type": "schematic_port",
+    "center": {
+      "x": 0.7495457298606905,
+      "y": 0.9993943064809212
+    },
+    "distance_from_component_edge": 0.3331314354936402,
+    "facing_direction": "right",
+    "is_connected": true,
+    "schematic_component_id": "schematic_component_altium_706",
+    "schematic_port_id": "schematic_port_altium_734",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "side_of_component": "right",
+    "source_port_id": "source_port_altium_734",
+    "true_ccw_index": 6,
+    "pin_number": 7
+  },
+  {
+    "type": "schematic_component",
+    "center": {
+      "x": 0.24984857662022897,
+      "y": 1.4158086008479707
+    },
+    "is_box_with_pins": false,
+    "schematic_component_id": "schematic_component_altium_706",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "size": {
+      "height": 1.4990914597213811,
+      "width": 0.4
+    },
+    "source_component_id": "source_component_altium_706",
+    "symbol_display_value": "OSTTE080161"
+  },
+  {
+    "type": "source_component",
+    "ftype": "simple_capacitor",
+    "source_component_id": "source_component_altium_1167",
+    "name": "C10",
+    "display_value": "0.1uF",
+    "display_name": "C10",
+    "capacitance": 1e-7,
+    "display_capacitance": "0.1uF"
+  },
+  {
+    "type": "source_port",
+    "name": "1",
+    "port_hints": ["1", "pin1"],
+    "source_component_id": "source_component_altium_1167",
+    "source_port_id": "source_port_altium_1172",
+    "pin_number": 1
+  },
+  {
+    "type": "schematic_port",
+    "center": {
+      "x": 1.4990914597213791,
+      "y": -1.1990914597213802
+    },
+    "distance_from_component_edge": 0.3,
+    "facing_direction": "up",
+    "is_connected": true,
+    "schematic_component_id": "schematic_component_altium_1167",
+    "schematic_port_id": "schematic_port_altium_1172",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "side_of_component": "top",
+    "source_port_id": "source_port_altium_1172",
+    "true_ccw_index": 0,
+    "pin_number": 1
+  },
+  {
+    "type": "schematic_component",
+    "center": {
+      "x": 1.4990914597213791,
+      "y": -1.499091459721381
+    },
+    "is_box_with_pins": true,
+    "schematic_component_id": "schematic_component_altium_1167",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "size": {
+      "width": 0.9,
+      "height": 0.6
+    },
+    "source_component_id": "source_component_altium_1167",
+    "symbol_display_value": "0.1uF"
+  },
+  {
+    "type": "source_component",
+    "display_name": "U7",
+    "display_value": "SN74CBT3244CPW",
+    "name": "U7",
+    "source_component_id": "source_component_altium_2270",
+    "ftype": "simple_chip"
+  },
+  {
+    "type": "source_port",
+    "name": "1B3",
+    "port_hints": ["14", "1B3", "pin14"],
+    "source_component_id": "source_component_altium_2270",
+    "source_port_id": "source_port_altium_2305",
+    "pin_number": 14
+  },
+  {
+    "type": "schematic_port",
+    "center": {
+      "x": -2.831617201695943,
+      "y": 1.2492428831011502
+    },
+    "display_pin_label": "1B3",
+    "display_pin_label_font_size": 0.1665657177468201,
+    "distance_from_component_edge": 0.3331314354936402,
+    "facing_direction": "right",
+    "is_connected": true,
+    "schematic_component_id": "schematic_component_altium_2270",
+    "schematic_port_id": "schematic_port_altium_2305",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "side_of_component": "right",
+    "source_port_id": "source_port_altium_2305",
+    "true_ccw_index": 16,
+    "pin_number": 14
+  },
+  {
+    "type": "schematic_component",
+    "center": {
+      "x": -3.747728649303454,
+      "y": 0.58298001211387
+    },
+    "is_box_with_pins": true,
+    "schematic_component_id": "schematic_component_altium_2270",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "size": {
+      "height": 2.6650514839491217,
+      "width": 1.1659600242277408
+    },
+    "source_component_id": "source_component_altium_2270",
+    "symbol_display_value": "SN74CBT3244CPW"
+  },
+  {
+    "type": "source_component",
+    "display_name": "U8",
+    "display_value": "SN74CBT3244CPW",
+    "name": "U8",
+    "source_component_id": "source_component_altium_2372",
+    "ftype": "simple_chip"
+  },
+  {
+    "type": "source_port",
+    "name": "2B1",
+    "port_hints": ["9", "2B1", "pin9"],
+    "source_component_id": "source_component_altium_2372",
+    "source_port_id": "source_port_altium_2403",
+    "pin_number": 9
+  },
+  {
+    "type": "schematic_port",
+    "center": {
+      "x": -2.831617201695943,
+      "y": -3.331314354936402
+    },
+    "display_pin_label": "2B1",
+    "display_pin_label_font_size": 0.1665657177468201,
+    "distance_from_component_edge": 0.3331314354936402,
+    "facing_direction": "right",
+    "is_connected": true,
+    "schematic_component_id": "schematic_component_altium_2372",
+    "schematic_port_id": "schematic_port_altium_2403",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "side_of_component": "right",
+    "source_port_id": "source_port_altium_2403",
+    "true_ccw_index": 8,
+    "pin_number": 9
+  },
+  {
+    "type": "schematic_component",
+    "center": {
+      "x": -3.747728649303454,
+      "y": -3.1647486371895823
+    },
+    "is_box_with_pins": true,
+    "schematic_component_id": "schematic_component_altium_2372",
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "size": {
+      "height": 2.6650514839491217,
+      "width": 1.1659600242277408
+    },
+    "source_component_id": "source_component_altium_2372",
+    "symbol_display_value": "SN74CBT3244CPW"
+  },
+  {
+    "type": "source_net",
+    "is_ground": false,
+    "is_power": false,
+    "member_source_group_ids": [],
+    "name": "HU+",
+    "source_net_id": "source_net_altium_hu"
+  },
+  {
+    "type": "source_net",
+    "is_ground": false,
+    "is_power": false,
+    "member_source_group_ids": [],
+    "name": "UH+",
+    "source_net_id": "source_net_altium_uh"
+  },
+  {
+    "type": "source_trace",
+    "connected_source_net_ids": [
+      "source_net_altium_hu",
+      "source_net_altium_uh"
+    ],
+    "connected_source_port_ids": [
+      "source_port_altium_603",
+      "source_port_altium_1172",
+      "source_port_altium_734",
+      "source_port_altium_150",
+      "source_port_altium_2305",
+      "source_port_altium_2403"
+    ],
+    "display_name": "HU+",
+    "name": "HU+",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": 1.9987886129618406,
+          "y": -1.9155057540884304
+        },
+        "to": {
+          "x": 2.2486371895820714,
+          "y": -1.9155057540884304
+        }
+      },
+      {
+        "from": {
+          "x": 2.2486371895820714,
+          "y": -1.9155057540884304
+        },
+        "to": {
+          "x": 3.331314354936401,
+          "y": -1.9155057540884304
+        }
+      },
+      {
+        "from": {
+          "x": 3.331314354936401,
+          "y": -1.9155057540884304
+        },
+        "to": {
+          "x": 4.080860084797093,
+          "y": -1.9155057540884304
+        },
+        "to_schematic_port_id": "schematic_port_altium_603"
+      }
+    ],
+    "junctions": [
+      {
+        "x": 1.4990914597213791,
+        "y": -1.2492428831011502
+      },
+      {
+        "x": 2.2486371895820714,
+        "y": -1.9155057540884304
+      }
+    ],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_75",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": 1.9987886129618406,
+          "y": -1.9155057540884304
+        },
+        "to": {
+          "x": 1.9987886129618406,
+          "y": -1.2492428831011502
+        }
+      },
+      {
+        "from": {
+          "x": 1.9987886129618406,
+          "y": -1.2492428831011502
+        },
+        "to": {
+          "x": 1.4990914597213791,
+          "y": -1.2492428831011502
+        }
+      }
+    ],
+    "junctions": [],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_373",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": 0.7495457298606905,
+          "y": 0.9993943064809212
+        },
+        "to": {
+          "x": 0.8328285887341007,
+          "y": 0.9993943064809212
+        },
+        "from_schematic_port_id": "schematic_port_altium_734"
+      },
+      {
+        "from": {
+          "x": 0.8328285887341007,
+          "y": 0.9993943064809212
+        },
+        "to": {
+          "x": 2.2486371895820714,
+          "y": 0.9993943064809212
+        }
+      }
+    ],
+    "junctions": [],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_571",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": 2.2486371895820714,
+          "y": 0.9993943064809212
+        },
+        "to": {
+          "x": 2.2486371895820714,
+          "y": -1.9155057540884304
+        }
+      }
+    ],
+    "junctions": [],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_584",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": 1.4990914597213791,
+          "y": -1.2492428831011502
+        },
+        "to": {
+          "x": 1.1659600242277417,
+          "y": -1.2492428831011502
+        }
+      }
+    ],
+    "junctions": [],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_848",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": -3.4978800726832233,
+          "y": 8.161720169594187
+        },
+        "to": {
+          "x": -3.2480314960629926,
+          "y": 8.161720169594187
+        }
+      },
+      {
+        "from": {
+          "x": -3.2480314960629926,
+          "y": 8.161720169594187
+        },
+        "to": {
+          "x": -2.9149000605693534,
+          "y": 8.161720169594187
+        }
+      }
+    ],
+    "junctions": [],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_163",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": -2.831617201695943,
+          "y": 1.2492428831011502
+        },
+        "to": {
+          "x": -2.748334342822533,
+          "y": 1.2492428831011502
+        },
+        "from_schematic_port_id": "schematic_port_altium_2305"
+      },
+      {
+        "from": {
+          "x": -2.748334342822533,
+          "y": 1.2492428831011502
+        },
+        "to": {
+          "x": -2.498485766202302,
+          "y": 1.2492428831011502
+        }
+      }
+    ],
+    "junctions": [],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_2659",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": -2.831617201695943,
+          "y": -3.331314354936402
+        },
+        "to": {
+          "x": -2.498485766202302,
+          "y": -3.331314354936402
+        },
+        "from_schematic_port_id": "schematic_port_altium_2403"
+      }
+    ],
+    "junctions": [],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_2984",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": 1.4990914597213791,
+          "y": -1.1990914597213802
+        },
+        "from_schematic_port_id": "schematic_port_altium_1172",
+        "to": {
+          "x": 1.4990914597213791,
+          "y": -1.2492428831011502
+        }
+      }
+    ],
+    "junctions": [],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_port_lead_1172",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_trace",
+    "edges": [
+      {
+        "from": {
+          "x": -3.3811629315566343,
+          "y": 8.161720169594187
+        },
+        "from_schematic_port_id": "schematic_port_altium_150",
+        "to": {
+          "x": -3.4978800726832233,
+          "y": 8.161720169594187
+        }
+      }
+    ],
+    "junctions": [],
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_trace_id": "schematic_trace_altium_port_lead_150",
+    "source_trace_id": "source_trace_altium_18"
+  },
+  {
+    "type": "schematic_text",
+    "anchor": "center",
+    "color": "rgb(132, 0, 0)",
+    "font_size": 0.1665657177468201,
+    "position": {
+      "x": 3.5534019785988296,
+      "y": -1.8322228952150201
+    },
+    "rotation": 0,
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_text_id": "schematic_inline_net_label_altium_55",
+    "source_trace_id": "source_trace_altium_18",
+    "text": "HU+"
+  },
+  {
+    "type": "schematic_text",
+    "anchor": "center",
+    "color": "rgb(132, 0, 0)",
+    "font_size": 0.1665657177468201,
+    "position": {
+      "x": -3.025943872400566,
+      "y": 8.245003028467597
+    },
+    "rotation": 0,
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_text_id": "schematic_inline_net_label_altium_148",
+    "source_trace_id": "source_trace_altium_18",
+    "text": "HU+"
+  },
+  {
+    "type": "schematic_text",
+    "anchor": "center",
+    "color": "rgb(132, 0, 0)",
+    "font_size": 0.1665657177468201,
+    "position": {
+      "x": 1.2214819301433462,
+      "y": -1.16596002422774
+    },
+    "rotation": 0,
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_text_id": "schematic_inline_net_label_altium_380",
+    "source_trace_id": "source_trace_altium_18",
+    "text": "HU+"
+  },
+  {
+    "type": "schematic_text",
+    "anchor": "center",
+    "color": "rgb(132, 0, 0)",
+    "font_size": 0.1665657177468201,
+    "position": {
+      "x": 1.0549162123965292,
+      "y": 1.0826771653543314
+    },
+    "rotation": 0,
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_text_id": "schematic_inline_net_label_altium_580",
+    "source_trace_id": "source_trace_altium_18",
+    "text": "UH+"
+  },
+  {
+    "type": "schematic_text",
+    "anchor": "center",
+    "color": "rgb(132, 0, 0)",
+    "font_size": 0.1665657177468201,
+    "position": {
+      "x": -2.526246719160106,
+      "y": 1.3325257419745604
+    },
+    "rotation": 0,
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_text_id": "schematic_inline_net_label_altium_2978",
+    "source_trace_id": "source_trace_altium_18",
+    "text": "HU+"
+  },
+  {
+    "type": "schematic_text",
+    "anchor": "center",
+    "color": "rgb(132, 0, 0)",
+    "font_size": 0.1665657177468201,
+    "position": {
+      "x": -2.6095295780335164,
+      "y": -3.2480314960629917
+    },
+    "rotation": 0,
+    "schematic_sheet_id": "schematic_sheet_altium",
+    "schematic_text_id": "schematic_inline_net_label_altium_2993",
+    "source_trace_id": "source_trace_altium_18",
+    "text": "HU+"
+  }
+]
