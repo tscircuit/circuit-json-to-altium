@@ -22,7 +22,7 @@ test("exports the microcontroller inline trace labels at a native integer size",
   if (!file) throw new Error("Expected the microcontroller schematic")
   const doc = parseAltiumSchDoc(file.content)
   const sheet = doc.getRecordsByKind("31")[0]!
-  const inlineLabels = doc
+  const annotationLabels = doc
     .getRecordsByKind("4")
     .filter((record) =>
       ["SWDIO", "SWCLK", "NRST", "PA0"].includes(
@@ -30,22 +30,28 @@ test("exports the microcontroller inline trace labels at a native integer size",
       ),
     )
 
-  expect(inlineLabels.map((record) => record.getDecoded("TEXT"))).toEqual([
-    "SWDIO",
+  expect(annotationLabels.map((record) => record.getDecoded("TEXT"))).toEqual([
     "SWDIO",
     "SWCLK",
-    "SWCLK",
-    "NRST",
     "NRST",
     "PA0",
   ])
+  const electricalLabels = doc.netLabels.filter((record) =>
+    ["SWDIO", "SWCLK", "NRST"].includes(record.text ?? ""),
+  )
+  expect(electricalLabels.map((record) => record.text)).toEqual([
+    "SWDIO",
+    "SWCLK",
+    "NRST",
+  ])
+  const inlineLabels = [...annotationLabels, ...electricalLabels]
   for (const record of inlineLabels) {
     const fontId = record.getNumber("FONTID")
     expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("3")
     expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
   }
   expect(inlineLabels.map((record) => record.getNumber("ORIENTATION"))).toEqual(
-    [0, 0, 0, 0, 1, 0, 1],
+    [0, 0, 1, 1, 0, 0, 0],
   )
   expect(
     inlineLabels.every((record) => record.getNumber("COLOR") === 132),

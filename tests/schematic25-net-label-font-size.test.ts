@@ -22,8 +22,12 @@ test("exports ordinary microcontroller net-label text at a native integer size",
   if (!file) throw new Error("Expected the microcontroller schematic")
   const doc = parseAltiumSchDoc(file.content)
   const sheet = doc.getRecordsByKind("31")[0]!
-  expect(doc.netLabels).toHaveLength(16)
-  for (const record of doc.netLabels) {
+  expect(doc.netLabels).toHaveLength(19)
+  const ordinaryLabels = doc.netLabels.filter((record) =>
+    record.getDecoded("UNIQUEID")?.startsWith("CJNT"),
+  )
+  expect(ordinaryLabels).toHaveLength(16)
+  for (const record of ordinaryLabels) {
     const fontId = record.getNumber("FONTID")
     expect(sheet.getCaseInsensitive(`SIZE${fontId}`)).toBe("4")
     expect(sheet.getDecoded(`FONTNAME${fontId}`)).toBe("Arial")
