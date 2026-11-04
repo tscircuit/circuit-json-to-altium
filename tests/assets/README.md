@@ -154,7 +154,6 @@ Input/Output/Bidirectional types, which add fixed-size automatic triangles.
 These pins use **Passive** electrical type: connectivity is retained, but
 Altium ERC no longer checks their input/output direction.
 
-
 ## Pin connection points
 
 [Automotive communication sheet](./automotive-mirror-communication-pin-terminals.SchDoc)
@@ -195,7 +194,6 @@ Native `SIZE` is an enum: Smallest/Small/Medium/Large have measured radii
 It remains larger than Circuit JSON's 0.03 radius. The pinned Altiumts preview
 currently renders `SIZE=0` at radius 1.5, so these local SVGs are not exact native
 size references. No global scaling or dependency patch is included here.
-
 
 ## Default small native junctions
 

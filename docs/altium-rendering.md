@@ -6,14 +6,14 @@ The merged renderer commit `6c8af3de0e50c7d918f7f2bf43cca5af604cf9cc` is pinned 
 
 ## Behavior exposed by the new baselines
 
-| Exported data | Previous local preview | Updated local preview |
-| --- | --- | --- |
-| `X2=258.08` | Accepts decimal coordinates | Invalid integer base field falls back to zero; stretched polygons expose the error |
-| `X2=258` and `X2_FRAC=8000` | Treats the fraction like decimal digits (`0.8`) | Adds the signed fraction divided by 100,000 (`0.08`) |
-| `SIZE5=3.6000` | Uses font size 3.6 | Invalid integer size uses fallback 10; oversized labels expose the error |
-| `FONTID=2` on a pin | Uses font 2 for both name and number | Resolves `SYSTEMFONT`, or each enabled `NAME_CUSTOMFONTID` / `DESIGNATOR_CUSTOMFONTID`; missing system font uses Times New Roman 10 |
-| `ISHIDDEN=T` on a net label, plus separate graphic text | Hides the native net label | Draws both labels, exposing duplicate text |
-| Pin without `ELECTRICAL` | No electrical-type indicator | Uses input type; passive/power pins need their explicit native types |
+| Exported data                                           | Previous local preview                          | Updated local preview                                                                                                               |
+| ------------------------------------------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| `X2=258.08`                                             | Accepts decimal coordinates                     | Invalid integer base field falls back to zero; stretched polygons expose the error                                                  |
+| `X2=258` and `X2_FRAC=8000`                             | Treats the fraction like decimal digits (`0.8`) | Adds the signed fraction divided by 100,000 (`0.08`)                                                                                |
+| `SIZE5=3.6000`                                          | Uses font size 3.6                              | Invalid integer size uses fallback 10; oversized labels expose the error                                                            |
+| `FONTID=2` on a pin                                     | Uses font 2 for both name and number            | Resolves `SYSTEMFONT`, or each enabled `NAME_CUSTOMFONTID` / `DESIGNATOR_CUSTOMFONTID`; missing system font uses Times New Roman 10 |
+| `ISHIDDEN=T` on a net label, plus separate graphic text | Hides the native net label                      | Draws both labels, exposing duplicate text                                                                                          |
+| Pin without `ELECTRICAL`                                | No electrical-type indicator                    | Uses input type; passive/power pins need their explicit native types                                                                |
 
 The automotive microcontroller comparison now exposes the same **classes of failure** visible in the user's Altium 365 capture: large pin/annotation text, leftward polygon stretching, duplicate net labels and extra terminal indicators. Open [its snapshot](../tests/__snapshots__/visual09-generated-system-repros-automotive-mirror-system-04-microcontroller.snap.svg). Left is Circuit JSON; right is the local Altium format preview.
 
@@ -48,7 +48,6 @@ Both flags are needed to save text-only SVG changes even if raster comparison re
 Review renderer behavior and baselines first. Fix exporter coordinates, fonts, net-label representation and pin electrical types in subsequent changes, using independent Altium renders as the reference.
 
 Validation: the full [baseline CI test run](https://github.com/tscircuit/circuit-json-to-altium/actions/runs/34267437467) passed 98 tests across 71 files. A local schematic run passed 58 tests across 36 files. Typecheck and format check passed. Earlier artifact verification confirmed all eight automotive `.SchDoc` files and 32 generated-system Circuit JSON source panels were byte-for-byte unchanged by the rendering switch.
-
 
 The updated renderer also honors native pin custom-color fields and position bit
 0 (default name/designator margins -7/+9), places IEEE clock symbols inside the
