@@ -6,7 +6,6 @@
   "types": "lib/index.ts",
   "type": "module",
   "files": ["lib"],
-  "trustedDependencies": ["altiumts"],
   "scripts": {
     "check": "bun run format:check && bun run typecheck && bun test",
     "download-references": "bun run scripts/download-references.ts",
@@ -29,7 +28,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "altiumts": "github:tscircuit/altiumts#1fad5fa2b7b9f4e83b06072d5b965f153aae1c48",
+    "altiumts": "^0.0.95",
     "cfb": "^1.2.2",
     "circuit-json": "^0.0.480",
     "color-string": "2.1.4",
