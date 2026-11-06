@@ -28,6 +28,7 @@ import {
 } from "./create-altium-schematic-sheet-symbol-records"
 import { createAltiumSchematicSymbolPrimitiveRecordFields } from "./create-altium-schematic-symbol-primitive-record-fields"
 import { createAltiumSchematicSymbolRecords } from "./create-altium-schematic-symbol-records"
+import { createAltiumSchematicTableCellRecordFields } from "./create-altium-schematic-table-cell-record-fields"
 import { createAltiumSchematicTextRecordFields } from "./create-altium-schematic-text-record-fields"
 import { createSchematicPinMarkerRecords } from "./create-schematic-pin-marker-records"
 import { createSchematicWireRecords } from "./create-schematic-wire-records"
@@ -1198,6 +1199,25 @@ export function createSchematicDocument({
       })
     if (!annotationRecordFields) continue
     addSchematicRecord(annotationRecordFields, schematicRecordContext)
+  }
+
+  const schematicTables = new Map<string, CircuitElement>(
+    byType(circuitJson, "schematic_table").map((schematicTable) => [
+      asString(schematicTable.schematic_table_id),
+      schematicTable,
+    ]),
+  )
+  for (const tableCell of schematicElements.filter(
+    (element) => element.type === "schematic_table_cell",
+  )) {
+    for (const recordFields of createAltiumSchematicTableCellRecordFields({
+      cell: tableCell,
+      circuitToAltiumSchematicPoint,
+      fontTable: altiumSchematicFontTable,
+      table: schematicTables.get(asString(tableCell.schematic_table_id)),
+    })) {
+      addSchematicRecord(recordFields, schematicRecordContext)
+    }
   }
 
   return appendSchematicConnectionJunctions(
