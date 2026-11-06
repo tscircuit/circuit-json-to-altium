@@ -25,11 +25,20 @@ function getUniquePcbNetName({
   basePcbNetName,
   useCountByPcbNetName,
 }: GetUniquePcbNetNameOptions): PcbNetName {
-  const pcbNetNameUseCount = (useCountByPcbNetName.get(basePcbNetName) ?? 0) + 1
+  let pcbNetNameUseCount = (useCountByPcbNetName.get(basePcbNetName) ?? 0) + 1
+  let candidatePcbNetName =
+    pcbNetNameUseCount === 1
+      ? basePcbNetName
+      : `${basePcbNetName}-${pcbNetNameUseCount}`
+  while (useCountByPcbNetName.has(candidatePcbNetName)) {
+    pcbNetNameUseCount++
+    candidatePcbNetName = `${basePcbNetName}-${pcbNetNameUseCount}`
+  }
   useCountByPcbNetName.set(basePcbNetName, pcbNetNameUseCount)
-  return pcbNetNameUseCount === 1
-    ? basePcbNetName
-    : `${basePcbNetName}-${pcbNetNameUseCount}`
+  if (!useCountByPcbNetName.has(candidatePcbNetName)) {
+    useCountByPcbNetName.set(candidatePcbNetName, 1)
+  }
+  return candidatePcbNetName
 }
 
 function getPcbNetDeclarationOrder(
