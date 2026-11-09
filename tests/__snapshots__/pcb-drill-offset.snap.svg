@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="640" height="480" viewBox="0 0 168.5039 129.1338" role="img" aria-label="Altium PCB — TOP, MULTILAYER" class="altium-pcb" data-renderer="altiumts">
+  <title>Altium PCB — TOP, MULTILAYER</title>
+  <rect width="100%" height="100%" fill="#071a16"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <polygon data-record="BoardOutline" points="5.5118,123.622 162.9921,123.622 162.9921,5.5118 5.5118,5.5118 5.5118,123.622" fill="#123d32" stroke="#6ee7b7" stroke-width="3"/>
+    <g data-record="Pad" data-layer="MULTILAYER" data-pad-name="1" data-pad-shape="RECTANGLE" data-pad-stack-layer="0" data-pad-stack-mode="SIMPLE" data-plated="true"><rect x="44.8819" y="33.0709" width="78.7402" height="62.9921" fill="#22c55e" stroke="#111827" stroke-width="1"/><circle data-hole-shape="ROUND" cx="84.252" cy="64.5669" r="11.811" fill="#111827"/></g>
+  </g>
+</svg>
