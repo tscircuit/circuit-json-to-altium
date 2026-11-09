@@ -57,8 +57,8 @@ const cases: { name: string; elements: CircuitElement[]; layers: string[] }[] =
               y: 2,
               from_layer: "top",
               to_layer: "inner1",
-              via_outer_diameter: 0.7,
-              via_hole_diameter: 0.35,
+              outer_diameter: 0.7,
+              hole_diameter: 0.35,
             },
             { route_type: "wire", x: 2, y: 2, width: 0.2, layer: "inner1" },
           ],
@@ -77,7 +77,7 @@ for (const fixture of cases) {
   test(`${fixture.name}: exported record snapshot`, () => {
     expect(
       createPcbDocument(elements)
-        .split("\n")
+        .split(/\r?\n/)
         .filter((line) => /RECORD=(Via|Net|Track)\|/.test(line)),
     ).toMatchSnapshot()
   })
@@ -86,9 +86,7 @@ for (const fixture of cases) {
     const vias = pcb.getRecordsByKind("Via")
     expect(vias).toHaveLength(1)
     const via = vias[0]!
-    expect([via.get("STARTLAYER"), via.get("STOPLAYER")]).toEqual(
-      fixture.layers,
-    )
+    expect([via.get("STARTLAYER"), via.get("ENDLAYER")]).toEqual(fixture.layers)
     expect(pcb.getNetForRecord(via)?.name).toBe("GND")
   })
 }
