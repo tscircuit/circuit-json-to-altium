@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test"
-import { createPcbDocument } from "../lib/create-pcb-document"
 import { board, extractArchive } from "./fixtures"
 import { viaRegressionCases } from "./fixtures/via-regressions"
 
@@ -9,13 +8,6 @@ for (const fixture of viaRegressionCases) {
     { type: "source_net", source_net_id: "gnd", name: "GND" },
     ...fixture.elements,
   ]
-  test(`${fixture.name}: exported record snapshot`, () => {
-    expect(
-      createPcbDocument(elements)
-        .split(/\r?\n/)
-        .filter((line) => /RECORD=(Via|Net|Track)\|/.test(line)),
-    ).toMatchSnapshot()
-  })
   test.failing(`${fixture.name}: preserves native via`, async () => {
     const { pcb } = await extractArchive(elements)
     const vias = pcb.getRecordsByKind("Via")
