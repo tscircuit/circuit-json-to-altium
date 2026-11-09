@@ -4,13 +4,21 @@ import { board, extractArchive } from "./fixtures"
 import { viaRegressionCases } from "./fixtures/via-regressions"
 
 const layers = ["TOP", "MID-LAYER1", "MID-LAYER2", "BOTTOM"]
-const escapeText = (value: string) =>
-  value.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
+const escapeText = (text: string) =>
+  text.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;")
 
 // A top-down PCB image cannot show a via's start/stop layers or net membership.
 // This diagnostic cross-section reads those fields from the parsed binary output.
 // Layer spacing is illustrative; it does not assert the exported board stackup.
-function crossSection(span: string[], net: string, color: string): string {
+function crossSection({
+  span,
+  net,
+  color,
+}: {
+  span: string[]
+  net: string
+  color: string
+}): string {
   const start = layers.indexOf(span[0] ?? "")
   const end = layers.indexOf(span[1] ?? "")
   return `${layers.map((layer, index) => `<line x1="6" x2="170" y1="${index * 30}" y2="${index * 30}" stroke="#94a3b8"/><text x="6" y="${index * 30 - 6}" font-size="10" fill="#475569">${layer}</text>`).join("")}
@@ -42,8 +50,8 @@ test("visually audits via spans, nets, and inline presence in native output", as
       <text x="24" y="80" font-size="19" font-weight="bold">${escapeText(fixture.name)}</text>
       <text x="24" y="108" font-size="13">Expected from input</text>
       <text x="212" y="108" font-size="13">Parsed binary output</text>
-      <g transform="translate(20, 142)">${crossSection(fixture.layers, "GND", "#15803d")}</g>
-      <g transform="translate(208, 142)">${crossSection(span, net, correct ? "#15803d" : "#b91c1c")}</g>
+      <g transform="translate(20, 142)">${crossSection({ span: fixture.layers, net: "GND", color: "#15803d" })}</g>
+      <g transform="translate(208, 142)">${crossSection({ span, net, color: correct ? "#15803d" : "#b91c1c" })}</g>
       <text x="24" y="300" font-size="14" fill="${correct ? "#15803d" : "#b91c1c"}">Exported vias: ${vias.length} (expected 1)</text>
       <text x="24" y="324" font-size="13">Top-down exported PCB (altiumts renderer)</text>
       <image x="20" y="332" width="360" height="260" href="data:image/svg+xml;base64,${Buffer.from(actualSvg).toString("base64")}"/>
