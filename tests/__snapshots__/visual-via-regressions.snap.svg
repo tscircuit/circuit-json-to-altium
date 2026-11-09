@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="650" viewBox="0 0 1200 650">
+    <rect width="1200" height="650" fill="white"/>
+    <g font-family="Arial, sans-serif" fill="#0f172a">
+      <text x="24" y="30" font-size="22" font-weight="bold">Via conversion audit: expected input vs native binary output</text>
+      <g transform="translate(0, 0)">
+      <rect x="8" y="50" width="384" height="550" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="24" y="80" font-size="19" font-weight="bold">inner-layer via</text>
+      <text x="24" y="108" font-size="13">Expected from input</text>
+      <text x="212" y="108" font-size="13">Parsed binary output</text>
+      <g transform="translate(20, 142)"><line x1="6" x2="170" y1="0" y2="0" stroke="#94a3b8"/><text x="6" y="-6" font-size="10" fill="#475569">TOP</text><line x1="6" x2="170" y1="30" y2="30" stroke="#94a3b8"/><text x="6" y="24" font-size="10" fill="#475569">MID-LAYER1</text><line x1="6" x2="170" y1="60" y2="60" stroke="#94a3b8"/><text x="6" y="54" font-size="10" fill="#475569">MID-LAYER2</text><line x1="6" x2="170" y1="90" y2="90" stroke="#94a3b8"/><text x="6" y="84" font-size="10" fill="#475569">BOTTOM</text>
+    <rect x="124" y="26" width="22" height="38" rx="3" fill="#15803d"/><rect x="132" y="26" width="6" height="38" fill="#f8fafc"/>
+    <text x="6" y="122" font-size="13" fill="#15803d">Net: GND</text></g>
+      <g transform="translate(208, 142)"><line x1="6" x2="170" y1="0" y2="0" stroke="#94a3b8"/><text x="6" y="-6" font-size="10" fill="#475569">TOP</text><line x1="6" x2="170" y1="30" y2="30" stroke="#94a3b8"/><text x="6" y="24" font-size="10" fill="#475569">MID-LAYER1</text><line x1="6" x2="170" y1="60" y2="60" stroke="#94a3b8"/><text x="6" y="54" font-size="10" fill="#475569">MID-LAYER2</text><line x1="6" x2="170" y1="90" y2="90" stroke="#94a3b8"/><text x="6" y="84" font-size="10" fill="#475569">BOTTOM</text>
+    <rect x="124" y="-4" width="22" height="98" rx="3" fill="#b91c1c"/><rect x="132" y="-4" width="6" height="98" fill="#f8fafc"/>
+    <text x="6" y="122" font-size="13" fill="#b91c1c">Net: UNASSIGNED</text></g>
+      <text x="24" y="300" font-size="14" fill="#b91c1c">Exported vias: 1 (expected 1)</text>
+      <text x="24" y="324" font-size="13">Top-down exported PCB (altiumts renderer)</text>
+      <image x="20" y="332" width="360" height="260" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjI2MCIgdmlld0JveD0iMCAwIDI1Mi43NTU5IDI1Mi43NTU5IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkFsdGl1bSBQQ0IiIGNsYXNzPSJhbHRpdW0tcGNiIiBkYXRhLXJlbmRlcmVyPSJhbHRpdW10cyI+CiAgPHRpdGxlPkFsdGl1bSBQQ0I8L3RpdGxlPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMwNzFhMTYiLz4KICA8ZyBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPHBvbHlnb24gZGF0YS1yZWNvcmQ9IkJvYXJkT3V0bGluZSIgcG9pbnRzPSI4LjI2NzcsMjQ0LjQ4ODIgMjQ0LjQ4ODIsMjQ0LjQ4ODIgMjQ0LjQ4ODIsOC4yNjc3IDguMjY3Nyw4LjI2NzcgOC4yNjc3LDI0NC40ODgyIiBmaWxsPSIjMTIzZDMyIiBzdHJva2U9IiM2ZWU3YjciIHN0cm9rZS13aWR0aD0iMyIvPgogICAgPGcgZGF0YS1yZWNvcmQ9IlZpYSIgZGF0YS1sYXllcj0iTVVMVElMQVlFUiI+PGNpcmNsZSBjeD0iMTY1Ljc0OCIgY3k9IjQ3LjYzNzgiIHI9IjEzLjc3OTYiIGZpbGw9IiMyMmM1NWUiIHN0cm9rZT0iI2QxZmFlNSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48Y2lyY2xlIGN4PSIxNjUuNzQ4IiBjeT0iNDcuNjM3OCIgcj0iNi44ODk4IiBmaWxsPSIjMTExODI3Ii8+PC9nPgogIDwvZz4KPC9zdmc+"/>
+    </g>
+<g transform="translate(400, 0)">
+      <rect x="8" y="50" width="384" height="550" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="24" y="80" font-size="19" font-weight="bold">standalone via net</text>
+      <text x="24" y="108" font-size="13">Expected from input</text>
+      <text x="212" y="108" font-size="13">Parsed binary output</text>
+      <g transform="translate(20, 142)"><line x1="6" x2="170" y1="0" y2="0" stroke="#94a3b8"/><text x="6" y="-6" font-size="10" fill="#475569">TOP</text><line x1="6" x2="170" y1="30" y2="30" stroke="#94a3b8"/><text x="6" y="24" font-size="10" fill="#475569">MID-LAYER1</text><line x1="6" x2="170" y1="60" y2="60" stroke="#94a3b8"/><text x="6" y="54" font-size="10" fill="#475569">MID-LAYER2</text><line x1="6" x2="170" y1="90" y2="90" stroke="#94a3b8"/><text x="6" y="84" font-size="10" fill="#475569">BOTTOM</text>
+    <rect x="124" y="-4" width="22" height="98" rx="3" fill="#15803d"/><rect x="132" y="-4" width="6" height="98" fill="#f8fafc"/>
+    <text x="6" y="122" font-size="13" fill="#15803d">Net: GND</text></g>
+      <g transform="translate(208, 142)"><line x1="6" x2="170" y1="0" y2="0" stroke="#94a3b8"/><text x="6" y="-6" font-size="10" fill="#475569">TOP</text><line x1="6" x2="170" y1="30" y2="30" stroke="#94a3b8"/><text x="6" y="24" font-size="10" fill="#475569">MID-LAYER1</text><line x1="6" x2="170" y1="60" y2="60" stroke="#94a3b8"/><text x="6" y="54" font-size="10" fill="#475569">MID-LAYER2</text><line x1="6" x2="170" y1="90" y2="90" stroke="#94a3b8"/><text x="6" y="84" font-size="10" fill="#475569">BOTTOM</text>
+    <rect x="124" y="-4" width="22" height="98" rx="3" fill="#b91c1c"/><rect x="132" y="-4" width="6" height="98" fill="#f8fafc"/>
+    <text x="6" y="122" font-size="13" fill="#b91c1c">Net: UNASSIGNED</text></g>
+      <text x="24" y="300" font-size="14" fill="#b91c1c">Exported vias: 1 (expected 1)</text>
+      <text x="24" y="324" font-size="13">Top-down exported PCB (altiumts renderer)</text>
+      <image x="20" y="332" width="360" height="260" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjI2MCIgdmlld0JveD0iMCAwIDI1Mi43NTU5IDI1Mi43NTU5IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkFsdGl1bSBQQ0IiIGNsYXNzPSJhbHRpdW0tcGNiIiBkYXRhLXJlbmRlcmVyPSJhbHRpdW10cyI+CiAgPHRpdGxlPkFsdGl1bSBQQ0I8L3RpdGxlPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMwNzFhMTYiLz4KICA8ZyBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPHBvbHlnb24gZGF0YS1yZWNvcmQ9IkJvYXJkT3V0bGluZSIgcG9pbnRzPSI4LjI2NzcsMjQ0LjQ4ODIgMjQ0LjQ4ODIsMjQ0LjQ4ODIgMjQ0LjQ4ODIsOC4yNjc3IDguMjY3Nyw4LjI2NzcgOC4yNjc3LDI0NC40ODgyIiBmaWxsPSIjMTIzZDMyIiBzdHJva2U9IiM2ZWU3YjciIHN0cm9rZS13aWR0aD0iMyIvPgogICAgPGcgZGF0YS1yZWNvcmQ9IlZpYSIgZGF0YS1sYXllcj0iTVVMVElMQVlFUiI+PGNpcmNsZSBjeD0iMTY1Ljc0OCIgY3k9IjQ3LjYzNzgiIHI9IjEzLjc3OTYiIGZpbGw9IiMyMmM1NWUiIHN0cm9rZT0iI2QxZmFlNSIgc3Ryb2tlLXdpZHRoPSIxLjUiLz48Y2lyY2xlIGN4PSIxNjUuNzQ4IiBjeT0iNDcuNjM3OCIgcj0iNi44ODk4IiBmaWxsPSIjMTExODI3Ii8+PC9nPgogIDwvZz4KPC9zdmc+"/>
+    </g>
+<g transform="translate(800, 0)">
+      <rect x="8" y="50" width="384" height="550" rx="8" fill="#f8fafc" stroke="#cbd5e1"/>
+      <text x="24" y="80" font-size="19" font-weight="bold">inline route via</text>
+      <text x="24" y="108" font-size="13">Expected from input</text>
+      <text x="212" y="108" font-size="13">Parsed binary output</text>
+      <g transform="translate(20, 142)"><line x1="6" x2="170" y1="0" y2="0" stroke="#94a3b8"/><text x="6" y="-6" font-size="10" fill="#475569">TOP</text><line x1="6" x2="170" y1="30" y2="30" stroke="#94a3b8"/><text x="6" y="24" font-size="10" fill="#475569">MID-LAYER1</text><line x1="6" x2="170" y1="60" y2="60" stroke="#94a3b8"/><text x="6" y="54" font-size="10" fill="#475569">MID-LAYER2</text><line x1="6" x2="170" y1="90" y2="90" stroke="#94a3b8"/><text x="6" y="84" font-size="10" fill="#475569">BOTTOM</text>
+    <rect x="124" y="-4" width="22" height="38" rx="3" fill="#15803d"/><rect x="132" y="-4" width="6" height="38" fill="#f8fafc"/>
+    <text x="6" y="122" font-size="13" fill="#15803d">Net: GND</text></g>
+      <g transform="translate(208, 142)"><line x1="6" x2="170" y1="0" y2="0" stroke="#94a3b8"/><text x="6" y="-6" font-size="10" fill="#475569">TOP</text><line x1="6" x2="170" y1="30" y2="30" stroke="#94a3b8"/><text x="6" y="24" font-size="10" fill="#475569">MID-LAYER1</text><line x1="6" x2="170" y1="60" y2="60" stroke="#94a3b8"/><text x="6" y="54" font-size="10" fill="#475569">MID-LAYER2</text><line x1="6" x2="170" y1="90" y2="90" stroke="#94a3b8"/><text x="6" y="84" font-size="10" fill="#475569">BOTTOM</text>
+    <text x="90" y="55" font-size="12" fill="#b91c1c">NO VIA</text>
+    <text x="6" y="122" font-size="13" fill="#b91c1c">Net: NONE</text></g>
+      <text x="24" y="300" font-size="14" fill="#b91c1c">Exported vias: 0 (expected 1)</text>
+      <text x="24" y="324" font-size="13">Top-down exported PCB (altiumts renderer)</text>
+      <image x="20" y="332" width="360" height="260" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiB3aWR0aD0iMzYwIiBoZWlnaHQ9IjI2MCIgdmlld0JveD0iMCAwIDI1Mi43NTU5IDI1Mi43NTU5IiByb2xlPSJpbWciIGFyaWEtbGFiZWw9IkFsdGl1bSBQQ0IiIGNsYXNzPSJhbHRpdW0tcGNiIiBkYXRhLXJlbmRlcmVyPSJhbHRpdW10cyI+CiAgPHRpdGxlPkFsdGl1bSBQQ0I8L3RpdGxlPgogIDxyZWN0IHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIGZpbGw9IiMwNzFhMTYiLz4KICA8ZyBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPgogICAgPHBvbHlnb24gZGF0YS1yZWNvcmQ9IkJvYXJkT3V0bGluZSIgcG9pbnRzPSI4LjI2NzcsMjQ0LjQ4ODIgMjQ0LjQ4ODIsMjQ0LjQ4ODIgMjQ0LjQ4ODIsOC4yNjc3IDguMjY3Nyw4LjI2NzcgOC4yNjc3LDI0NC40ODgyIiBmaWxsPSIjMTIzZDMyIiBzdHJva2U9IiM2ZWU3YjciIHN0cm9rZS13aWR0aD0iMyIvPgogICAgPGxpbmUgZGF0YS1yZWNvcmQ9IlRyYWNrIiBkYXRhLWxheWVyPSJNSUQtTEFZRVIxIiB4MT0iMTY1Ljc0OCIgeTE9IjQ3LjYzNzgiIHgyPSIyMDUuMTE4MSIgeTI9IjQ3LjYzNzgiIHN0cm9rZT0iI2Y5NzMxNiIgc3Ryb2tlLXdpZHRoPSI3Ljg3NCIvPgogICAgPGxpbmUgZGF0YS1yZWNvcmQ9IlRyYWNrIiBkYXRhLWxheWVyPSJUT1AiIHgxPSIxMjYuMzc3OSIgeTE9IjQ3LjYzNzgiIHgyPSIxNjUuNzQ4IiB5Mj0iNDcuNjM3OCIgc3Ryb2tlPSIjZWY0NDQ0IiBzdHJva2Utd2lkdGg9IjcuODc0Ii8+CiAgPC9nPgo8L3N2Zz4="/>
+    </g>
+      <text x="24" y="625" font-size="13">Cross-sections illustrate via endpoints and nets, not physical stackup. PCB views are rendered by altiumts, not Altium Designer.</text>
+    </g>
+  </svg>
