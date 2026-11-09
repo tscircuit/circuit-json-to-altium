@@ -28,7 +28,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "altiumts": "^0.0.95",
+    "altiumts": "github:rushabhcodes/altiumts#02c4dfe16a8c9c3a5ed3cbd7ebee2cdb2a00fb8a",
     "cfb": "^1.2.2",
     "circuit-json": "^0.0.480",
     "color-string": "2.1.4",

@@ -31,6 +31,9 @@ jobs:
       - name: Download open-source Altium references
         run: bun run download-references
 
+      - name: Build pinned serializer source
+        run: bun run --cwd node_modules/altiumts prepare
+
       - name: Run tests
         run: bun test
 

@@ -5,6 +5,7 @@ import { createPcbCopperPourRecords } from "./create-pcb-copper-pour-records"
 import { createPcbCourtyardRecords } from "./create-pcb-courtyard-records"
 import { createPcbCutoutRecords } from "./create-pcb-cutout-records"
 import { createPcbDocumentationRecords } from "./create-pcb-documentation-records"
+import { createPcbHoleOffsetFields } from "./create-pcb-hole-offset-fields"
 import { createPcbKeepoutRecords } from "./create-pcb-keepout-records"
 import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
 import { createPcbSilkscreenCircleRecords } from "./create-pcb-silkscreen-circle-records"
@@ -332,6 +333,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
         `HOLEWIDTH=${formatMil(Math.max(holeWidth, holeHeight) * MILLIMETERS_TO_MILS)}`,
         `HOLESHAPE=${isSlotted ? "SLOT" : "ROUND"}`,
         `HOLEROTATION=${formatNumber(convertCircuitPcbCcwRotationDegreesToAltium(relativeHoleRotation))}`,
+        ...createPcbHoleOffsetFields({ hole, padCcwRotationDegrees }),
         "PLATED=TRUE",
         "LOCKED=FALSE",
         `X=${formatMil(altiumCenter.x)}`,
