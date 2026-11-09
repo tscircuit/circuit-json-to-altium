@@ -16,7 +16,7 @@ function getViaLayers(
   via: CircuitElement,
   before?: CircuitElement,
   after?: CircuitElement,
-): string[] {
+): [string, string] {
   const layers =
     Array.isArray(via.layers) && via.layers.length > 0
       ? via.layers.map((layer) => getAltiumPcbTrackLayer(asString(layer)))
@@ -66,7 +66,6 @@ export function createPcbViaRecords({
     trace?: CircuitElement,
     before?: CircuitElement,
     after?: CircuitElement,
-    inline = false,
   ) => {
     const sourceTraceId = asString(
       via.source_trace_id,
@@ -94,7 +93,7 @@ export function createPcbViaRecords({
       startLayer,
       stopLayer,
     ])
-    if (inline && emitted.has(key)) return
+    if (via.route_type === "via" && emitted.has(key)) return
     emitted.add(key)
     records.push(
       [
@@ -122,7 +121,7 @@ export function createPcbViaRecords({
       : []
     for (const [index, point] of route.entries()) {
       if (point.route_type === "via")
-        addVia(point, trace, route[index - 1], route[index + 1], true)
+        addVia(point, trace, route[index - 1], route[index + 1])
     }
   }
   return records

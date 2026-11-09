@@ -175,10 +175,11 @@ export const createPcbNetEntries = (
   )
   const referencedSourceNetIds = new Set([
     ...pcbNetNameBySourceNetId.keys(),
-    ...[
-      ...byType(circuitJson, "pcb_copper_pour"),
-      ...byType(circuitJson, "pcb_via"),
-    ]
+    ...circuitJson
+      .filter(
+        (element) =>
+          element.type === "pcb_copper_pour" || element.type === "pcb_via",
+      )
       .map((element) => asString(element.source_net_id))
       .filter(Boolean),
   ])
