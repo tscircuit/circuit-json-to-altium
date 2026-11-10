@@ -253,6 +253,10 @@ function getAltiumComponentIndex({
   element: CircuitElement
 }): number | undefined {
   if (typeof element.pcb_component_id !== "string") return undefined
+  // The Altium importer uses this placeholder for standalone board graphics.
+  if (element.pcb_component_id === "pcb_component_altium_board_graphics") {
+    return undefined
+  }
   const altiumComponentIndex = componentIndex.get(element.pcb_component_id)
   if (altiumComponentIndex === undefined) {
     throw new Error(
