@@ -31,7 +31,7 @@ async function scenario() {
   return { baseline, actual, center, inlineVia }
 }
 
-test.failing("preserves the real ADC_VREF via when represented by its inline route", async () => {
+test("preserves the real ADC_VREF via when represented by its inline route", async () => {
   const { baseline, actual, inlineVia } = await scenario()
   expect(actual.pcb.vias).toHaveLength(baseline.pcb.vias.length)
   expect(inlineVia).toBeDefined()
