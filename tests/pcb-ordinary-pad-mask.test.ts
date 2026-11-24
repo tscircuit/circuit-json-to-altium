@@ -25,7 +25,7 @@ function exportPads(swapped = false) {
   return { bytes, pcb: parseAltiumBinaryPcbDoc(bytes) }
 }
 
-test.failing("preserves coverage and the 0.3 mm margin in binary pad records", () => {
+test("preserves coverage and the 0.3 mm margin in binary pad records", () => {
   const original = exportPads()
   const swapped = exportPads(true)
   expect(original.bytes).not.toEqual(swapped.bytes)
@@ -42,7 +42,7 @@ test.failing("preserves coverage and the 0.3 mm margin in binary pad records", (
 
 for (const layer of ["top", "bottom"]) {
   for (const margin of [-0.1, 0, 0.3]) {
-    test.failing(`${layer} pads preserve signed mask margin ${margin} mm and rotation`, () => {
+    test(`${layer} pads preserve signed mask margin ${margin} mm and rotation`, () => {
       const converter = new CircuitJsonToAltiumConverter([
         board(),
         {

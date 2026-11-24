@@ -28,6 +28,9 @@ jobs:
       - name: Install dependencies
         run: bun install
 
+      - name: Build pinned altiumts Git dependency
+        run: bun run --cwd node_modules/altiumts prepare
+
       - name: Download open-source Altium references
         run: bun run download-references
 
