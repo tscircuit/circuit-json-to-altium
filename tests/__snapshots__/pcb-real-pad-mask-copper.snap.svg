@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="480" height="360" viewBox="0 0 160 120" role="img" aria-label="Altium PCB — TOP" class="altium-pcb" data-renderer="altiumts">
+  <title>Altium PCB — TOP</title>
+  <rect width="100%" height="100%" fill="#071a16"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <g data-record="Pad" data-layer="TOP" data-pad-name="1" data-pad-shape="RECTANGLE" data-pad-stack-layer="0" data-pad-stack-mode="SIMPLE" data-plated="true"><rect x="56.378" y="32.441" width="47.2441" height="55.1181" fill="#ef4444" stroke="#111827" stroke-width="1"/></g>
+    <g data-record="Pad" data-layer="TOP" data-pad-name="2" data-pad-shape="RECTANGLE" data-pad-stack-layer="0" data-pad-stack-mode="SIMPLE" data-plated="true"><rect x="56.378" y="119.0551" width="47.2441" height="55.1181" fill="#ef4444" stroke="#111827" stroke-width="1"/></g>
+    <g data-record="Pad" data-layer="TOP" data-pad-name="3" data-pad-shape="RECTANGLE" data-pad-stack-layer="0" data-pad-stack-mode="SIMPLE" data-plated="true"><rect x="123.3071" y="119.0551" width="47.2441" height="55.1181" fill="#ef4444" stroke="#111827" stroke-width="1"/></g>
+    <g data-record="Pad" data-layer="TOP" data-pad-name="4" data-pad-shape="RECTANGLE" data-pad-stack-layer="0" data-pad-stack-mode="SIMPLE" data-plated="true"><rect x="123.3071" y="32.441" width="47.2441" height="55.1181" fill="#ef4444" stroke="#111827" stroke-width="1"/></g>
+  </g>
+</svg>
