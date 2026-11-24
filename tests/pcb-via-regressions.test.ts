@@ -18,6 +18,34 @@ for (const fixture of viaRegressionCases) {
   })
 }
 
+test.failing("preserves canonical Circuit JSON inline via diameter fields", async () => {
+  const { pcb } = await extractArchive([
+    board({ num_layers: 4 }),
+    {
+      type: "pcb_trace",
+      pcb_trace_id: "inline-dimensions",
+      route: [
+        {
+          route_type: "via",
+          x: 0,
+          y: 0,
+          from_layer: "top",
+          to_layer: "inner1",
+          via_diameter: 0.5,
+          via_hole_diameter: 0.2,
+        },
+      ],
+    },
+  ])
+  expect(pcb.vias).toHaveLength(1)
+  expect(
+    pcb.vias[0]?.getAltiumMeasurement("DIAMETER")?.toMillimeters(),
+  ).toBeCloseTo(0.5, 4)
+  expect(
+    pcb.vias[0]?.getAltiumMeasurement("HOLESIZE")?.toMillimeters(),
+  ).toBeCloseTo(0.2, 4)
+})
+
 test.failing("normalizes layer spans, supports legacy endpoints, and declares via-only nets", async () => {
   const { pcb } = await extractArchive([
     board({ num_layers: 4 }),
