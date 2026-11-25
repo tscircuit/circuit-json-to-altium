@@ -44,8 +44,14 @@ test.failing("preserves the real ADC_VREF via when represented by its inline rou
   expect(actual.pcb.getNetForRecord(inlineVia!)?.name).toBe("ADC_VREF")
 }, 30_000)
 
-test("snapshots the real ADC_VREF inline via and nearby copper", async () => {
+test("snapshots the full real board and ADC_VREF inline via detail", async () => {
   const { actual, center } = await scenario()
+  await expect(
+    serializeAltiumPcbToSvg(actual.pcb, {
+      width: 1000,
+      height: 1000,
+    }),
+  ).toMatchSvgSnapshot(import.meta.path, "full-board")
   await expect(
     serializeAltiumPcbToSvg(actual.pcb, {
       width: 600,
