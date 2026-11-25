@@ -20,7 +20,7 @@ async function scenario() {
   }
 }
 
-test.failing("preserves nema17 DATA and PWR knockout text and its border margin", async () => {
+test("preserves nema17 DATA and PWR knockout text and its border margin", async () => {
   const { texts } = await scenario()
   const knockout = texts.filter((text) => text.inverted === true)
   expect(knockout.map((text) => text.text).sort()).toEqual(["DATA", "PWR"])
@@ -58,13 +58,13 @@ test("snapshots real native knockout-label styles and the complete board", async
         "text": "PWR",
       },
       {
-        "inverted": false,
-        "marginMm": 0,
+        "inverted": true,
+        "marginMm": 0.18,
         "text": "DATA",
       },
       {
-        "inverted": false,
-        "marginMm": 0,
+        "inverted": true,
+        "marginMm": 0.18,
         "text": "PWR",
       },
     ]
