@@ -66,7 +66,7 @@ const boardAnnotations: CircuitElement[] = [
   },
 ]
 
-test.failing("preserves courtyards, keepouts, and fabrication annotations", async () => {
+test("preserves courtyards, keepouts, and fabrication annotations", async () => {
   const elements: CircuitElement[] = [
     board({ width: 24, height: 16 }),
     sourceComponent("sc1", "U1"),
@@ -212,7 +212,7 @@ test.failing("preserves courtyards, keepouts, and fabrication annotations", asyn
   )
 })
 
-test.failing("exports board annotations without creating a physical component", async () => {
+test("exports board annotations without creating a physical component", async () => {
   const { pcb } = await extractArchive([board(), ...boardAnnotations])
 
   expect(pcb.components).toHaveLength(0)
