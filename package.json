@@ -28,7 +28,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "altiumts": "^0.0.96",
+    "altiumts": "^0.0.97",
     "cfb": "^1.2.2",
     "circuit-json": "^0.0.480",
     "color-string": "2.1.4",
