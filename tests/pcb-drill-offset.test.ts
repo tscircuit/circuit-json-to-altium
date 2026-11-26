@@ -125,7 +125,7 @@ test("snapshots the actual TI PMP23595 board before and after export", async () 
   ).toMatchSvgSnapshot(import.meta.path, "terminals")
 }, 120_000)
 
-test.failing("preserves the four real PMP23595 terminal drill offsets on every layer", async () => {
+test("preserves the four real PMP23595 terminal drill offsets on every layer", async () => {
   const { source, pcb } = await exportTiBoard()
   for (const sourcePad of getOffsetPads(source)) {
     const designator =
@@ -160,7 +160,7 @@ test.failing("preserves the four real PMP23595 terminal drill offsets on every l
   }
 }, 120_000)
 
-test.failing("preserves drill offsets in binary PcbDoc instead of emitting the zero-offset control", () => {
+test("preserves drill offsets in binary PcbDoc instead of emitting the zero-offset control", () => {
   const offset = exportHole({ x: 0.4, y: 0.2 })
   const control = exportHole({ x: 0, y: 0 })
   expect(offset.bytes).not.toEqual(control.bytes)
@@ -185,7 +185,7 @@ for (const [padCcwRotationDegrees, holeOffsetX, holeOffsetY] of [
   [180, 0.4, -0.2],
   [37, -0.4, -0.2],
 ]) {
-  test.failing(`retains board-relative drill position with pad rotation ${padCcwRotationDegrees}`, () => {
+  test(`retains board-relative drill position with pad rotation ${padCcwRotationDegrees}`, () => {
     const converter = new CircuitJsonToAltiumConverter([
       board(),
       {
