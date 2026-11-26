@@ -40,7 +40,7 @@ test("snapshots the real TI PMP22712 standalone annotation export", async () => 
     convertedSvg = serializeAltiumPcbToSvg(pcb, {
       width: 800,
       height: 700,
-      viewBox: { x: 800, y: 600, width: 1800, height: 1600 },
+      viewBox: { x: 700, y: 150, width: 1900, height: 2100 },
     })
   } catch (error) {
     if (
