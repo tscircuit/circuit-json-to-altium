@@ -13,6 +13,7 @@ import {
   parseAltiumMeasurementToMils,
 } from "altiumts"
 import type { NinePointAnchor } from "circuit-json"
+import { applyToPoint, rotateDEG } from "transformation-matrix"
 import type { CircuitElement } from "../../lib/types"
 import { convertAltiumPcbAnnotationsToCircuitJson } from "./convert-altium-pcb-annotations-to-circuit-json"
 import { convertAltiumPcbComponentBodiesToCircuitJson } from "./convert-altium-pcb-component-bodies-to-circuit-json"
@@ -839,6 +840,12 @@ export function convertAltiumPcbToCircuitJson(
       continue
     }
 
+    const localHoleOffset = {
+      x: toCircuitLength(getMeasurementMils(pad, "LAYER0HOLEXOFFSET") ?? 0),
+      y: toCircuitLength(getMeasurementMils(pad, "LAYER0HOLEYOFFSET") ?? 0),
+    }
+    const hasHoleOffset = localHoleOffset.x !== 0 || localHoleOffset.y !== 0
+    const holeOffset = applyToPoint(rotateDEG(rotation), localHoleOffset)
     const isSlotted = Math.abs(holeWidthMils - holeSizeMils) > 1e-9
     const holeRotation = toCircuitRotation(
       isSlotted
@@ -860,7 +867,7 @@ export function convertAltiumPcbToCircuitJson(
         pcb_hole_id: `pcb_hole_${padIndex}`,
         ...holeFields,
       })
-    } else if (isSlotted && rotation !== holeRotation) {
+    } else if ((isSlotted && rotation !== holeRotation) || hasHoleOffset) {
       const padShape = pad.getDecoded("SHAPE")?.toUpperCase()
       elements.push({
         type: "pcb_plated_hole",
@@ -882,8 +889,8 @@ export function convertAltiumPcbToCircuitJson(
               ),
             }
           : {}),
-        hole_offset_x: 0,
-        hole_offset_y: 0,
+        hole_offset_x: holeOffset.x,
+        hole_offset_y: holeOffset.y,
       })
     } else {
       elements.push({
