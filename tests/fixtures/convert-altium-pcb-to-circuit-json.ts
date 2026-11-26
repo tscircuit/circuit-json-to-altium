@@ -814,6 +814,10 @@ export function convertAltiumPcbToCircuitJson(
         outerWidthMils,
         outerHeightMils,
       )
+      const solderMaskExpansionMils = getMeasurementMils(
+        pad,
+        "SOLDERMASKEXPANSION_MANUAL",
+      )
       elements.push({
         type: "pcb_smtpad",
         pcb_smtpad_id: `pcb_smtpad_${padIndex}`,
@@ -825,6 +829,10 @@ export function convertAltiumPcbToCircuitJson(
           getPadAlternateShape(pad),
         ),
         ...(cornerRadius === undefined ? {} : { corner_radius: cornerRadius }),
+        ...(pad.get("SOLDERMASKEXPANSIONMODE") === "Manual" &&
+        solderMaskExpansionMils !== undefined
+          ? { soldermask_margin: toCircuitLength(solderMaskExpansionMils) }
+          : {}),
         ccw_rotation: rotation,
         layer: toCircuitLayer(layer),
       })
