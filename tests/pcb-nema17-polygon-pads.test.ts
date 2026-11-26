@@ -7,7 +7,7 @@ import {
 import { CircuitJsonToAltiumConverter } from "../lib"
 import type { CircuitElement } from "./fixtures"
 
-test.failing("preserves the eight nema17 USB-C polygon pads and openings", async () => {
+test("preserves the eight nema17 USB-C polygon pads and openings", async () => {
   const elements = (await Bun.file(
     new URL("./assets/nema17.circuit.json", import.meta.url),
   ).json()) as CircuitElement[]

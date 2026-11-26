@@ -41,7 +41,7 @@ for (const layer of ["top", "bottom"] as const) {
   })
 }
 
-test.failing("rejects a polygon with zero copper area", async () => {
+test("rejects a polygon with zero copper area", async () => {
   await expect(
     extractArchive([
       board(),
@@ -59,7 +59,7 @@ test.failing("rejects a polygon with zero copper area", async () => {
   ).rejects.toThrow("non-zero area")
 })
 
-test.failing("exports concave bottom pads on bottom copper, solder, and paste", async () => {
+test("exports concave bottom pads on bottom copper, solder, and paste", async () => {
   const { pcb } = await extractArchive([
     board(),
     {
