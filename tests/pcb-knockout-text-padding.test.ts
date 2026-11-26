@@ -14,7 +14,7 @@ const text = {
   knockout_padding: { left: 0, right: 0, top: 0, bottom: 0 },
 }
 
-test.failing("preserves zero-margin bottom knockout text", async () => {
+test("preserves zero-margin bottom knockout text", async () => {
   const { pcb } = await extractArchive([board(), text])
   const exported = pcb.texts[0]!
   expect(exported.getBoolean("INVERTED")).toBe(true)
@@ -25,7 +25,7 @@ test.failing("preserves zero-margin bottom knockout text", async () => {
   ).toBe(0)
 })
 
-test.failing("rejects asymmetric native knockout padding", () => {
+test("rejects asymmetric native knockout padding", () => {
   expect(() =>
     createPcbTextRecord({
       circuitText: {
