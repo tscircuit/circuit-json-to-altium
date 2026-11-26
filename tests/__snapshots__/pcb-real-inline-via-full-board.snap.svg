@@ -8021,5 +8021,6 @@
     <g data-record="Via" data-layer="MULTILAYER"><circle cx="797.8599" cy="550.5822" r="9.8425" fill="#22c55e" stroke="#d1fae5" stroke-width="1.5"/><circle cx="797.8599" cy="550.5822" r="5.9055" fill="#111827"/></g>
     <g data-record="Via" data-layer="MULTILAYER"><circle cx="858.8835" cy="550.5822" r="9.8425" fill="#22c55e" stroke="#d1fae5" stroke-width="1.5"/><circle cx="858.8835" cy="550.5822" r="5.9055" fill="#111827"/></g>
     <g data-record="Via" data-layer="MULTILAYER"><circle cx="687.23" cy="981.8814" r="9.8425" fill="#22c55e" stroke="#d1fae5" stroke-width="1.5"/><circle cx="687.23" cy="981.8814" r="5.9055" fill="#111827"/></g>
+    <g data-record="Via" data-layer="MULTILAYER"><circle cx="638.407" cy="779.9129" r="9.8425" fill="#22c55e" stroke="#d1fae5" stroke-width="1.5"/><circle cx="638.407" cy="779.9129" r="5.9055" fill="#111827"/></g>
   </g>
 </svg>

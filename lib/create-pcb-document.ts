@@ -1,3 +1,4 @@
+import { collectPcbVias } from "./collect-pcb-vias"
 import { convertCircuitPcbCcwRotationDegreesToAltium } from "./convert-circuit-pcb-ccw-rotation-degrees-to-altium"
 import { createCircuitToAltiumPcbPointTransform } from "./create-circuit-to-altium-pcb-point-transform"
 import { createPcbBoardLayerStackFields } from "./create-pcb-board-layer-stack-fields"
@@ -14,6 +15,7 @@ import { createPcbSilkscreenLineRecords } from "./create-pcb-silkscreen-line-rec
 import { createPcbSilkscreenRectRecords } from "./create-pcb-silkscreen-rect-records"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
 import { createPcbTextRecord } from "./create-pcb-text-record"
+import { createPcbViaRecords } from "./create-pcb-via-records"
 import {
   asNumber,
   asPoint,
@@ -33,7 +35,6 @@ import type {
   CircuitElement,
   PcbComponentId,
   PcbPortId,
-  PcbTraceId,
   SourceComponentId,
   SourcePortId,
   SourceTraceId,
@@ -435,35 +436,13 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
     }
   }
 
-  const pcbTraces = new Map<PcbTraceId, CircuitElement>(
-    byType(circuitJson, "pcb_trace").map((trace) => [
-      asString(trace.pcb_trace_id),
-      trace,
-    ]),
+  recordLines.push(
+    ...createPcbViaRecords({
+      ...collectPcbVias(circuitJson),
+      netEntries,
+      circuitToAltiumPcbPoint,
+    }),
   )
-  for (const via of byType(circuitJson, "pcb_via")) {
-    const altiumCenter = circuitToAltiumPcbPoint({
-      x: asNumber(via.x),
-      y: asNumber(via.y),
-    })
-    const owningTrace = pcbTraces.get(asString(via.pcb_trace_id))
-    const net = netByTraceId.get(
-      asString(via.source_trace_id, asString(owningTrace?.source_trace_id)),
-    )
-    recordLines.push(
-      [
-        "|RECORD=Via",
-        ...(net ? [`NET=${net.index}`] : []),
-        `X=${formatMil(altiumCenter.x)}`,
-        `Y=${formatMil(altiumCenter.y)}`,
-        `DIAMETER=${formatMil(asPositiveNumber(via.outer_diameter, 0.6) * MILLIMETERS_TO_MILS)}`,
-        `HOLESIZE=${formatMil(asPositiveNumber(via.hole_diameter, 0.3) * MILLIMETERS_TO_MILS)}`,
-        "STARTLAYER=TOP",
-        "STOPLAYER=BOTTOM",
-        "LOCKED=FALSE",
-      ].join("|"),
-    )
-  }
 
   recordLines.push(
     ...createPcbSilkscreenLineRecords({

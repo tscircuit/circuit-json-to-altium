@@ -12,7 +12,7 @@ async function scenario() {
   return extractArchive(elements)
 }
 
-test.failing("preserves a real-board via changed to a blind span", async () => {
+test("preserves a real-board via changed to a blind span", async () => {
   const { pcb } = await scenario()
   const via = pcb.vias[0]
   expect(via instanceof AltiumViaRecord && via.endLayer).toBe("MID-LAYER1")
@@ -27,7 +27,7 @@ test("records the real via's native endpoints and net", async () => {
     net: pcb.getNetForRecord(via)?.name ?? null,
   }).toMatchInlineSnapshot(`
     {
-      "endLayer": "BOTTOM",
+      "endLayer": "MID-LAYER1",
       "net": "DRIVER_STEP",
       "startLayer": "TOP",
     }

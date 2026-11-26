@@ -41,5 +41,6 @@
     <g data-record="Via" data-layer="MULTILAYER"><circle cx="99.2132" cy="87.8937" r="9.8425" fill="#22c55e" stroke="#d1fae5" stroke-width="1.5"/><circle cx="99.2132" cy="87.8937" r="5.9055" fill="#111827"/></g>
     <g data-record="Via" data-layer="MULTILAYER"><circle cx="72.2482" cy="62.6378" r="9.8425" fill="#22c55e" stroke="#d1fae5" stroke-width="1.5"/><circle cx="72.2482" cy="62.6378" r="5.9055" fill="#111827"/></g>
     <g data-record="Via" data-layer="MULTILAYER"><circle cx="26.6813" cy="53.7795" r="9.8425" fill="#22c55e" stroke="#d1fae5" stroke-width="1.5"/><circle cx="26.6813" cy="53.7795" r="5.9055" fill="#111827"/></g>
+    <g data-record="Via" data-layer="MULTILAYER"><circle cx="50" cy="40" r="9.8425" fill="#22c55e" stroke="#d1fae5" stroke-width="1.5"/><circle cx="50" cy="40" r="5.9055" fill="#111827"/></g>
   </g>
 </svg>
