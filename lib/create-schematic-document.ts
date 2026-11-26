@@ -1114,6 +1114,7 @@ export function createSchematicDocument({
   for (const recordFields of createSchematicWireRecords({
     circuitToAltiumSchematicPoint,
     schematicElements,
+    inlineNetLabelTexts: inlineNetLabels.map(({ text }) => text),
   })) {
     addSchematicRecord(recordFields, schematicRecordContext)
   }

@@ -1,4 +1,4 @@
-import { asPoint, asString, isCircuitElement, sanitizeField } from "./format"
+import { asPoint, asString, sanitizeField } from "./format"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
 import type {
   CircuitElement,
@@ -41,26 +41,16 @@ export function getInlineSchematicNetLabels({
         ),
       ]),
   )
-  const edgesByTraceId = new Map<SourceTraceId, { from: Point; to: Point }[]>()
-  for (const trace of schematicElements) {
-    if (trace.type !== "schematic_trace" || !Array.isArray(trace.edges)) {
-      continue
-    }
-    const traceId = asString(trace.source_trace_id)
-    if (!traceId) continue
-    const edges = edgesByTraceId.get(traceId) ?? []
-    for (const edge of trace.edges) {
-      if (!isCircuitElement(edge)) continue
-      const from = asPoint(edge.from)
-      const to = asPoint(edge.to)
-      if (!from || !to) continue
-      edges.push({
-        from: circuitToAltiumSchematicPoint(from),
-        to: circuitToAltiumSchematicPoint(to),
-      })
-    }
-    edgesByTraceId.set(traceId, edges)
-  }
+  const sheetTraceIds = new Set<SourceTraceId>(
+    schematicElements
+      .filter(
+        (element) =>
+          element.type === "schematic_trace" &&
+          Array.isArray(element.edges) &&
+          element.edges.length > 0,
+      )
+      .map((element) => asString(element.source_trace_id)),
+  )
 
   return schematicElements.flatMap((text) => {
     if (text.type !== "schematic_text" || !isSchematicSheetAnnotation(text)) {
@@ -73,27 +63,11 @@ export function getInlineSchematicNetLabels({
       !traceId ||
       !position ||
       !name ||
+      !sheetTraceIds.has(traceId) ||
       !namesByTraceId.get(traceId)?.has(name)
     ) {
       return []
     }
-    const altiumTextPosition = circuitToAltiumSchematicPoint(position)
-    let altiumPosition: Point | undefined
-    let closestDistance = Number.POSITIVE_INFINITY
-    // Imported labels are offset from their electrical wire vertices.
-    // Reuse a vertex on this trace so the native label is connected even
-    // after integer coordinate rounding, including on diagonal wires.
-    for (const { from, to } of edgesByTraceId.get(traceId) ?? []) {
-      for (const candidate of [from, to]) {
-        const distance =
-          (candidate.x - altiumTextPosition.x) ** 2 +
-          (candidate.y - altiumTextPosition.y) ** 2
-        if (distance < closestDistance) {
-          closestDistance = distance
-          altiumPosition = candidate
-        }
-      }
-    }
-    return altiumPosition ? [{ altiumPosition, text }] : []
+    return [{ altiumPosition: circuitToAltiumSchematicPoint(position), text }]
   })
 }
