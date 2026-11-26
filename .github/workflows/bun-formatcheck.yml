@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main, repro/ordinary-pad-solder-mask]
+    branches: [main]
 
 jobs:
   format-check:
