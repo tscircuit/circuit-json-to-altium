@@ -1,3 +1,4 @@
+import { collectPcbVias } from "./collect-pcb-vias"
 import { convertCircuitPcbCcwRotationDegreesToAltium } from "./convert-circuit-pcb-ccw-rotation-degrees-to-altium"
 import { createCircuitToAltiumPcbPointTransform } from "./create-circuit-to-altium-pcb-point-transform"
 import { createPcbBoardLayerStackFields } from "./create-pcb-board-layer-stack-fields"
@@ -437,7 +438,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
 
   recordLines.push(
     ...createPcbViaRecords({
-      circuitJson,
+      ...collectPcbVias(circuitJson),
       netEntries,
       circuitToAltiumPcbPoint,
     }),
