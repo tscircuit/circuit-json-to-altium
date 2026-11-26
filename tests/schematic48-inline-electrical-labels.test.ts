@@ -129,7 +129,7 @@ test.failing.each([
         type: "schematic_trace",
         schematic_trace_id: "other_wire",
         source_trace_id: "other_trace",
-        edges: [{ from: { x: 10, y: 0 }, to: { x: 10, y: 4 } }],
+        edges: [{ from: { x: 20, y: 0 }, to: { x: 20, y: 4 } }],
       },
       {
         type: "schematic_text",
