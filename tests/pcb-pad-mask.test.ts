@@ -22,7 +22,7 @@ async function exportSimpleFocMini() {
   }
 }
 
-test.failing("preserves the original SimpleFOC Mini SMT solder-mask margins", async () => {
+test("preserves the original SimpleFOC Mini SMT solder-mask margins", async () => {
   const { pcb, smtPads } = await exportSimpleFocMini()
   expect(smtPads).toHaveLength(49)
   const pads = pcb.getRecordsByKind("Pad")
