@@ -1,4 +1,4 @@
-import type { PcbTrace, PcbVia } from "circuit-json"
+import { type PcbVia, pcb_via } from "circuit-json"
 import type { PcbNetEntry } from "./create-pcb-net-entries"
 import {
   asNumber,
@@ -19,14 +19,6 @@ import type {
   SourceTraceId,
 } from "./types"
 
-type Via = Pick<PcbVia, "x" | "y" | "outer_diameter" | "hole_diameter"> & {
-  layers: [string, string]
-  source_trace_id: SourceTraceId
-  source_net_id: SourceNetId
-  pcb_trace_id: PcbTraceId
-  isInline: boolean
-}
-
 function getCopperLayerOrder(layer: string): number {
   if (layer === "TOP") return 0
   if (layer === "BOTTOM") return 32
@@ -41,7 +33,7 @@ function readVia(
     from_layer?: string
     to_layer?: string
   } = {},
-): Via {
+): PcbVia {
   const layers =
     Array.isArray(via.layers) && via.layers.length > 0
       ? via.layers.map((layer) => asString(layer))
@@ -49,11 +41,9 @@ function readVia(
           asString(via.from_layer, defaults.from_layer ?? "top"),
           asString(via.to_layer, defaults.to_layer ?? "bottom"),
         ]
-  const altiumLayers = layers
-    .map(getAltiumPcbTrackLayer)
-    .sort((a, b) => getCopperLayerOrder(a) - getCopperLayerOrder(b))
-
-  return {
+  return pcb_via.parse({
+    type: "pcb_via",
+    pcb_via_id: asString(via.pcb_via_id) || undefined,
     x: asNumber(via.x),
     y: asNumber(via.y),
     // Core route points can use via_diameter/via_hole_diameter.
@@ -65,12 +55,11 @@ function readVia(
       via.hole_diameter,
       asPositiveNumber(via.via_hole_diameter, 0.3),
     ),
-    layers: [altiumLayers[0]!, altiumLayers[altiumLayers.length - 1]!],
+    layers: layers.map((layer) => layer.toLowerCase()),
     source_trace_id: asString(via.source_trace_id, defaults.source_trace_id),
-    source_net_id: asString(via.source_net_id),
+    source_net_id: asString(via.source_net_id) || undefined,
     pcb_trace_id: defaults.pcb_trace_id ?? "",
-    isInline: via.route_type === "via",
-  }
+  })
 }
 
 export function createPcbViaRecords({
@@ -83,10 +72,7 @@ export function createPcbViaRecords({
   circuitToAltiumPcbPoint: (point: Point) => Point
 }): string[] {
   const traces = byType(circuitJson, "pcb_trace")
-  const traceById = new Map<
-    PcbTraceId,
-    Pick<PcbTrace, "pcb_trace_id" | "source_trace_id">
-  >(
+  const traceById = new Map(
     traces.map((trace) => [
       asString(trace.pcb_trace_id),
       {
@@ -98,6 +84,7 @@ export function createPcbViaRecords({
   const vias = byType(circuitJson, "pcb_via").map((via) =>
     readVia(via, traceById.get(asString(via.pcb_trace_id))),
   )
+  const inlineVias = new Set<PcbVia>()
   for (const trace of traces) {
     const route = Array.isArray(trace.route)
       ? trace.route.filter(
@@ -107,14 +94,14 @@ export function createPcbViaRecords({
       : []
     for (const [index, point] of route.entries()) {
       if (point.route_type !== "via") continue
-      vias.push(
-        readVia(point, {
-          pcb_trace_id: asString(trace.pcb_trace_id),
-          source_trace_id: asString(trace.source_trace_id),
-          from_layer: asString(route[index - 1]?.layer, "top"),
-          to_layer: asString(route[index + 1]?.layer, "bottom"),
-        }),
-      )
+      const via = readVia(point, {
+        pcb_trace_id: asString(trace.pcb_trace_id),
+        source_trace_id: asString(trace.source_trace_id),
+        from_layer: asString(route[index - 1]?.layer, "top"),
+        to_layer: asString(route[index + 1]?.layer, "bottom"),
+      })
+      vias.push(via)
+      inlineVias.add(via)
     }
   }
 
@@ -130,10 +117,14 @@ export function createPcbViaRecords({
   const emitted = new Set<string>()
   for (const via of vias) {
     const net =
-      netBySourceNetId.get(via.source_net_id) ??
-      netByTraceId.get(via.source_trace_id)
+      netBySourceNetId.get(via.source_net_id ?? "") ??
+      netByTraceId.get(via.source_trace_id ?? "")
     const center = circuitToAltiumPcbPoint({ x: via.x, y: via.y })
-    const [startLayer, stopLayer] = via.layers
+    const layers = via.layers
+      .map(getAltiumPcbTrackLayer)
+      .sort((a, b) => getCopperLayerOrder(a) - getCopperLayerOrder(b))
+    const startLayer = layers[0]!
+    const stopLayer = layers[layers.length - 1]!
     let connection = `trace:${via.pcb_trace_id}`
     if (via.source_trace_id) connection = `source:${via.source_trace_id}`
     if (net) connection = `net:${net.index}`
@@ -145,7 +136,7 @@ export function createPcbViaRecords({
       stopLayer,
     ])
     // Explicit records retain their dimensions when the route repeats a via.
-    if (via.isInline && emitted.has(key)) continue
+    if (inlineVias.has(via) && emitted.has(key)) continue
     emitted.add(key)
     records.push(
       [
