@@ -3,6 +3,8 @@ import type { Point } from "./types"
 
 type AttachmentPointKey = string
 
+const ATTACHMENT_POINT_TOLERANCE = 1e-8
+
 export function splitSchematicWireAtAttachments(
   segment: SchematicWireSegment,
   attachments: Point[],
@@ -17,7 +19,9 @@ export function splitSchematicWireAtAttachments(
     const py = point.y - segment.from.y
     const along = px * dx + py * dy
     if (
-      Math.abs(px * dy - py * dx) <= 1e-8 * Math.sqrt(lengthSquared) &&
+      // Accept floating-point noise without projecting or moving the point.
+      Math.abs(px * dy - py * dx) <=
+        ATTACHMENT_POINT_TOLERANCE * Math.sqrt(lengthSquared) &&
       along > 0 &&
       along < lengthSquared
     ) {
