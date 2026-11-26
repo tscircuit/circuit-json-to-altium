@@ -1,5 +1,21 @@
 # Real-circuit fixtures
 
+## DRV8307EVM inline electrical labels
+
+`ti-drv8307evm-inline-labels.circuit.json` is a minimized output of
+`altium-to-circuit-json` at `c8008ef75555ca40f619644bf50c1ed7cfc0f29e`.
+It retains the HU+/UH+ source trace, both net names, its wire geometry, six
+physical terminals, components and inline texts. Symbol references are removed
+so the exporter uses fallback component boxes. This isolates electrical label
+handling from native symbol reconstruction.
+
+- Source: [TI DRV8307EVM SLVC565A design files](https://www.ti.com/lit/zip/slvc565a),
+  `Board files/DRV8307EVM RevA.SchDoc`.
+- Original SchDoc SHA-256: `478b7e0d88ea8419da186388e57acb13fcfbee0bc5b9be253b7192e75d79fd07`.
+- Expected terminals: `C10.1`, `P3.7`, `TP2.1`, `U1.1`, `U7.14`, `U8.9`.
+
+## SparkFun level shifter
+
 `sparkfun-level-shifter-8-channel-txs0108e.circuit.json` is the complete Circuit
 JSON export of the existing SparkFun TXS0108E 8-channel level-shifter board. The
 real board already includes a four-row voltage-range table above the boxed
