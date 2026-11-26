@@ -1,8 +1,10 @@
 import { createHash } from "node:crypto"
 import { mkdir, writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
+import JSZip from "jszip"
 
 type ReferenceSpec = {
+  archivePath?: string
   filename: string
   sha256: string
   source: string
@@ -10,6 +12,13 @@ type ReferenceSpec = {
 }
 
 const references: ReferenceSpec[] = [
+  {
+    filename: "ti-pmp23595.PcbDoc",
+    archivePath: "PMP23595.PcbDoc",
+    sha256: "18913410812b0993e4c8c3a00a489335d0fa58d27b79ec02e1294a8a6471e0f6",
+    source: "Texas Instruments PMP23595 CAD/CAE files SLVMEP2A (TI terms)",
+    url: "https://www.ti.com/lit/zip/SLVMEP2",
+  },
   {
     filename: "nodemcu-esp12.PcbDoc",
     sha256: "5060fb6f0e80af09c8d5af376038a4e55044b28ae1d4dfa6a1fa354a6ea1e2f2",
@@ -198,7 +207,16 @@ async function downloadReference(reference: ReferenceSpec): Promise<void> {
     )
   }
 
-  const bytes = new Uint8Array(await response.arrayBuffer())
+  const downloadedBytes = new Uint8Array(await response.arrayBuffer())
+  const archiveEntry = reference.archivePath
+    ? (await JSZip.loadAsync(downloadedBytes)).file(reference.archivePath)
+    : undefined
+  if (reference.archivePath && !archiveEntry) {
+    throw new Error(`Missing ${reference.archivePath} in ${reference.url}`)
+  }
+  const bytes = archiveEntry
+    ? await archiveEntry.async("uint8array")
+    : downloadedBytes
   const actualHash = createHash("sha256").update(bytes).digest("hex")
   if (actualHash !== reference.sha256) {
     throw new Error(

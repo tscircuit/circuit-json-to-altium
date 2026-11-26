@@ -5,6 +5,14 @@ files from immutable GitHub revisions. The binary files are ignored by Git and
 are not distributed under this repository's MIT license. The download script
 verifies each file's SHA-256 digest before writing it.
 
+The drill-offset regression also downloads `PMP23595.PcbDoc` from Texas
+Instruments' public [PMP23595 CAD/CAE archive](https://www.ti.com/lit/zip/SLVMEP2)
+(SLVMEP2A). Its SHA-256 is
+`18913410812b0993e4c8c3a00a489335d0fa58d27b79ec02e1294a8a6471e0f6`.
+TI's archive notices and website terms apply. The PCB stays ignored; it is
+not redistributed in this repository. Terminals T500–T503 have native
+−90 mil (−2.286 mm) local X drill offsets, with pad rotations of 90° and 270°.
+
 ## Boards
 
 | Local file                     | Upstream file                                                                                                                                                                                                                          | Revision                                   | License      |     Bytes | SHA-256                                                            |
