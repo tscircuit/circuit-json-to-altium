@@ -1,10 +1,4 @@
-import {
-  type LayerRef,
-  layer_ref,
-  type PcbVia,
-  pcb_trace_route_point_via,
-  pcb_via,
-} from "circuit-json"
+import { type PcbVia, pcb_via } from "circuit-json"
 import {
   asNumber,
   asPoint,
@@ -14,18 +8,6 @@ import {
   isCircuitElement,
 } from "./format"
 import type { CircuitElement } from "./types"
-
-function parseViaLayers(
-  layers: unknown,
-  fromLayer: string,
-  toLayer: string,
-): LayerRef[] {
-  const references =
-    Array.isArray(layers) && layers.length > 0 ? layers : [fromLayer, toLayer]
-  return references.map((layer) =>
-    layer_ref.parse(asString(layer).toLowerCase()),
-  )
-}
 
 export function collectPcbVias(circuitJson: CircuitElement[]): {
   vias: PcbVia[]
@@ -41,7 +23,7 @@ export function collectPcbVias(circuitJson: CircuitElement[]): {
       },
     ]),
   )
-  const vias = byType(circuitJson, "pcb_via").map((element) => {
+  const vias: PcbVia[] = byType(circuitJson, "pcb_via").map((element) => {
     const trace = traceById.get(asString(element.pcb_trace_id))
     return pcb_via.parse({
       type: "pcb_via",
@@ -56,11 +38,13 @@ export function collectPcbVias(circuitJson: CircuitElement[]): {
         element.hole_diameter,
         asPositiveNumber(element.via_hole_diameter, 0.3),
       ),
-      layers: parseViaLayers(
-        element.layers,
-        asString(element.from_layer, "top"),
-        asString(element.to_layer, "bottom"),
-      ),
+      layers: (Array.isArray(element.layers) && element.layers.length > 0
+        ? element.layers
+        : [
+            asString(element.from_layer, "top"),
+            asString(element.to_layer, "bottom"),
+          ]
+      ).map((layer) => asString(layer).toLowerCase()),
       source_trace_id: asString(
         element.source_trace_id,
         trace?.source_trace_id,
@@ -79,17 +63,29 @@ export function collectPcbVias(circuitJson: CircuitElement[]): {
       : []
     for (const [index, element] of route.entries()) {
       if (element.route_type !== "via") continue
-      const layers = parseViaLayers(
-        element.layers,
-        asString(element.from_layer, asString(route[index - 1]?.layer, "top")),
-        asString(element.to_layer, asString(route[index + 1]?.layer, "bottom")),
-      )
-      const point = pcb_trace_route_point_via.parse({
-        route_type: "via",
+      // Legacy route vias can omit endpoints and inherit adjacent wire layers.
+      const layerReferences: string[] = (
+        Array.isArray(element.layers) && element.layers.length > 0
+          ? element.layers
+          : [
+              asString(
+                element.from_layer,
+                asString(route[index - 1]?.layer, "top"),
+              ),
+              asString(
+                element.to_layer,
+                asString(route[index + 1]?.layer, "bottom"),
+              ),
+            ]
+      ).map((layer) => asString(layer).toLowerCase())
+      const via: PcbVia = pcb_via.parse({
+        type: "pcb_via",
+        pcb_via_id: asString(element.pcb_via_id) || undefined,
         x: element.x,
         y: element.y,
-        from_layer: layers[0],
-        to_layer: layers[layers.length - 1],
+        layers: layerReferences,
+        from_layer: layerReferences[0],
+        to_layer: layerReferences[layerReferences.length - 1],
         // Core route points can use via_diameter/via_hole_diameter.
         outer_diameter: asPositiveNumber(
           element.outer_diameter,
@@ -99,12 +95,6 @@ export function collectPcbVias(circuitJson: CircuitElement[]): {
           element.hole_diameter,
           asPositiveNumber(element.via_hole_diameter, 0.3),
         ),
-      })
-      const via = pcb_via.parse({
-        ...point,
-        type: "pcb_via",
-        pcb_via_id: asString(element.pcb_via_id) || undefined,
-        layers,
         source_trace_id: asString(
           element.source_trace_id,
           asString(trace.source_trace_id),
