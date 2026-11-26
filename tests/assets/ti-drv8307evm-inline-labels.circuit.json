@@ -55,7 +55,8 @@
       "height": 0.2
     },
     "source_component_id": "source_component_altium_149",
-    "symbol_display_value": "TP-LOOP-ORANGE"
+    "symbol_display_value": "TP-LOOP-ORANGE",
+    "symbol_name": "testpoint_left"
   },
   {
     "type": "source_component",
@@ -206,7 +207,8 @@
       "height": 0.6
     },
     "source_component_id": "source_component_altium_1167",
-    "symbol_display_value": "0.1uF"
+    "symbol_display_value": "0.1uF",
+    "symbol_name": "capacitor_down"
   },
   {
     "type": "source_component",
@@ -611,12 +613,12 @@
   },
   {
     "type": "schematic_text",
-    "anchor": "center",
+    "anchor": "bottom_left",
     "color": "rgb(132, 0, 0)",
     "font_size": 0.1665657177468201,
     "position": {
-      "x": 3.5534019785988296,
-      "y": -1.8322228952150201
+      "x": 3.331314354936401,
+      "y": -1.9155057540884304
     },
     "rotation": 0,
     "schematic_sheet_id": "schematic_sheet_altium",
@@ -626,12 +628,12 @@
   },
   {
     "type": "schematic_text",
-    "anchor": "center",
+    "anchor": "bottom_left",
     "color": "rgb(132, 0, 0)",
     "font_size": 0.1665657177468201,
     "position": {
-      "x": -3.025943872400566,
-      "y": 8.245003028467597
+      "x": -3.2480314960629926,
+      "y": 8.161720169594187
     },
     "rotation": 0,
     "schematic_sheet_id": "schematic_sheet_altium",
@@ -641,12 +643,12 @@
   },
   {
     "type": "schematic_text",
-    "anchor": "center",
+    "anchor": "bottom_left",
     "color": "rgb(132, 0, 0)",
     "font_size": 0.1665657177468201,
     "position": {
-      "x": 1.2214819301433462,
-      "y": -1.16596002422774
+      "x": 0.9993943064809194,
+      "y": -1.2492428831011502
     },
     "rotation": 0,
     "schematic_sheet_id": "schematic_sheet_altium",
@@ -656,12 +658,12 @@
   },
   {
     "type": "schematic_text",
-    "anchor": "center",
+    "anchor": "bottom_left",
     "color": "rgb(132, 0, 0)",
     "font_size": 0.1665657177468201,
     "position": {
-      "x": 1.0549162123965292,
-      "y": 1.0826771653543314
+      "x": 0.8328285887341007,
+      "y": 0.9993943064809212
     },
     "rotation": 0,
     "schematic_sheet_id": "schematic_sheet_altium",
@@ -671,12 +673,12 @@
   },
   {
     "type": "schematic_text",
-    "anchor": "center",
+    "anchor": "bottom_left",
     "color": "rgb(132, 0, 0)",
     "font_size": 0.1665657177468201,
     "position": {
-      "x": -2.526246719160106,
-      "y": 1.3325257419745604
+      "x": -2.748334342822533,
+      "y": 1.2492428831011502
     },
     "rotation": 0,
     "schematic_sheet_id": "schematic_sheet_altium",
@@ -686,12 +688,12 @@
   },
   {
     "type": "schematic_text",
-    "anchor": "center",
+    "anchor": "bottom_left",
     "color": "rgb(132, 0, 0)",
     "font_size": 0.1665657177468201,
     "position": {
-      "x": -2.6095295780335164,
-      "y": -3.2480314960629917
+      "x": -2.831617201695943,
+      "y": -3.331314354936402
     },
     "rotation": 0,
     "schematic_sheet_id": "schematic_sheet_altium",

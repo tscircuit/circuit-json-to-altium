@@ -6,6 +6,7 @@ import {
   serializeAltiumSheetToSvg,
 } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
+import { getSchematicTransform } from "../lib/get-schematic-transform"
 import {
   board,
   type CircuitElement,
@@ -66,12 +67,44 @@ test.failing("preserves the DRV8307EVM HU+/UH+ six-terminal connection", async (
 })
 
 test.failing.each([
-  { from: { x: 0, y: 0 }, to: { x: 4, y: 0 }, rotation: 0 },
-  { from: { x: 0, y: 0 }, to: { x: 0, y: 4 }, rotation: -90 },
-  { from: { x: 0, y: 0 }, to: { x: 3, y: 2 }, rotation: 0 },
+  {
+    from: { x: 0, y: 0 },
+    to: { x: 10, y: 0 },
+    position: { x: 4, y: 0 },
+    rotation: 0,
+    anchor: "bottom_left",
+  },
+  {
+    from: { x: 0, y: 0 },
+    to: { x: 0, y: 10 },
+    position: { x: 0, y: 4 },
+    rotation: -90,
+    anchor: "bottom_left",
+  },
+  {
+    from: { x: 0, y: 0 },
+    to: { x: 3, y: 2 },
+    position: { x: 1, y: 2 / 3 },
+    rotation: 0,
+    anchor: "bottom_left",
+  },
+  {
+    from: { x: 10, y: 0 },
+    to: { x: 0, y: 0 },
+    position: { x: 6, y: 0 },
+    rotation: 0,
+    anchor: "bottom_right",
+  },
+  {
+    from: { x: 0, y: 10 },
+    to: { x: 0, y: 0 },
+    position: { x: 0, y: 6 },
+    rotation: -90,
+    anchor: "bottom_right",
+  },
 ])(
-  "places offset inline labels on their referenced wire: %p",
-  async ({ from, to, rotation }) => {
+  "preserves the provided interior inline-label attachment: %p",
+  async ({ from, to, position, rotation, anchor }) => {
     const elements: CircuitElement[] = [
       board(),
       { type: "source_net", source_net_id: "signal", name: "SIGNAL" },
@@ -103,8 +136,8 @@ test.failing.each([
         schematic_text_id: "inline_signal",
         source_trace_id: "signal_trace",
         text: "SIGNAL",
-        position: { x: 10.05, y: 1.09 },
-        anchor: "center",
+        position,
+        anchor,
         font_size: 0.18,
         color: "#123456",
         rotation,
@@ -137,21 +170,27 @@ test.failing.each([
     const document = schematics[0]!
     expect(document.netLabels).toHaveLength(1)
     const label = document.netLabels[0]!
-    const position = label.position!
+    const labelPosition = label.position!
+    const { circuitToAltiumSchematicPoint } = getSchematicTransform(
+      elements.filter((element) => element.type.startsWith("schematic_")),
+    )
+    expect(labelPosition).toEqual(circuitToAltiumSchematicPoint(position))
     const [start, end] = getSchematicRecordPoints(document.wires[0]!)
-    expect((position.x - start!.x) * (end!.y - start!.y)).toBe(
-      (position.y - start!.y) * (end!.x - start!.x),
+    expect((labelPosition.x - start!.x) * (end!.y - start!.y)).toBe(
+      (labelPosition.y - start!.y) * (end!.x - start!.x),
     )
     const graph = getSchematicNetGraph(document)
     expect(graph.getNetForRecord(label)?.id).toBe(
       graph.getNetForRecord(document.wires[0]!)?.id,
     )
     expect(graph.getNetForRecord(label)?.id).not.toBe(
-      graph.getNetForRecord(document.wires[1]!)?.id,
+      graph.getNetForRecord(document.wires.at(-1)!)?.id,
     )
     expect(label.getNumber("ORIENTATION")).toBe(rotation === -90 ? 1 : 0)
     expect(label.getNumber("COLOR")).toBe(0x56_34_12)
-    expect(label.getNumber("JUSTIFICATION")).toBe(4)
+    expect(label.getNumber("JUSTIFICATION")).toBe(
+      anchor === "bottom_left" ? 0 : 2,
+    )
     const sheet = document.getRecordsByKind("31")[0]!
     expect(sheet.getNumber(`SIZE${label.getNumber("FONTID")}`)).toBe(4)
     expect(
@@ -199,6 +238,68 @@ test("does not attach an inline text to a wire on another sheet", () => {
       doc.getRecordsByKind("4").map((r) => r.getDecoded("TEXT")),
     ),
   ).toContain("SIGNAL")
+})
+
+test.failing("retains interior attachments on disconnected branches of one net", async () => {
+  const elements: CircuitElement[] = [
+    board(),
+    { type: "source_net", source_net_id: "signal", name: "SIGNAL" },
+    {
+      type: "source_trace",
+      source_trace_id: "trace",
+      connected_source_net_ids: ["signal"],
+    },
+    {
+      type: "schematic_trace",
+      source_trace_id: "trace",
+      edges: [
+        { from: { x: 0, y: 0 }, to: { x: 10, y: 0 } },
+        { from: { x: 2, y: 0 }, to: { x: 8, y: 0 } },
+      ],
+    },
+    {
+      type: "schematic_trace",
+      source_trace_id: "trace",
+      edges: [{ from: { x: 0, y: 4 }, to: { x: 10, y: 4 } }],
+    },
+    ...[
+      { x: 4, y: 0 },
+      { x: 6, y: 4 },
+    ].map((position) => ({
+      type: "schematic_text",
+      source_trace_id: "trace",
+      text: "SIGNAL",
+      position,
+      anchor: "bottom_left",
+      font_size: 0.18,
+    })),
+  ]
+  const { schematics } = await extractArchive(elements)
+  const document = schematics[0]!
+  const { circuitToAltiumSchematicPoint } = getSchematicTransform(
+    elements.filter((element) => element.type.startsWith("schematic_")),
+  )
+  expect(document.netLabels.map((label) => label.position)).toEqual(
+    [
+      { x: 4, y: 0 },
+      { x: 6, y: 4 },
+    ].map(circuitToAltiumSchematicPoint),
+  )
+  const graph = getSchematicNetGraph(document)
+  expect(graph.getNetsByName("SIGNAL")).toHaveLength(1)
+  const net = graph.getNetsByName("SIGNAL")[0]!
+  for (const wire of document.wires)
+    expect(graph.getNetForRecord(wire)?.id).toBe(net.id)
+  for (const label of document.netLabels) {
+    expect(
+      document.wires.some((wire) =>
+        getSchematicRecordPoints(wire).some(
+          (point) =>
+            point.x === label.position!.x && point.y === label.position!.y,
+        ),
+      ),
+    ).toBe(true)
+  }
 })
 
 async function loadDrvSchematic() {
