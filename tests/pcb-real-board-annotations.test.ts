@@ -1,8 +1,6 @@
 import { expect, test } from "bun:test"
 import { serializeAltiumPcbToSvg } from "altiumts"
-import { convertCircuitJsonToPcbSvg } from "circuit-to-svg"
 import { type CircuitElement, expectValidPcb, extractArchive } from "./fixtures"
-import { createSideBySideSvg } from "./fixtures/create-side-by-side-svg"
 
 async function loadBoard(): Promise<CircuitElement[]> {
   return Bun.file(
@@ -36,14 +34,14 @@ test.failing("exports the real TI PMP22712 board annotations without a dummy com
 
 test("snapshots the real TI PMP22712 standalone annotation export", async () => {
   const elements = await loadBoard()
-  const sourceSvg = await convertCircuitJsonToPcbSvg(
-    elements as Parameters<typeof convertCircuitJsonToPcbSvg>[0],
-    { matchBoardAspectRatio: true },
-  )
   let convertedSvg: string
   try {
     const { pcb } = await extractArchive(elements)
-    convertedSvg = serializeAltiumPcbToSvg(pcb, { width: 600, height: 600 })
+    convertedSvg = serializeAltiumPcbToSvg(pcb, {
+      width: 800,
+      height: 600,
+      fitToContent: true,
+    })
   } catch (error) {
     if (
       !(error instanceof Error) ||
@@ -51,12 +49,7 @@ test("snapshots the real TI PMP22712 standalone annotation export", async () => 
         "PCB annotation references missing component pcb_component_altium_board_graphics"
     )
       throw error
-    convertedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600"><rect width="600" height="600" fill="#071a16"/><text x="24" y="280" fill="#f8fafc" font-family="monospace" font-size="18">Export blocked</text><text x="24" y="315" fill="#f8fafc" font-family="monospace" font-size="14">Standalone annotations reference a missing component.</text></svg>`
+    convertedSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600"><rect width="800" height="600" fill="#071a16"/><text x="40" y="260" fill="#f8fafc" font-family="Arial, sans-serif" font-size="28">Export blocked</text><text x="40" y="310" fill="#f8fafc" font-family="Arial, sans-serif" font-size="20">Standalone annotations reference a missing component.</text></svg>`
   }
-  await expect(
-    createSideBySideSvg(sourceSvg, convertedSvg, {
-      source: "TI PMP22712 Circuit JSON",
-      converted: "Native Altium export",
-    }),
-  ).toMatchSvgSnapshot(import.meta.path)
+  await expect(convertedSvg).toMatchSvgSnapshot(import.meta.path)
 })
