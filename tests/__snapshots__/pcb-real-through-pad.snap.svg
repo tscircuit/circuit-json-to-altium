@@ -5,6 +5,9 @@
     <line data-record="Track" data-layer="MID-LAYER2" x1="91.909" y1="121.7257" x2="91.909" y2="161.7729" stroke="#f97316" stroke-width="5.9055"/>
     <line data-record="Track" data-layer="MID-LAYER2" x1="91.909" y1="161.7729" x2="380.7712" y2="450.6312" stroke="#f97316" stroke-width="5.9055"/>
     <line data-record="Track" data-layer="MID-LAYER2" x1="211.2511" y1="204.56" x2="211.2511" y2="40" stroke="#f97316" stroke-width="5.9055"/>
+    <line data-record="Track" data-layer="MID-LAYER2" x1="40" y1="204.56" x2="40" y2="40" stroke="#f97316" stroke-width="5.9055"/>
+    <line data-record="Track" data-layer="MID-LAYER1" x1="40" y1="40" x2="211.2511" y2="40" stroke="#f97316" stroke-width="5.9055"/>
+    <line data-record="Track" data-layer="MID-LAYER2" x1="211.2511" y1="40" x2="211.2511" y2="204.56" stroke="#f97316" stroke-width="5.9055"/>
     <line data-record="Track" data-layer="MID-LAYER1" x1="40" y1="40" x2="211.2511" y2="40" stroke="#f97316" stroke-width="5.9055"/>
     <line data-record="Track" data-layer="MID-LAYER2" x1="40" y1="204.56" x2="40" y2="40" stroke="#f97316" stroke-width="5.9055"/>
     <line data-record="Track" data-layer="MID-LAYER1" x1="40" y1="40" x2="211.2511" y2="40" stroke="#f97316" stroke-width="5.9055"/>
@@ -49,7 +52,6 @@
     <line data-record="Track" data-layer="TOP" x1="255.5468" y1="240.7532" x2="237.3696" y2="240.7532" stroke="#ef4444" stroke-width="5.9055"/>
     <line data-record="Track" data-layer="TOP" x1="237.3696" y1="240.7532" x2="215.7161" y2="203.3516" stroke="#ef4444" stroke-width="5.9055"/>
     <line data-record="Track" data-layer="TOP" x1="215.7161" y1="203.3516" x2="211.2511" y2="204.56" stroke="#ef4444" stroke-width="5.9055"/>
-    <line data-record="Track" data-layer="TOP" x1="40" y1="204.56" x2="211.2511" y2="204.56" stroke="#ef4444" stroke-width="5.9055"/>
     <line data-record="Track" data-layer="TOP" x1="-4.2975" y1="234.81" x2="18.3421" y2="240.7532" stroke="#ef4444" stroke-width="5.9055"/>
     <line data-record="Track" data-layer="TOP" x1="18.3421" y1="240.7532" x2="40" y2="204.56" stroke="#ef4444" stroke-width="5.9055"/>
     <g data-record="Pad" data-layer="TOP" data-pad-name="1" data-pad-shape="RECTANGLE" data-pad-stack-layer="0" data-pad-stack-mode="SIMPLE" data-plated="true"><rect x="91.1767" y="172.8398" width="68.8976" height="44.2913" fill="#ef4444" stroke="#111827" stroke-width="1"/></g>

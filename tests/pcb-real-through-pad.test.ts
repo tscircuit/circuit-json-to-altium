@@ -26,7 +26,7 @@ async function scenario() {
   }
 }
 
-test.failing("equivalent real-board through-pad routes preserve all copper", async () => {
+test("equivalent real-board through-pad routes preserve all copper", async () => {
   const { baseline, actual } = await scenario()
   expect(
     Buffer.from(actual.pcbBytes).equals(Buffer.from(baseline.pcbBytes)),

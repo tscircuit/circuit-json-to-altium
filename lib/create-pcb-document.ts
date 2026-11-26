@@ -45,6 +45,20 @@ type PadLookupContext = {
   sourcePorts: Map<SourcePortId, CircuitElement>
 }
 
+function getRouteEndpoint(
+  point: CircuitElement,
+  role: "start" | "end",
+): CircuitElement {
+  if (point.route_type !== "through_pad") return point
+  // A segment arriving at a pad ends at its entry; one leaving starts at its exit.
+  const position = asPoint(role === "start" ? point.end : point.start)!
+  return {
+    ...point,
+    ...position,
+    layer: role === "start" ? point.end_layer : point.start_layer,
+  }
+}
+
 function getPadNet(
   pad: CircuitElement,
   context: PadLookupContext,
@@ -388,22 +402,25 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
   for (const trace of byType(circuitJson, "pcb_trace")) {
     const route = Array.isArray(trace.route)
       ? trace.route.flatMap((routePoint) =>
-          isCircuitElement(routePoint) && asPoint(routePoint)
+          isCircuitElement(routePoint) &&
+          (asPoint(routePoint) ||
+            (routePoint.route_type === "through_pad" &&
+              asPoint(routePoint.start) &&
+              asPoint(routePoint.end)))
             ? [routePoint]
             : [],
         )
       : []
     const net = netByTraceId.get(asString(trace.source_trace_id))
     for (let index = 1; index < route.length; index++) {
-      const circuitRouteStart = route[index - 1]
-      const circuitRouteEnd = route[index]
-      if (!circuitRouteStart || !circuitRouteEnd) continue
-      if (
-        circuitRouteStart.route_type === "via" &&
-        circuitRouteEnd.route_type === "via"
-      ) {
+      const start = route[index - 1]
+      const end = route[index]
+      if (!start || !end) continue
+      if (start.route_type === "via" && end.route_type === "via") {
         continue
       }
+      const circuitRouteStart = getRouteEndpoint(start, "start")
+      const circuitRouteEnd = getRouteEndpoint(end, "end")
       const altiumStartPoint = circuitToAltiumPcbPoint({
         x: asNumber(circuitRouteStart.x),
         y: asNumber(circuitRouteStart.y),

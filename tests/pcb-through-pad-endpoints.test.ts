@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { board, extractArchive } from "./fixtures"
 
-test.failing("uses each pad entry/exit layer and position without drawing copper across the pad", async () => {
+test("uses each pad entry/exit layer and position without drawing copper across the pad", async () => {
   const { pcb } = await extractArchive([
     board(),
     {
