@@ -10,9 +10,15 @@ test("snapshots the real NEMA17 board and USB-C polygon pads", async () => {
   const { pcb } = await extractArchive(elements)
   const outline = elements.find((element) => element.type === "pcb_board")!
     .outline as { x: number; y: number }[]
+  const polygonOwner = elements.find(
+    (element) => element.type === "pcb_smtpad" && element.shape === "polygon",
+  )!.pcb_component_id
   const points = elements
     .filter(
-      (element) => element.type === "pcb_smtpad" && element.shape === "polygon",
+      (element) =>
+        element.type === "pcb_smtpad" &&
+        element.shape === "polygon" &&
+        element.pcb_component_id === polygonOwner,
     )
     .flatMap((element) => element.points as { x: number; y: number }[])
   const minX = Math.min(...points.map((point) => point.x))
