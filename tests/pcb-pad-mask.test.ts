@@ -1,14 +1,23 @@
 import { expect, test } from "bun:test"
-import { serializeAltiumPcbToSvg } from "altiumts"
-import { type CircuitElement, extractArchive } from "./fixtures"
+import {
+  parseAltiumBinaryPcbDoc,
+  parseAltiumPcbDoc,
+  serializeAltiumPcbToSvg,
+} from "altiumts"
+import { CircuitJsonToAltiumConverter } from "../lib"
+import { convertAltiumPcbToCircuitJson } from "./fixtures/convert-altium-pcb-to-circuit-json"
 
 async function exportSimpleFocMini() {
-  const elements = (await Bun.file(
-    new URL("./assets/simplefoc-mini-silkscreen.circuit.json", import.meta.url),
-  ).json()) as CircuitElement[]
-  const result = await extractArchive(elements)
+  const source = parseAltiumPcbDoc(
+    await Bun.file(
+      new URL("../references/simplefoc-mini.PcbDoc", import.meta.url),
+    ).text(),
+  )
+  const elements = convertAltiumPcbToCircuitJson(source)
+  const converter = new CircuitJsonToAltiumConverter(elements)
+  converter.runUntilFinished()
   return {
-    ...result,
+    pcb: parseAltiumBinaryPcbDoc(converter.getOutput().pcb.content),
     smtPads: elements.filter((element) => element.type === "pcb_smtpad"),
   }
 }
