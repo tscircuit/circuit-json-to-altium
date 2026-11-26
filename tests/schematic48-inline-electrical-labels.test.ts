@@ -223,4 +223,12 @@ test("snapshots the real DRV8307EVM inline labels", async () => {
   await expect(serializeAltiumSheetToSvg(document)).toMatchSvgSnapshot(
     import.meta.path,
   )
+  await expect(
+    serializeAltiumSheetToSvg(document, {
+      width: 900,
+      height: 700,
+      showBorder: false,
+      viewBox: { x: 600, y: 360, width: 350, height: 320 },
+    }),
+  ).toMatchSvgSnapshot(import.meta.path, "detail")
 })
