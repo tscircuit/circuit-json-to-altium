@@ -9,6 +9,7 @@ test("round-trips the open-source NodeMCU ESP-12 Altium board", async () => {
   })
 
   expect(result.roundTripCounts).toEqual(result.sourceCounts)
+  expect(result.semanticMismatches).toEqual([])
   expect(result.roundTripSourceNetNames).toEqual(result.sourceNetNames)
   expect(result.cadComponentMismatchCount).toBe(0)
   expect(result.geometryMaxDeltaMm).toBeLessThan(0.03)
