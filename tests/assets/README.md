@@ -208,3 +208,15 @@ The TI file has 62 green junctions with no exposed blue automatic dots in the
 native Viewer. These comparisons use the pinned Altiumts renderer, whose dot
 radius differs from native Altium. Regenerate with
 `bun scripts/generate-junction-review-files.ts`.
+
+## TI PMP22712 standalone PCB annotations
+
+`ti-pmp22712-board-annotations.circuit.json` is the complete PCB importer output
+from the real TI PMP22712 board, including three board dimensions and two
+fabrication paths owned by `pcb_component_altium_board_graphics`.
+
+- Source: TI reference package <https://www.ti.com/lit/zip/SLVMF61>, nested
+  `PMP22712 - E2 Altium.zip` / `PMP22712_PCB.PcbDoc`.
+- Source PcbDoc SHA-256: `3343b2cb765db52243ccfa584cdded44588d3ad85067e89192f09931b9a309c1`.
+- Importer: `tscircuit/altium-to-circuit-json` at `c8008ef75555ca40f619644bf50c1ed7cfc0f29e`.
+- Export regression: `tests/pcb-real-board-annotations.test.ts`.
