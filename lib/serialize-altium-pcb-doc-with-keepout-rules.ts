@@ -1,5 +1,6 @@
 import { parseAltiumPcbDoc } from "altiumts"
 import CFB from "cfb"
+import { getManufacturingRuleBinaryType } from "./create-pcb-manufacturing-rule-records"
 import { serializeAltiumPcbDocWithBoardCutouts } from "./serialize-altium-pcb-doc-with-board-cutouts"
 
 const streams = {
@@ -25,12 +26,11 @@ export function serializeAltiumPcbDocWithKeepoutRules(
   })
   const rulePayloads = rules.map((rule) => {
     if (
-      rule.get("RULEKIND") !== "Clearance" ||
-      rule.getNumber("BINARYRECORDTYPE") !== 0
+      getManufacturingRuleBinaryType(rule.get("RULEKIND")) === undefined ||
+      rule.getNumber("BINARYRECORDTYPE") !==
+        getManufacturingRuleBinaryType(rule.get("RULEKIND"))
     ) {
-      throw new Error(
-        "Keepout rule serializer only supports native Clearance rules",
-      )
+      throw new Error("Unsupported native PCB rule kind or binary record type")
     }
     const text = rule
       .getString()
@@ -40,6 +40,11 @@ export function serializeAltiumPcbDocWithKeepoutRules(
       throw new Error("Keepout rule serialization requires ASCII query names")
     const payload = new TextEncoder().encode(`${text}\0`)
     const record = new Uint8Array(payload.length + 6)
+    new DataView(record.buffer).setUint16(
+      0,
+      rule.getNumber("BINARYRECORDTYPE")!,
+      true,
+    )
     new DataView(record.buffer).setUint32(2, payload.length, true)
     record.set(payload, 6)
     return record

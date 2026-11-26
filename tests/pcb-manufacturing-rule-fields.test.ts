@@ -4,7 +4,7 @@ import { board, extractArchive } from "./fixtures"
 
 type ManufacturingRuleName = string | undefined
 
-test.failing("writes native rule types, pair scopes and minima without inventing constraints", async () => {
+test("writes native rule types, pair scopes and minima without inventing constraints", async () => {
   const settings = {
     min_trace_width: 0.25,
     min_board_edge_clearance: 0.4,

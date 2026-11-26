@@ -7,6 +7,7 @@ import { createPcbCourtyardRecords } from "./create-pcb-courtyard-records"
 import { createPcbCutoutRecords } from "./create-pcb-cutout-records"
 import { createPcbDocumentationRecords } from "./create-pcb-documentation-records"
 import { createPcbKeepoutRecords } from "./create-pcb-keepout-records"
+import { createPcbManufacturingRuleRecords } from "./create-pcb-manufacturing-rule-records"
 import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
 import { createPcbSilkscreenCircleRecords } from "./create-pcb-silkscreen-circle-records"
 import { createPcbSilkscreenGraphicRecords } from "./create-pcb-silkscreen-graphic-records"
@@ -120,6 +121,7 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       ...boardFields,
     ].join("|"),
   ]
+  recordLines.push(...createPcbManufacturingRuleRecords(circuitJson))
 
   const sourceComponents = new Map<SourceComponentId, CircuitElement>(
     byType(circuitJson, "source_component")
