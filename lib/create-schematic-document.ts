@@ -44,6 +44,7 @@ import {
   sanitizeField,
 } from "./format"
 import { getAltiumSchematicTextPresentation } from "./get-altium-schematic-text-presentation"
+import { getInlineSchematicNetLabels } from "./get-inline-schematic-net-labels"
 import { getSchematicTransform } from "./get-schematic-transform"
 import { isSchematicSheetAnnotation } from "./is-schematic-sheet-annotation"
 import { isSchematicSymbolPrimitive } from "./is-schematic-symbol-primitive"
@@ -437,7 +438,14 @@ export function createSchematicDocument({
     (element) =>
       element.type === "schematic_text" && isSchematicSheetAnnotation(element),
   )
-  const consumedSheetTexts = new Set<CircuitElement>()
+  const inlineNetLabels = getInlineSchematicNetLabels({
+    circuitJson,
+    schematicElements,
+    circuitToAltiumSchematicPoint,
+  })
+  const consumedSheetTexts = new Set<CircuitElement>(
+    inlineNetLabels.map(({ text }) => text),
+  )
   const netLabelPlans = []
   for (const [netLabelIndex, schematicNetLabel] of schematicElements
     .filter((element) => element.type === "schematic_net_label")
@@ -1164,6 +1172,21 @@ export function createSchematicDocument({
     })
     for (const recordFields of netLabelRecordFields) {
       addSchematicRecord(recordFields, schematicRecordContext)
+    }
+  }
+
+  for (const [index, { altiumPosition, text }] of inlineNetLabels.entries()) {
+    for (const fields of createAltiumSchematicNetLabelRecordFields({
+      anchorSide: "",
+      altiumLabelCenter: altiumPosition,
+      altiumLabelPosition: altiumPosition,
+      decorationIndex: netLabelPlans.length + index,
+      fontTable: nativeTextFontTable,
+      labelText: sanitizeField(text.text),
+      symbolName: "",
+      textPresentation: text,
+    })) {
+      addSchematicRecord(fields, schematicRecordContext)
     }
   }
 

@@ -14,7 +14,7 @@ import {
   extractArchive,
 } from "./fixtures"
 
-test.failing("preserves the DRV8307EVM HU+/UH+ six-terminal connection", async () => {
+test("preserves the DRV8307EVM HU+/UH+ six-terminal connection", async () => {
   const document = await loadDrvSchematic()
   const graph = getSchematicNetGraph(document)
   const nets = graph.getNetsByName("HU+")
@@ -66,7 +66,7 @@ test.failing("preserves the DRV8307EVM HU+/UH+ six-terminal connection", async (
   expectValidSchematic(document)
 })
 
-test.failing.each([
+test.each([
   {
     from: { x: 0, y: 0 },
     to: { x: 10, y: 0 },
@@ -240,7 +240,7 @@ test("does not attach an inline text to a wire on another sheet", () => {
   ).toContain("SIGNAL")
 })
 
-test.failing("retains interior attachments on disconnected branches of one net", async () => {
+test("retains interior attachments on disconnected branches of one net", async () => {
   const elements: CircuitElement[] = [
     board(),
     { type: "source_net", source_net_id: "signal", name: "SIGNAL" },
