@@ -17,25 +17,22 @@ async function scenario() {
   }
 }
 
-test.failing("retains mask coverage on the first real rectangular SMT pad", async () => {
+test.failing("retains mask coverage on the first NEMA17 rectangular SMT pad", async () => {
   const { pad } = await scenario()
   expect(pad.getBoolean("TENTEDTOP")).toBe(true)
 }, 30_000)
 
-test("snapshots copper and mask separately around the covered real pad", async () => {
-  const { pcb, pad } = await scenario()
-  const x = pad.getAltiumMeasurement("X")!.toMils()
-  const y = pad.getAltiumMeasurement("Y")!.toMils()
+test("snapshots the complete NEMA17 board and top solder mask", async () => {
+  const { pcb } = await scenario()
   const options = {
-    width: 480,
-    height: 360,
-    showBoardOutline: false,
-    componentIndices: [pad.getNumber("COMPONENT")!],
-    viewBox: { x: x - 80, y: y - 60, width: 160, height: 120 },
+    width: 1000,
+    height: 1000,
+    showBoardOutline: true,
   }
-  await expect(
-    serializeAltiumPcbToSvg(pcb, { ...options, layers: ["TOP"] }),
-  ).toMatchSvgSnapshot(import.meta.path, "copper")
+  await expect(serializeAltiumPcbToSvg(pcb, options)).toMatchSvgSnapshot(
+    import.meta.path,
+    "board",
+  )
   await expect(
     serializeAltiumPcbToSvg(pcb, { ...options, layers: ["TOPSOLDER"] }),
   ).toMatchSvgSnapshot(import.meta.path, "mask")
