@@ -3,7 +3,7 @@ import { getSchematicRecordPoints, parseAltiumSchDoc } from "altiumts"
 import { CircuitJsonToAltiumConverter } from "../lib"
 import { expectValidSchematic } from "./fixtures"
 
-test.failing("exports compact single-text labels connected to the original wire anchors", async () => {
+test("exports compact single-text labels connected to the original wire anchors", async () => {
   const circuitJson = await Bun.file(
     new URL(
       "./assets/generated-system-automotive-mirror.circuit.json",

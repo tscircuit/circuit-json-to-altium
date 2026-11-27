@@ -56,12 +56,12 @@
     <polyline data-record="27" points="747.155,1008.155 747.155,1011.155" fill="none" stroke="#008800" stroke-width="1.4343"/>
     <circle data-record="29" cx="747.155" cy="1011.155" r="1.5" fill="#008800"/>
     <circle data-record="29" cx="797.155" cy="1055.155" r="1.5" fill="#008800"/>
-    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(869.155 1055.155) rotate(0)">HU+</text>
-    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(431.155 384.155) rotate(0)">HU+</text>
-    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(714.155 1011.155) rotate(0)">HU+</text>
-    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(703.155 861.155) rotate(0)">UH+</text>
-    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(464.155 844.155) rotate(0)">HU+</text>
-    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(458.155 1150.155) rotate(0)">HU+</text>
+    <text data-record="25" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(869.155 1055.155) rotate(0)">HU+</text>
+    <text data-record="25" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(431.155 384.155) rotate(0)">HU+</text>
+    <text data-record="25" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(714.155 1011.155) rotate(0)">HU+</text>
+    <text data-record="25" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(703.155 861.155) rotate(0)">UH+</text>
+    <text data-record="25" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(464.155 844.155) rotate(0)">HU+</text>
+    <text data-record="25" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(458.155 1150.155) rotate(0)">HU+</text>
     <circle data-record="29" cx="422.155" cy="384.155" r="1.5" fill="#008800"/>
     </g>
   </g>
