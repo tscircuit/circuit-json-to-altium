@@ -5,6 +5,7 @@ import { createHairlinePowerPortDefinitions } from "../create-hairline-power-por
 import { createSchematicDocument } from "../create-schematic-document"
 import { extractAltiumSchematicTemplate } from "../extract-altium-schematic-template"
 import { asNumber, asString, byType } from "../format"
+import { normalizeCompoundFileFreeSectors } from "../normalize-compound-file-free-sectors"
 import type {
   AltiumSchematicFile,
   AltiumSchematicSheetOptions,
@@ -164,13 +165,15 @@ export class BuildSchematicDocumentsStage extends ConverterStage<
       })
       return {
         asciiContent,
-        content: serializeAltiumSchDocToBinary(asciiContent, {
-          embeddedImages: template?.embeddedImages,
-          objectDefinitionRecords: createHairlinePowerPortDefinitions(
-            asciiContent,
-            this.context.schematicUnitsPerCircuitUnit / 20,
-          ),
-        }),
+        content: normalizeCompoundFileFreeSectors(
+          serializeAltiumSchDocToBinary(asciiContent, {
+            embeddedImages: template?.embeddedImages,
+            objectDefinitionRecords: createHairlinePowerPortDefinitions(
+              asciiContent,
+              this.context.schematicUnitsPerCircuitUnit / 20,
+            ),
+          }),
+        ),
         filename: definition.filename,
       }
     })

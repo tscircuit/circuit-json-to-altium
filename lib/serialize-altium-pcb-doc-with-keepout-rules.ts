@@ -1,5 +1,6 @@
 import { parseAltiumPcbDoc } from "altiumts"
 import CFB from "cfb"
+import { normalizeCompoundFileFreeSectors } from "./normalize-compound-file-free-sectors"
 import { serializeAltiumPcbDocWithBoardCutouts } from "./serialize-altium-pcb-doc-with-board-cutouts"
 
 const streams = {
@@ -81,8 +82,8 @@ export function serializeAltiumPcbDocWithKeepoutRules(
     stream.content = concatenate(output)
     stream.size = stream.content.length
   }
-  return new Uint8Array(
-    CFB.write(compound, { fileType: "cfb", type: "buffer" }),
+  return normalizeCompoundFileFreeSectors(
+    new Uint8Array(CFB.write(compound, { fileType: "cfb", type: "buffer" })),
   )
 }
 
