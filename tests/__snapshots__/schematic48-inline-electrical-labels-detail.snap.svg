@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="900" height="700" viewBox="0 0 350 320" role="img" aria-label="Altium schematic sheet" class="altium-sheet" data-renderer="altiumts">
+  <title>Altium schematic sheet</title>
+  <rect width="100%" height="100%" fill="#fffcf8"/>
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <defs><clipPath id="altium-sheet-paper"><rect x="0" y="0" width="350" height="320"/></clipPath></defs>
+    <g data-sheet-content="true" clip-path="url(#altium-sheet-paper)">
+    <polyline data-record="6" points="-228.6667,-419 -242,-419" fill="none" stroke="#840000" stroke-width="0.4571"/>
+    <polyline data-record="6" points="-248.6667,-412.3333 -247.9922,-412.3675 -247.3247,-412.4698 -246.6709,-412.6391 -246.0376,-412.8736 -245.4313,-413.171 -244.8582,-413.5282 -244.3242,-413.9416 -243.8347,-414.4069 -243.3948,-414.9193 -243.009,-415.4736 -242.6813,-416.064 -242.415,-416.6846 -242.2128,-417.329 -242.0769,-417.9905 -242.0086,-418.6623 -242.0086,-419.3377 -242.0769,-420.0095 -242.2128,-420.671 -242.415,-421.3154 -242.6813,-421.936 -243.009,-422.5264 -243.3948,-423.0807 -243.8347,-423.5931 -244.3242,-424.0584 -244.8582,-424.4718 -245.4313,-424.829 -246.0376,-425.1264 -246.6709,-425.3609 -247.3247,-425.5302 -247.9922,-425.6325 -248.6667,-425.6667" fill="none" stroke="#840000" stroke-width="0.4571"/>
+    <text data-record="34" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="end" dominant-baseline="central" transform="translate(-250 -419) rotate(0)">TP2</text>
+    <text data-record="41" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-252 -373) rotate(0)">TP-LOOP-ORANGE</text>
+    <g data-record="2"><line x1="-228" y1="-419" x2="-228" y2="-419" stroke="#840000" stroke-width="1"/></g>
+    <line data-record="13" x1="-242" y1="-419" x2="-228" y2="-419" stroke="#840000" stroke-width="0.4571"/>
+    <rect data-record="14" x="291" y="208" width="189" height="189" rx="0" fill="#ffffc2" stroke="#880000" stroke-width="0.4571"/>
+    <text data-record="34" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(291 168) rotate(0)">U1</text>
+    <text data-record="41" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(291 437) rotate(0)">DRV8307</text>
+    <g data-record="2"><line x1="269" y1="252" x2="269" y2="252" stroke="#840000" stroke-width="1"/><text x="0" y="0" fill="#840000" font-family="Arial" font-size="10" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="end" dominant-baseline="text-after-edge" transform="translate(281 252) rotate(0)">1</text><text x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="central" transform="translate(297.6667 252) rotate(0)">HU+</text></g>
+    <line data-record="13" x1="291" y1="252" x2="269" y2="252" stroke="#840000" stroke-width="0.4571"/>
+    <rect data-record="14" x="0" y="-20" width="27" height="100" rx="0" fill="#ffffc2" stroke="#880000" stroke-width="0.4571"/>
+    <text data-record="34" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(0 -60) rotate(0)">P3</text>
+    <text data-record="41" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(0 120) rotate(0)">OSTTE080161</text>
+    <g data-record="2"><line x1="47" y1="58" x2="47" y2="58" stroke="#840000" stroke-width="1"/><text x="0" y="0" fill="#840000" font-family="Arial" font-size="10" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(35 58) rotate(0)">7</text><text x="0" y="0" fill="#840000" font-family="Arial" font-size="10" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="end" dominant-baseline="central" transform="translate(18.3333 58) rotate(0)">7</text></g>
+    <line data-record="13" x1="25" y1="58" x2="47" y2="58" stroke="#840000" stroke-width="0.4571"/>
+    <polyline data-record="6" points="97,245 97,229" fill="none" stroke="#840000" stroke-width="0.4571"/>
+    <polyline data-record="6" points="97,221 97,205" fill="none" stroke="#840000" stroke-width="0.4571"/>
+    <polyline data-record="6" points="107.668,229 86.332,229" fill="none" stroke="#840000" stroke-width="0.4571"/>
+    <polyline data-record="6" points="107.668,221 86.332,221" fill="none" stroke="#840000" stroke-width="0.4571"/>
+    <text data-record="34" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(105 211) rotate(0)">C10</text>
+    <text data-record="41" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-before-edge" transform="translate(105 238) rotate(0)">0.1uF</text>
+    <g data-record="2"><line x1="97" y1="205" x2="97" y2="205" stroke="#840000" stroke-width="1"/></g>
+    <line data-record="13" x1="97" y1="221" x2="97" y2="205" stroke="#840000" stroke-width="0.4571"/>
+    <rect data-record="14" x="-292" y="-3" width="78" height="178" rx="0" fill="#ffffc2" stroke="#880000" stroke-width="0.4571"/>
+    <text data-record="34" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-292 -43) rotate(0)">U7</text>
+    <text data-record="41" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-292 215) rotate(0)">SN74CBT3244CPW</text>
+    <g data-record="2"><line x1="-192" y1="41" x2="-192" y2="41" stroke="#840000" stroke-width="1"/><text x="0" y="0" fill="#840000" font-family="Arial" font-size="10" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-204 41) rotate(0)">14</text><text x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="end" dominant-baseline="central" transform="translate(-220.6667 41) rotate(0)">1B3</text></g>
+    <line data-record="13" x1="-214" y1="41" x2="-192" y2="41" stroke="#840000" stroke-width="0.4571"/>
+    <rect data-record="14" x="-292" y="247" width="78" height="177" rx="0" fill="#ffffc2" stroke="#880000" stroke-width="0.4571"/>
+    <text data-record="34" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-292 207) rotate(0)">U8</text>
+    <text data-record="41" x="0" y="0" fill="#1f2937" font-family="Arial" font-size="14" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-292 464) rotate(0)">SN74CBT3244CPW</text>
+    <g data-record="2"><line x1="-192" y1="347" x2="-192" y2="347" stroke="#840000" stroke-width="1"/><text x="0" y="0" fill="#840000" font-family="Arial" font-size="10" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-204 347) rotate(0)">9</text><text x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="end" dominant-baseline="central" transform="translate(-220.6667 347) rotate(0)">2B1</text></g>
+    <line data-record="13" x1="-214" y1="347" x2="-192" y2="347" stroke="#840000" stroke-width="0.4571"/>
+    <polyline data-record="27" points="130,252 147,252" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="147,252 219,252" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="219,252 269,252" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="130,252 130,208" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="130,208 97,208" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="47,58 53,58" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="53,58 147,58" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="147,58 147,252" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="97,208 75,208" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="-236,-419 -219,-419" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="-219,-419 -197,-419" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="-192,41 -186,41" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="-186,41 -169,41" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="-192,347 -169,347" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <polyline data-record="27" points="97,205 97,208" fill="none" stroke="#008800" stroke-width="0.4571"/>
+    <circle data-record="29" cx="97" cy="208" r="1.5" fill="#008800"/>
+    <circle data-record="29" cx="147" cy="252" r="1.5" fill="#008800"/>
+    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(219 252) rotate(0)">HU+</text>
+    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-219 -419) rotate(0)">HU+</text>
+    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(64 208) rotate(0)">HU+</text>
+    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(53 58) rotate(0)">UH+</text>
+    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-186 41) rotate(0)">HU+</text>
+    <text data-record="4" x="0" y="0" fill="#840000" font-family="Arial" font-size="12" font-style="normal" font-weight="normal" text-decoration="none" text-anchor="start" dominant-baseline="text-after-edge" transform="translate(-192 347) rotate(0)">HU+</text>
+    <circle data-record="29" cx="-228" cy="-419" r="1.5" fill="#008800"/>
+    </g>
+  </g>
+</svg>

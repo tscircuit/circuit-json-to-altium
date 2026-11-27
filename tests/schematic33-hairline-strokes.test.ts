@@ -43,6 +43,18 @@ test("exports smallest schematic strokes with unchanged text fonts", async () =>
     const fields = (document: typeof doc) =>
       document
         .getRecordsByKind(kind)
+        // These inline sheet texts now carry electrical label records.
+        // Compare the remaining text fields to isolate the stroke regression.
+        .filter(
+          (record) =>
+            !(
+              ["4", "25"].includes(kind) &&
+              !document.getParent(record) &&
+              ["SWDIO", "SWCLK", "NRST"].includes(
+                record.getDecoded("TEXT") ?? "",
+              )
+            ),
+        )
         .map((record) =>
           record.fields
             .filter(({ key }) => key !== "OWNERINDEX")

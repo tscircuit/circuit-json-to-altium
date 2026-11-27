@@ -100,6 +100,13 @@ test("uses hairline stems for every component type with unchanged text and conne
     Array.from(
       serializeAltiumSheetToSvg(doc).matchAll(/<text\b[\s\S]*?<\/text>/gu),
       (m) => m[0].replace(/ data-record-index="\d+"/gu, ""),
+    ).filter(
+      (markup) =>
+        !/^<text data-record="(?:4|25)"[^>]*>(?:SWDIO|SWCLK|NRST)<\/text>$/u.test(
+          markup,
+        ),
     )
+  // These three sheet texts now export as electrical labels on wire vertices.
+  // Their presentation is verified separately in schematic23.
   expect(text(after)).toEqual(text(before))
 })
