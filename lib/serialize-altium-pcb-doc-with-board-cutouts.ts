@@ -1,5 +1,6 @@
 import { serializeAltiumPcbDocToBinary } from "altiumts"
 import CFB from "cfb"
+import { normalizeCompoundFileFatSectors } from "./normalize-compound-file-fat-sectors"
 
 const REGION_RECORD_PATTERN = /(?:^|\|)RECORD=Region(?:\||$)/iu
 const BOARD_CUTOUT_FIELD_PATTERN = /\|ISBOARDCUTOUT=TRUE(?=\||$)/giu
@@ -27,7 +28,9 @@ export function serializeAltiumPcbDocWithBoardCutouts(
 ): Uint8Array {
   const { cutoutRegionIndexes, source } = preparePcbSource(asciiSource)
   const serialized = serializeAltiumPcbDocToBinary(source)
-  if (cutoutRegionIndexes.size === 0) return serialized
+  if (cutoutRegionIndexes.size === 0) {
+    return normalizeCompoundFileFatSectors(serialized)
+  }
 
   const compoundFile = CFB.read(serialized, { type: "buffer" })
   const regionStream = CFB.find(compoundFile, REGION_STREAM_PATH)
@@ -47,8 +50,10 @@ export function serializeAltiumPcbDocWithBoardCutouts(
 
   regionStream.content = markedRegions.stream
   regionStream.size = markedRegions.stream.byteLength
-  return new Uint8Array(
-    CFB.write(compoundFile, { fileType: "cfb", type: "buffer" }),
+  return normalizeCompoundFileFatSectors(
+    new Uint8Array(
+      CFB.write(compoundFile, { fileType: "cfb", type: "buffer" }),
+    ),
   )
 }
 
