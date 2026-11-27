@@ -11,7 +11,7 @@ async function loadBoard(): Promise<CircuitElement[]> {
   ).json()
 }
 
-test.failing("exports the real TI PMP22712 board annotations without a dummy component", async () => {
+test("exports the real TI PMP22712 board annotations without a dummy component", async () => {
   const elements = await loadBoard()
   const standalone = elements.filter(
     (element) =>
