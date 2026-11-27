@@ -11,7 +11,7 @@ const concave = [
 ]
 
 for (const layer of ["top", "bottom"] as const) {
-  test.failing(`keeps covered ${layer} polygon anchors tented`, async () => {
+  test(`keeps covered ${layer} polygon anchors tented`, async () => {
     const { pcb } = await extractArchive([
       board(),
       {
