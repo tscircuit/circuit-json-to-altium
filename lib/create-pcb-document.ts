@@ -13,6 +13,8 @@ import { createPcbNetEntries, type PcbNetEntry } from "./create-pcb-net-entries"
 import { createPcbSilkscreenCircleRecords } from "./create-pcb-silkscreen-circle-records"
 import { createPcbSilkscreenGraphicRecords } from "./create-pcb-silkscreen-graphic-records"
 import { createPcbSilkscreenLineRecords } from "./create-pcb-silkscreen-line-records"
+import { createPcbSilkscreenOvalRecords } from "./create-pcb-silkscreen-oval-records"
+import { createPcbSilkscreenPillRecords } from "./create-pcb-silkscreen-pill-records"
 import { createPcbSilkscreenRectRecords } from "./create-pcb-silkscreen-rect-records"
 import { createPcbSilkscreenTextRecord } from "./create-pcb-silkscreen-text-record"
 import { createPcbTextRecord } from "./create-pcb-text-record"
@@ -564,6 +566,16 @@ export const createPcbDocument = (circuitJson: CircuitElement[]): string => {
       componentIndex,
     }),
     ...createPcbSilkscreenCircleRecords({
+      circuitJson,
+      circuitToAltiumPcbPoint,
+      componentIndex,
+    }),
+    ...createPcbSilkscreenPillRecords({
+      circuitJson,
+      circuitToAltiumPcbPoint,
+      componentIndex,
+    }),
+    ...createPcbSilkscreenOvalRecords({
       circuitJson,
       circuitToAltiumPcbPoint,
       componentIndex,

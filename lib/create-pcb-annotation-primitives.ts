@@ -169,13 +169,35 @@ export function createCirclePoints({
   center: Point
   radiusMm: number
 }): Point[] {
+  return createEllipsePoints({
+    center,
+    radiusXMm: radiusMm,
+    radiusYMm: radiusMm,
+  })
+}
+
+export function createEllipsePoints({
+  center,
+  radiusXMm,
+  radiusYMm,
+  rotationDegrees = 0,
+}: {
+  center: Point
+  radiusXMm: number
+  radiusYMm: number
+  rotationDegrees?: number
+}): Point[] {
   const segmentCount = 48
+  const localToCircuit = compose(
+    translate(center.x, center.y),
+    rotate((rotationDegrees * Math.PI) / 180),
+  )
   return Array.from({ length: segmentCount }, (_, segmentIndex) => {
     const angleRadians = (segmentIndex * Math.PI * 2) / segmentCount
-    return {
-      x: center.x + Math.cos(angleRadians) * radiusMm,
-      y: center.y + Math.sin(angleRadians) * radiusMm,
-    }
+    return applyToPoint(localToCircuit, {
+      x: Math.cos(angleRadians) * radiusXMm,
+      y: Math.sin(angleRadians) * radiusYMm,
+    })
   })
 }
 
